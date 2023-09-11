@@ -5,9 +5,9 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include "EEPROM.h"
-#include "otaServer.h"
+#include "JOtaServer.h"
 
-class JFixture{
+class JFixture: public JOtaServer{
   public:
   JFixture(){
 
