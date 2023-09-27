@@ -18,12 +18,14 @@ class JMsgArguments{
 class JModes{
   public:
   JModes(){
-    oneShots[OneShot::START_DEEPSLEEP] = false;
+    // oneShots[OneShot::START_DEEPSLEEP] = false;
   };
   enum OneShot{
-    START_DEEPSLEEP
+    START_DEEPSLEEP,
+    // START_OTA_SERVER
   };
   std::map<OneShot, JMsgArguments> oneShots{
     {START_DEEPSLEEP, JMsgArguments()}
+    // {START_OTA_SERVER, JMsgArguments()}
   };
 };

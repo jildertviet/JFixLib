@@ -1,5 +1,6 @@
 #pragma once
 
+// #include "WiFi.h"
 #include "HttpsOTAUpdate.h"
 #include <ArduinoJson.h>
 #include "certificate.h" // Create one, like: static const char *server_certificate = "-----BEGIN CERTIFICATE
@@ -36,13 +37,12 @@ class JOtaServer{
     START_OTA_SERVER,
     HANDLE_OTA_SERVER
   };
-  Mode mode = IDLE;
+  Mode otaMode = IDLE;
   char* ssid;
   char* password;
   char* url; // Set from MSG
 
-  static HttpsOTAStatus_t otastatus;
-
+  HttpsOTAStatus_t otastatus;
   
   int numTries = 0;
   bool checkOtaServer(){
@@ -63,7 +63,7 @@ class JOtaServer{
     return false; // ...
   }
 
-  bool parseOtaMsgAddressed(const uint8_t *data, int data_len, Mode m){
+  bool parseOtaServerVariables(const uint8_t *data, int data_len){
     Serial.println(" addressed");
     DynamicJsonDocument doc(200); // {"ssid":"xxx"}
     char* json = new char[data_len-7];
@@ -82,7 +82,6 @@ class JOtaServer{
     Serial.println(ssid);
     Serial.println(password);
     Serial.println(url);
-    mode = m;
 
     return true;
   }
@@ -117,7 +116,7 @@ class JOtaServer{
   }
 
   void handleOtaServer(){
-    switch(mode){
+    switch(otaMode){
       case JOtaServer::START_OTA_SERVER:{
         if(startOtaServer()){
           // blinkLed(1, 250, 3);
@@ -126,7 +125,7 @@ class JOtaServer{
         } else{
           ESP.restart();
         }
-        mode = HANDLE_OTA_SERVER;
+        otaMode = HANDLE_OTA_SERVER;
       }
       break;
       case JOtaServer::HANDLE_OTA_SERVER:{
@@ -143,5 +142,22 @@ class JOtaServer{
       break;
     }
   }
+
+  // virtual void checkOneShots(){
+  //   std::map<OneShot, JMsgArguments>::iterator it;
+  //   for (it=oneShots.begin(); it!=oneShots.end(); it++){
+  //     if(it->second.bActive == true){
+  //       Serial.println("OneShot triggered");
+  //       switch(it->first){
+  //       case OneShot::START_OTA_SERVER:{
+  //           blink(Channel::GREEN, 2); // Do one blink
+  //
+  //         }
+  //       }
+  //       break;
+  //       }
+  //     }
+  //   }
+  // }
 };
 
