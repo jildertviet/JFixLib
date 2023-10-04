@@ -53,21 +53,48 @@ class JEspnowDevice: public JFixture{
         }
       }
       break;
-      // case 0x11:{ // {0x11, a, d, d, r, e, s, 0x05} : set ESP32 with address 'addres' to ID 0x05
-      //   if(checkAddressed(data)){
-      //     Serial.println("Set ID");
-      //     id = data[1];
-      //     EEPROM.write(0, id);
-      //     EEPROM.commit();
-      //     Serial.println((int)id);
-      //   }
-      // }
-      // break;
+      case 0x11:{ // {0x11, a, d, d, r, e, s, 0x05} : set ESP32 with address 'addres' to ID 0x05
+        if(e->checkAddressed(data)){
+          Serial.println("Set ID");
+          e->id = data[7];
+          EEPROM.write(0, e->id);
+          EEPROM.commit();
+          Serial.println((int)e->id);
+        }
+      }
+      break;
       case 0x15:{
         Serial.print("0x15 Ota Server");
         if(e->checkAddressed(data)){
           e->parseOtaServerVariables(data, data_len);
           e->otaMode = Mode::START_OTA_SERVER;
+        }
+      }
+      break;
+      case 0x20:{ // SET_RGBW
+        if(e->checkAddressed(data)){
+          // int numChannels = (data_len - 6 - 1) / 4;
+          e->oneShots[JModes::OneShot::SET_CHANNELS] = true;
+          memcpy(&e->oneShots[JModes::OneShot::SET_CHANNELS].arguments[0], data+6+1, data_len-6-1);
+        }
+      }
+      break;
+      case 0x21:{
+        if(e->checkAddressed(data)){
+          e->oneShots[JModes::OneShot::SET_BRIGHTNESS] = true;
+          memcpy(&e->oneShots[JModes::OneShot::SET_BRIGHTNESS].arguments[0], data+6+1, sizeof(float) * 1);
+        }
+      }
+      break;
+      case 0x22:{
+        if(e->checkAddressed(data)){
+          char lagID = *(data+6+1);
+          switch(lagID){
+            case 0:{
+              memcpy(&(e->brightnessLag->lagTime), data+6+1+1, sizeof(float));
+            }
+            break;
+          }
         }
       }
       break;
@@ -80,7 +107,7 @@ class JEspnowDevice: public JFixture{
       WiFi.softAP(networkName.c_str(), randomPw().c_str(), CHANNEL, true); // This sets the channel... ?
       Serial.print("AP MAC address: "); Serial.println(WiFi.softAPmacAddress());
       String addr = WiFi.softAPmacAddress(); // 0D:XD:33: etc, replace : with 0x and prepend line w/ 0x
-      addr.replace(":", "0x");
+      addr.replace(":", ",0x");
       addr = "0x" + addr;
       Serial.println(addr); // For copying in SC array, or JSON
       WiFi.softAPmacAddress(myAddr);

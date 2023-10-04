@@ -1,19 +1,18 @@
 #include "JFixture.h"
 // #include "JEspnowDevice.h"
-#include "JFixtureDimmer.h"
+// #include "JFixtureDimmer.h"
+#include "JFixtureAddr.h"
 
-#define WS2812B_STATUS_LED
-
-class JJoniskSettings{
+class JTlFixSettings{
   public:
-    JJoniskSettings(){};
+    JTlFixSettings(){};
     String networkName = "JV_";
-    char numChannels = 4;
-    uint8_t* pins = nullptr;
+    char numChannels = 6;
     char ledBuiltin = 5;
+    uint8_t* pins = nullptr;
 };
 
-class JJonisk: public JFixtureDimmer{
+class JTlFix: public JFixtureAddr{
   public:
     // void setup(String networkName, char numChannels = 4, uint8_t* pins = nullptr){
     //   JEspnowDevice::setup(networkName);
@@ -22,11 +21,13 @@ class JJonisk: public JFixtureDimmer{
     void setup(JJoniskSettings settings){
       JEspnowDevice::setup(settings.networkName);
       if(settings.pins){
-        JFixtureDimmer::setup(settings.numChannels, settings.pins);
+        JFixtureAddr::setup(settings.numChannels, settings.pins);
       }
       setLedBuiltin(settings.ledBuiltin);
     }
     void update() override{
-      JFixtureDimmer::update();
+      JFixture::update(); 
+    }
+    void blink(char num=1, short dur=100, short delayTime=100, char channel=0) override{
     }
 };

@@ -97,6 +97,7 @@ class JOtaServer{
         delay(1000);
         attemptCount++;
         if(attemptCount >= 10){
+          Serial.println(" Connection failed");
           return false;
         }
     }

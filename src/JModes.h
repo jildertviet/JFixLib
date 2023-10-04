@@ -22,10 +22,14 @@ class JModes{
   };
   enum OneShot{
     START_DEEPSLEEP,
+    SET_CHANNELS,
+    SET_BRIGHTNESS
     // START_OTA_SERVER
   };
   std::map<OneShot, JMsgArguments> oneShots{
-    {START_DEEPSLEEP, JMsgArguments()}
+    {START_DEEPSLEEP, JMsgArguments()},
+    {SET_CHANNELS, JMsgArguments()},
+    {SET_BRIGHTNESS, JMsgArguments()}
     // {START_OTA_SERVER, JMsgArguments()}
   };
 };
