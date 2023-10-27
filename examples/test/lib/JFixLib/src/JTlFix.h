@@ -8,6 +8,8 @@ class JTlFixSettings{
     JTlFixSettings(){};
     String networkName = "JV_";
     char numChannels = 6;
+    uint8_t numLedsPerString = 144;
+    char numStrings = 2;
     char ledBuiltin = 5;
     uint8_t* pins = nullptr;
 };
@@ -18,15 +20,17 @@ class JTlFix: public JFixtureAddr{
     //   JEspnowDevice::setup(networkName);
     //   JFixtureDimmer::setup(numChannels, pins);
     // }
-    void setup(JJoniskSettings settings){
+    void setup(JTlFixSettings settings){
       JEspnowDevice::setup(settings.networkName);
       if(settings.pins){
-        JFixtureAddr::setup(settings.numChannels, settings.pins);
+        JFixtureAddr::setup(settings.numChannels, settings.pins, settings.numLedsPerString, JAddressableMode::J_WS2816B, settings.numStrings);
       }
       setLedBuiltin(settings.ledBuiltin);
     }
+
     void update() override{
-      JFixture::update(); 
+      JFixtureAddr::update();
+      // JFixture::update(); 
     }
     void blink(char num=1, short dur=100, short delayTime=100, char channel=0) override{
     }

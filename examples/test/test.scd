@@ -1,10 +1,13 @@
-p = SerialPort.new("/dev/ttyUSB1", 230400, crtscts: true)
+p = SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
 a = [0x3C,0x71,0xBF,0x10,0x80,0x5D]; // Green perf board
 a = [0x24, 0x6F, 0x28, 0xDD, 0x01, 0xB1];
+a = [0xC8,0xF0,0x9E,0xCF,0x94,0xAD]; // WS2816B tlFix
 j = JJonisk.new(0, a, p);
+
+j = JTLFix.new(0, a, p);
 j.id
 j.address
-j.setOTAServer("Klank",  ~pw, "https://192.168.10.37/.pio/build/esp32dev/firmware.bin");
+j.setOTAServer("Klank",  ~pw, "https://192.168.10.171/.pio/build/esp32dev/firmware.bin");
 j.writeID(2)
 j.deepSleep(1);
 v = [1, 0, 0.1]
