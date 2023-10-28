@@ -25,9 +25,9 @@ class JFixtureAddr: public JFixtureGraphics{
   enum JDrawMode{
     TEST,
     TEST_PERLIN,
-    EVENTS
+    LIVE
   };
-  JDrawMode drawMode = TEST_PERLIN;
+  JDrawMode drawMode = LIVE;
 
   void setup(char numColorChannels = 6, const uint8_t* pins = nullptr, short numLedsPerString = 60, JAddressableMode mode = J_WS2812B, int numStrings = 1){
     channels = new float[numColorChannels];
@@ -46,9 +46,10 @@ class JFixtureAddr: public JFixtureGraphics{
         addLeds(pins[i], leds[i], numLedsPerString * 2);
       }
     }
+    writeRGBPtr = &this->writeRGB;
     initCurve();
     testLED();
-    allBlack();
+    allBlack(true);
   }
 
   void initCurve(){ // 0.0 -- 1.0
@@ -61,7 +62,9 @@ class JFixtureAddr: public JFixtureGraphics{
   
   }
 
-  void writeRGB(int id, float r, float g, float b, char channel=0){
+  static void writeRGB(int id, float r, float g, float b, char channel=0, CRGB** leds = nullptr){
+    if(!leds)
+      return;
     uint16_t rgb[3];
     rgb[0] = r * 65535;
     rgb[1] = g * 65535;
@@ -94,7 +97,7 @@ class JFixtureAddr: public JFixtureGraphics{
   void allBlack(bool bWrite = false){
     for(int j=0; j<numStrings; j++){
       for(int i=0; i<numLedsPerString; i++){
-        writeRGB(i, 0, 0, 0, j);
+        writeRGB(i, 0, 0, 0, j, leds);
       }
     }
     if(bWrite)
@@ -104,17 +107,15 @@ class JFixtureAddr: public JFixtureGraphics{
   int ledIndex = 0;
   void update() override{
     JFixture::update();
-    JFixtureGraphics::update(); // Update Events
     switch(drawMode){
       case TEST:{
         allBlack(false);
         float v = sin(millis() * 0.001) * 0.5 + 0.5;
-        writeRGB(10, v, 0.0, 0.0, 0);
-        writeRGB(10, 0, v, 0, 1);
-        writeRGB(20, 0, 0, v, 0);
+        writeRGB(10, v, 0.0, 0.0, 0, leds);
+        writeRGB(10, 0, v, 0, 1, leds);
+        writeRGB(20, 0, 0, v, 0, leds);
         // ledIndex = (ledIndex + 1) % numLedsPerString;
         FastLED.show();                                       
-        delay(1); // ?
       }
       break;
       case TEST_PERLIN:{
@@ -126,13 +127,32 @@ class JFixtureAddr: public JFixtureGraphics{
             val = pow(val, 2.0);
             if(val < 0.005)
               val = 0.005;
-            writeRGB(i, val, 0.0, val, j);
+            writeRGB(i, 0.0, 0.0, val, j, leds);
           }
         }
         FastLED.show();
-        delay(1);
       }
       break;
+      case LIVE:{
+        // JFixtureGraphics::update(); // Update Events                                
+        for(char i=0; i<MAX_EVENTS; i++){
+          if(events[i]){
+            events[i]->update();
+            if(events[i]->bActive){
+             // Serial.print("Active event: "); Serial.println((int)i);
+              events[i]->draw(leds, numLedsPerString, numStrings);
+            } else{
+              Serial.println("delete events[i];");
+              delete events[i];
+              Serial.println("events[i] = nullptr;");
+              events[i] = nullptr;
+              Serial.println("done");
+           }
+        }
+      }
     }
+      break;
+    }
+    delay(1);
   }
 };

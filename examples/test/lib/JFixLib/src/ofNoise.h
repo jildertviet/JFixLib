@@ -1,3 +1,5 @@
+#pragma once
+
 #define OFNOISE_FASTFLOOR(x) ( ((x)>0) ? ((int)x) : (((int)x)-1) )
 
 /*

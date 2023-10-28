@@ -3,6 +3,7 @@
 
 #include "fabgl.h"
 #include "JEnv.h"
+#include "FastLED.h"
 
 enum boundariesMode{
   MODE_BOUNCE,
@@ -19,6 +20,8 @@ public:
   bool checkLifeTime();
 
   virtual void draw(){};
+  virtual void draw(CRGB** leds, int numLedsPerString, char numStrings){};
+
   virtual void update(){checkLifeTime();};
 
   JEnv brightnessEnv;
@@ -32,5 +35,7 @@ public:
   float brightness = 1.0;
   fabgl::Canvas* canvas = nullptr;
   boundariesMode limitMode = MODE_BOUNCE;
+  int numLedsPerString = 1;
+  int numLeds = 1;
 };
 #endif // JEVENT
