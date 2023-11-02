@@ -62,7 +62,7 @@ class JFixtureAddr: public JFixtureGraphics{
   
   }
 
-  static void writeRGB(int id, float r, float g, float b, char channel=0, CRGB** leds = nullptr){
+  static void writeRGB(int id, float r, float g, float b, char channel, CRGB** leds){
     if(!leds)
       return;
     uint16_t rgb[3];
@@ -135,12 +135,25 @@ class JFixtureAddr: public JFixtureGraphics{
       break;
       case LIVE:{
         // JFixtureGraphics::update(); // Update Events                                
+        bool bUseCanvas = false;
+        for(int i=0; i<MAX_EVENTS; i++){
+          if(!events[i])
+            continue;
+          if(events[i]->bActive && events[i]->canvas){
+            bUseCanvas = true;
+            break;
+          }
+        }
+        if(bUseCanvas){
+          canvas.setBrushColor(RGB888(0,0,0)); // Brightness gets calculated in checkLifeTime() of JEvent. Not very intuitive...
+          canvas.clear();
+        }
         for(char i=0; i<MAX_EVENTS; i++){
           if(events[i]){
             events[i]->update();
             if(events[i]->bActive){
              // Serial.print("Active event: "); Serial.println((int)i);
-              events[i]->draw(leds, numLedsPerString, numStrings);
+              events[i]->draw(leds, numLedsPerString, numStrings); // Write to LEDs, or canvas
             } else{
               Serial.println("delete events[i];");
               delete events[i];
@@ -150,9 +163,24 @@ class JFixtureAddr: public JFixtureGraphics{
            }
         }
       }
+      if(bUseCanvas){
+        canvas.waitCompletion();
+        canvasToLeds();
+      }
+      FastLED.show();
     }
       break;
     }
     delay(1);
   }
+
+  void canvasToLeds(){
+    for(int x=0; x<numStrings; x++){
+      for(int y=0; y<numLedsPerString; y++){
+        RGB888 color = canvas.getPixel(x*horizontalPixelDistance, y); // Read the pixel
+        // Serial.println(color.R);
+        writeRGB(y, color.R / 255., color.G / 255., color.B / 255., x, leds);
+      }
+    }
+  } 
 };

@@ -8,7 +8,7 @@ expRandLines::expRandLines(unsigned char x, unsigned char y, unsigned short widt
     // color[0] = r;
     // color[1] = g;
     // color[2] = b;
-    color = RGBA8888(r, g, b, 255);
+    // color = RGBA8888(r, g, b, 255);
     endTime = millis() + lifeTime;
     this->delayTime = delayTime;
     this->sizeRange = sizeRange;

@@ -14,9 +14,8 @@ class JEvent_Perlin : public Event{
     void update(){
       // checkLifetime();
     }
-    void (*writeRGB)(int, float, float, float, char, CRGB**) = nullptr;
 
-    void draw(CRGB** leds, int numLedsPerString, char numStrings){
+    void draw(CRGB** leds, int numLedsPerString, char numStrings) override{
       // Should write to FastLED?
       if(leds){
         for(float j=0; j<numStrings; j++){

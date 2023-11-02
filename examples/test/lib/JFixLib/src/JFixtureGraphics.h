@@ -3,19 +3,30 @@
 #include "JEspnowDevice.h"
 #include "Event/Event.h"
 #include "Event/JEvent_Perlin.h"
+#include "Event/JRect.h"
+#include "fabgl.h"
 
 #define MAX_EVENTS  128
+
+fabgl::VGAController vga;
+fabgl::Canvas canvas(&vga);
+
 class JFixtureGraphics : public JEspnowDevice{
   public:
     JFixtureGraphics(){
-      for(int i=0; i<MAX_EVENTS; i++){
-        events[i] = nullptr;
-      }
-    };
-    Event* lastAddedTemp = nullptr;
+      memset(events, 0x00, sizeof(events));
+      // vga.begin(GPIO_NUM_20, GPIO_NUM_21, GPIO_NUM_25, GPIO_NUM_26, GPIO_NUM_2); // Fabgl doesn't seem to work without the VGA part
+      vga.begin(GPIO_NUM_20, GPIO_NUM_21, GPIO_NUM_19, GPIO_NUM_25, GPIO_NUM_16, GPIO_NUM_17, GPIO_NUM_2, GPIO_NUM_4);
+      vga.setResolution(VGA_320x200_75Hz, 100, 144);
+      canvas.setBrushColor(Color::Black);
+      canvas.clear();
+      // canvas.setBrushColor(Color::Green);
+      // canvas.fillRectangle(0, 0, 20, 100);
+    }
+    Event* lastAdded = nullptr;
     Event* events[MAX_EVENTS];
-
-    void (*writeRGBPtr)(int, float, float, float, char, CRGB**) = nullptr;
+    
+    void (*writeRGBPtr)(int, float, float, float, char, CRGB**) = nullptr; // Will point to function of inherited class (JFixtureAddr)
 
     // void update() override{
     //   for(char i=0; i<MAX_EVENTS; i++){
@@ -36,14 +47,34 @@ class JFixtureGraphics : public JEspnowDevice{
     //   }
 
     void addEvent(const uint8_t *data, int data_len) override{
+      Event* e = nullptr;
       switch(data[0]){
         case 0x01:{ // Perlin
-          Event* perlin = (Event*)new JEvent_Perlin();
-          ((JEvent_Perlin*)perlin)->writeRGB = this->writeRGBPtr;
+          e = (Event*)new JEvent_Perlin();
 // [noiseScale, noiseTimeScale, horizontalPixelDistance, horizontalPixelOffset].asBytes32F ++ pos.asBytes32F ++ size.asBytes32F ++ rgb ++ "end");
-         addEvent(perlin);       
         }
         break;
+        case 0x02:{ // JRect
+          JRect* r = new JRect(); // lifeTime
+          memcpy(&(r->loc), data+1, sizeof(float)*2);
+          memcpy(&(r->size), data+1+(sizeof(float)*2), sizeof(float)*2);
+          memcpy(&(r->rgba), data+1+(sizeof(float)*4), sizeof(float)*4);
+          Serial.println(r->loc[0]);
+          Serial.println(r->loc[1]);
+          Serial.println(r->size[0]);
+          Serial.println(r->size[1]);
+          Serial.println(r->rgba[0]);
+          Serial.println(r->rgba[1]);
+          Serial.println(r->rgba[2]);
+          Serial.println(r->rgba[3]);
+          e = (Event*)r;
+          e->canvas = &canvas; // Only link this in Events that actually use the canvas
+        }
+        break;
+      }
+      if(e){
+        e->writeRGB = this->writeRGBPtr; // Events use the static function of their parent to write to the LEDs
+        addEvent(e);
       }
     }
 
@@ -53,10 +84,20 @@ class JFixtureGraphics : public JEspnowDevice{
           e->bActive = true;
           // e->canvas = &canvas;
           events[i] = e;
-          lastAddedTemp = e; // Isn't set to null when Event gets deleted
+          lastAdded = e; // Isn't set to null when Event gets deleted
           Serial.print("New event @: "); Serial.println((int)i);
           break;
         }
       }
+    }
+
+    void addEnv(const uint8_t *data, int data_len) override{
+      float a, s, r, b;
+      memcpy(&a, data, sizeof(float));
+      memcpy(&s, data+(sizeof(float)*1), sizeof(float));
+      memcpy(&r, data+(sizeof(float)*2), sizeof(float));
+      memcpy(&b, data+(sizeof(float)*3), sizeof(float));
+      char bKill = data[(sizeof(float)*4)]; // Currently always deletes when done
+      lastAdded->triggerBrightnessEnv(a, s, r, b);
     }
 };

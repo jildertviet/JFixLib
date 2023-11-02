@@ -37,6 +37,7 @@ class JEspnowDevice: public JFixture{
       return bAddressed;
     }
     virtual void addEvent(const uint8_t *data, int data_len){};
+    virtual void addEnv(const uint8_t *data, int data_len){};
 
     static void receive(const uint8_t *mac_addr, const uint8_t *data, int data_len){
       char msgType = data[0];
@@ -100,7 +101,13 @@ class JEspnowDevice: public JFixture{
       }
       case 0x23:{
         if(e->checkAddressed(data)){
-          e->addEvent(data + 6 + 1, data_len); // Don't pass address + msgType (0x23)
+          e->addEvent(data + 6 + 1, data_len - 6 - 1); // Don't pass address + msgType (0x23)
+        }
+      }
+      break;
+      case 0x24:{
+        if(e->checkAddressed(data)){
+          e->addEnv(data+6+1, data_len - 6 - 1);
         }
       }
       break;

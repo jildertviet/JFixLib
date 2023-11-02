@@ -23,9 +23,9 @@ bool Event::checkLifeTime(){
 
   if(brightnessEnv.state != IDLE)
     brightness = brightnessEnv.update();
-  if(brightnessEnv.state == DONE || millis() > endTime){
-    return false;
+  if(endTime && millis() > endTime || brightnessEnv.state == DONE){
     bActive = false;
+    return false;
   } else{
     return true;
   }
