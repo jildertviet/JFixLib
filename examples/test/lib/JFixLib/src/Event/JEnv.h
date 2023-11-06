@@ -19,8 +19,12 @@ public:
     unsigned short duration = 0;
     unsigned short a, s, r;
     float brightness = 0;
-    void trigger(unsigned short a, unsigned short s, unsigned short r, float b);
+    void trigger(unsigned short a, unsigned short s, unsigned short r, float b, float bias=0);
+    void trigger(float* ptr, unsigned short a, unsigned short s, unsigned short r, float b, float bias=0);
     float value = 0;
+    float bias = 0; // To do
+    float* writePtr = nullptr;
+    char varName = '0';
     bool stateRandom = false;
     JEnvState state = IDLE;
 };

@@ -9,13 +9,13 @@ class JEvent_Perlin : public Event{
     // JFixtureAddr* parent = nullptr;
     float noiseScale = 0.01;
     float noiseTimeScale = 0.0005;
-    int horizontalPixelDistance = 10; // Beams are 10 pixels from eachother
+    // int horizontalPixelDistance = 10; // Beams are 10 pixels from eachother
 
     void update(){
       // checkLifetime();
     }
 
-    void draw(CRGB** leds, int numLedsPerString, char numStrings) override{
+    void draw(CRGB** leds, int numLedsPerString, char numStrings, int horizontalPixelDistance) override{
       // Should write to FastLED?
       if(leds){
         for(float j=0; j<numStrings; j++){

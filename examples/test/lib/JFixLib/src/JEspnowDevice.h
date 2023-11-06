@@ -29,6 +29,15 @@ class JEspnowDevice: public JFixture{
     
     bool checkAddressed(const uint8_t* data){
       bool bAddressed = true;
+      bool bBroadcast = true;
+      for(int i=0; i<6; i++){
+        if(bBroadcast && data[i+1] != 0xFF){
+          bBroadcast = false;
+        }
+      }
+      if(bBroadcast)
+        return true;
+
       for(int i=0; i<6; i++){ // Check if this msg is for this ESP32
         if(myAddr[i] != data[i+1]){
             bAddressed = false;
@@ -36,8 +45,6 @@ class JEspnowDevice: public JFixture{
       }
       return bAddressed;
     }
-    virtual void addEvent(const uint8_t *data, int data_len){};
-    virtual void addEnv(const uint8_t *data, int data_len){};
 
     static void receive(const uint8_t *mac_addr, const uint8_t *data, int data_len){
       char msgType = data[0];
@@ -108,6 +115,19 @@ class JEspnowDevice: public JFixture{
       case 0x24:{
         if(e->checkAddressed(data)){
           e->addEnv(data+6+1, data_len - 6 - 1);
+        }
+      }
+      break;
+      case 0x25:{
+        if(e->checkAddressed(data)){
+          e->deleteEvents();
+        }
+      }
+      break;
+      case 0x26:{
+        if(e->checkAddressed(data)){
+          memcpy(e->rgbaBackground, data+6+1, sizeof(float)*4);
+          // bDraw = true;
         }
       }
       break;

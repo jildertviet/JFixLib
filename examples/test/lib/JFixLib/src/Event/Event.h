@@ -5,6 +5,8 @@
 #include "JEnv.h"
 #include "FastLED.h"
 
+#define MAX_ENV 6
+
 enum boundariesMode{
   MODE_BOUNCE,
   MODE_RESET
@@ -19,13 +21,18 @@ public:
   unsigned long endTime = 0;
   bool checkLifeTime();
 
+  float* viewPort;
+  float* viewPortOffset;
+  int horizontalSpacing = 0;
+                                
   virtual void draw(){};
-  virtual void draw(CRGB** leds, int numLedsPerString, char numStrings){};
+  virtual void draw(CRGB** leds, int numLedsPerString, char numStrings, int horizontalPixelDistance){};
   void (*writeRGB)(int, float, float, float, char, CRGB**) = nullptr;
 
   virtual void update(){checkLifeTime();};
 
   JEnv brightnessEnv;
+  JEnv* envelopes[MAX_ENV] = {nullptr};
   void triggerBrightnessEnv(unsigned short a, unsigned short s, unsigned short r, float b);
 
   float loc[2] = {0,0};
@@ -39,5 +46,7 @@ public:
   boundariesMode limitMode = MODE_BOUNCE;
   int numLedsPerString = 1;
   int numLeds = 1;
+  JEnv* getIdleEnv();
+  void addEnv(char varName, float* dest, unsigned short a, unsigned short s, unsigned short r, float b, float bias);
 };
 #endif // JEVENT

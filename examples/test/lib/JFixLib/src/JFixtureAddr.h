@@ -9,6 +9,7 @@
 class JFixtureAddr: public JFixtureGraphics{
   public: 
   CRGB** leds = nullptr;
+  float*** ledsValues = nullptr;
   float brightnessCurve[256];
   int numLedsPerString = 1;
   char numStrings = 1;
@@ -41,8 +42,14 @@ class JFixtureAddr: public JFixtureGraphics{
       }
     } else if(mode == J_WS2816B){
       leds = new CRGB*[numStrings];
+      // ledsValues = new float**[numStrings];
       for(int i=0; i<numStrings; i++){
         leds[i] = new CRGB[numLedsPerString * 2];
+        // ledsValues[i] = new float*[numLedsPerString];
+        // for(int j=0; j<numLedsPerString; j++){
+          // ledsValues[i][j] = new float[3];
+          // memset(ledsValues[i][j], 0x00, sizeof(float)*3)
+        // }
         addLeds(pins[i], leds[i], numLedsPerString * 2);
       }
     }
@@ -50,6 +57,22 @@ class JFixtureAddr: public JFixtureGraphics{
     initCurve();
     testLED();
     allBlack(true);
+
+   //  float r, g, b;
+   //  r = 1.0; g = 0.5; b=0.1;
+   //  uint16_t rgb[3];
+   //  rgb[0] = r * 65535;
+   //  rgb[1] = g * 65535;
+   //  rgb[2] = b * 65535;
+   //  char split[3][2];
+   //  for(int i=0; i<3; i++){
+   //    memcpy(split[i], &rgb[i], 2);
+   //  }
+   //  CRGB ledsTest[2];
+   //  ledsTest[0] = CRGB(split[1][0], split[1][1], split[0][1]);
+   //  ledsTest[1] = CRGB(split[2][1], split[0][0], split[2][0]);
+   //  
+   // Serial.println(rTestF);
   }
 
   void initCurve(){ // 0.0 -- 1.0
@@ -65,19 +88,72 @@ class JFixtureAddr: public JFixtureGraphics{
   static void writeRGB(int id, float r, float g, float b, char channel, CRGB** leds){
     if(!leds)
       return;
+
     uint16_t rgb[3];
+    float rgbF[3];
+    char split[3][2] = {
+      {leds[channel][id*2+1].g, leds[channel][id*2+0].b},
+      {leds[channel][id*2+0].r, leds[channel][id*2+0].g},
+      {leds[channel][id*2+1].b, leds[channel][id*2+1].r},
+    };
+    for(int i=0; i<3; i++){
+      memcpy(&rgb[i], split[i], 2);
+      rgbF[i] = rgb[i] / 65535.;
+    }
+
+    if(r < rgbF[0])
+      r = rgbF[0];
+    if(g < rgbF[1])
+      g = rgbF[1];
+    if(b < rgbF[2])
+      b = rgbF[2];
+    if(r < e->rgbaBackground[0])
+      r = e->rgbaBackground[0];
+    if(g < e->rgbaBackground[1])
+      g = e->rgbaBackground[1];
+    if(b < e->rgbaBackground[2])
+      b = e->rgbaBackground[2];
+    // Check values in leds
+    // Convert leds[2] to one RGB float pair
+    // uint16_t rTest = 0;
+    // char splitNew[2] = {ledsTest[0].r, ledsTest[0].g};
+    // memcpy(&rTest, splitNew, 2);
+    // float rTestF = rTest / 65535.;
+    
     rgb[0] = r * 65535;
     rgb[1] = g * 65535;
     rgb[2] = b * 65535;
-    char split[3][2];
     for(int i=0; i<3; i++){
       memcpy(split[i], &rgb[i], 2);
     }
-
+    
     leds[channel][(id*2)+0] = CRGB(split[1][0], split[1][1], split[0][1]);
     leds[channel][(id*2)+1] = CRGB(split[2][1], split[0][0], split[2][0]);
     // leds[channel][(id*2)+0] = CRGB(split[1][0], split[1][1], split[0][0]); // Different, because FastLED set to WS2812B instead of NEOPIXEL
     // leds[channel][(id*2)+1] = CRGB(split[0][1], split[2][0], split[2][1]);
+  }
+
+  void writeRGBHard(int id, float r, float g, float b, char channel, CRGB** leds){ // Doesn't check previous values
+    if(!leds)
+      return;
+
+    if(r < e->rgbaBackground[0])
+      r = e->rgbaBackground[0];
+    if(g < e->rgbaBackground[1])
+      g = e->rgbaBackground[1];
+    if(b < e->rgbaBackground[2])
+      b = e->rgbaBackground[2];
+    
+    uint16_t rgb[3];
+    char split[3][2];
+    rgb[0] = r * 65535;
+    rgb[1] = g * 65535;
+    rgb[2] = b * 65535;
+    for(int i=0; i<3; i++){
+      memcpy(split[i], &rgb[i], 2);
+    }    
+    leds[channel][(id*2)+0] = CRGB(split[1][0], split[1][1], split[0][1]);
+    leds[channel][(id*2)+1] = CRGB(split[2][1], split[0][0], split[2][0]); 
   }
 
   void testLED(){
@@ -97,7 +173,7 @@ class JFixtureAddr: public JFixtureGraphics{
   void allBlack(bool bWrite = false){
     for(int j=0; j<numStrings; j++){
       for(int i=0; i<numLedsPerString; i++){
-        writeRGB(i, 0, 0, 0, j, leds);
+        writeRGBHard(i, 0, 0, 0, j, leds);
       }
     }
     if(bWrite)
@@ -134,26 +210,29 @@ class JFixtureAddr: public JFixtureGraphics{
       }
       break;
       case LIVE:{
-        // JFixtureGraphics::update(); // Update Events                                
-        bool bUseCanvas = false;
-        for(int i=0; i<MAX_EVENTS; i++){
-          if(!events[i])
-            continue;
-          if(events[i]->bActive && events[i]->canvas){
-            bUseCanvas = true;
-            break;
-          }
-        }
-        if(bUseCanvas){
-          canvas.setBrushColor(RGB888(0,0,0)); // Brightness gets calculated in checkLifeTime() of JEvent. Not very intuitive...
-          canvas.clear();
-        }
+        // JFixtureGraphics::update(); // Update Events, currently happening below 
+        // bool bUseCanvas = false;
+        // for(int i=0; i<MAX_EVENTS; i++){
+          // if(!events[i])
+            // continue;
+          // if(events[i]->bActive && events[i]->canvas){
+            // bUseCanvas = true;
+            // break;
+          // }
+        // }
+        // if(bUseCanvas){
+          // canvas.setBrushColor(RGB888(0,0,0)); // Brightness gets calculated in checkLifeTime() of JEvent. Not very intuitive...
+          // canvas.clear();
+        // }
+        allBlack();
+        bool bEventUpdate = false;
         for(char i=0; i<MAX_EVENTS; i++){
           if(events[i]){
             events[i]->update();
             if(events[i]->bActive){
              // Serial.print("Active event: "); Serial.println((int)i);
-              events[i]->draw(leds, numLedsPerString, numStrings); // Write to LEDs, or canvas
+              bEventUpdate = true;
+              events[i]->draw(leds, numLedsPerString, numStrings, horizontalPixelDistance); // Write to LEDs, or canvas
             } else{
               Serial.println("delete events[i];");
               delete events[i];
@@ -163,15 +242,20 @@ class JFixtureAddr: public JFixtureGraphics{
            }
         }
       }
-      if(bUseCanvas){
-        canvas.waitCompletion();
-        canvasToLeds();
-      }
       FastLED.show();
+      if(bEventUpdate){
+        delayMicroseconds(1500); // Or even 0?
+      } else{
+        delay(2);
+      }
+      // if(bUseCanvas){
+        // canvas.waitCompletion();
+        // canvasToLeds();
+      // }
     }
       break;
     }
-    delay(1);
+    // delayMicroseconds(500);
   }
 
   void canvasToLeds(){

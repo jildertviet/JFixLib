@@ -13,7 +13,9 @@ float JEnv::update(){
         Serial.println("Stop env");
         // bActive = false;
         state = DONE;
-        value = 0;
+        value = bias;
+        if(writePtr)
+          *writePtr = value;
         return value;
     } else{
         // change val
@@ -67,10 +69,12 @@ float JEnv::update(){
         }
     }
 //    Serial.println("End of update()");
-    return value * brightness;
+    if(writePtr)
+        *writePtr = bias + (value * brightness);
+    return bias + (value * brightness);
 }
 
-void JEnv::trigger(unsigned short a, unsigned short s, unsigned short r, float b){
+void JEnv::trigger(unsigned short a, unsigned short s, unsigned short r, float b, float bias){
     duration = a + s + r;
     this->a = a;
     this->s = s;
@@ -80,4 +84,9 @@ void JEnv::trigger(unsigned short a, unsigned short s, unsigned short r, float b
     startTime = millis();
     stopTime = startTime + duration;
     brightness = b;
+    this->bias = bias;
+}
+void JEnv::trigger(float* ptr, unsigned short a, unsigned short s, unsigned short r, float b, float bias){
+  writePtr = ptr;
+  trigger(a, s, r, b, bias);
 }

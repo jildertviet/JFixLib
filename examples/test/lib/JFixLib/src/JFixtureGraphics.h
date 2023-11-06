@@ -25,6 +25,8 @@ class JFixtureGraphics : public JEspnowDevice{
     }
     Event* lastAdded = nullptr;
     Event* events[MAX_EVENTS];
+    float viewPort[2] = {20, 144};
+    float viewPortOffset[2] = {0,0}; // Original
     
     void (*writeRGBPtr)(int, float, float, float, char, CRGB**) = nullptr; // Will point to function of inherited class (JFixtureAddr)
 
@@ -59,20 +61,14 @@ class JFixtureGraphics : public JEspnowDevice{
           memcpy(&(r->loc), data+1, sizeof(float)*2);
           memcpy(&(r->size), data+1+(sizeof(float)*2), sizeof(float)*2);
           memcpy(&(r->rgba), data+1+(sizeof(float)*4), sizeof(float)*4);
-          Serial.println(r->loc[0]);
-          Serial.println(r->loc[1]);
-          Serial.println(r->size[0]);
-          Serial.println(r->size[1]);
-          Serial.println(r->rgba[0]);
-          Serial.println(r->rgba[1]);
-          Serial.println(r->rgba[2]);
-          Serial.println(r->rgba[3]);
           e = (Event*)r;
-          e->canvas = &canvas; // Only link this in Events that actually use the canvas
+          // e->canvas = &canvas; // Only link this in Events that actually use the canvas
         }
         break;
       }
       if(e){
+        e->viewPort = viewPort;
+        e->viewPortOffset = viewPortOffset;
         e->writeRGB = this->writeRGBPtr; // Events use the static function of their parent to write to the LEDs
         addEvent(e);
       }
@@ -98,6 +94,25 @@ class JFixtureGraphics : public JEspnowDevice{
       memcpy(&r, data+(sizeof(float)*2), sizeof(float));
       memcpy(&b, data+(sizeof(float)*3), sizeof(float));
       char bKill = data[(sizeof(float)*4)]; // Currently always deletes when done
-      lastAdded->triggerBrightnessEnv(a, s, r, b);
+      char bType = data[(sizeof(float)*4) + 1];
+      char key = data[(sizeof(float)*4) + 2]; // Get Env by key, instead of always last. 
+      Event* e = lastAdded;
+      switch(bType){
+        // case 'b': e->triggerBrightnessEnv(a, s, r, b); break;
+        case 'b': e->addEnv('b', &e->brightness, a, s, r, b, e->brightness); break;
+        case 'x': e->addEnv('x', &e->loc[0], a, s, r, b, e->loc[0]); break;
+        case 'y': e->addEnv('y', &e->loc[1], a, s, r, b, e->loc[1]); break;
+        case 'w': e->addEnv('w', &e->size[0], a, s, r, b, e->size[0]); break;
+        case 'h': e->addEnv('h', &e->size[1], a, s, r, b, e->size[1]); break;
+      }
+    }
+
+    void deleteEvents(){
+      for(int i=0; i<MAX_EVENTS; i++){
+        if(events[i]){
+          delete events[i];
+          events[i] = nullptr;
+        }
+      }
     }
 };
