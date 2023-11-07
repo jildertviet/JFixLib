@@ -25,8 +25,6 @@ class JFixtureGraphics : public JEspnowDevice{
     }
     Event* lastAdded = nullptr;
     Event* events[MAX_EVENTS];
-    float viewPort[2] = {20, 144};
-    float viewPortOffset[2] = {0,0}; // Original
     
     void (*writeRGBPtr)(int, float, float, float, char, CRGB**) = nullptr; // Will point to function of inherited class (JFixtureAddr)
 
@@ -67,8 +65,8 @@ class JFixtureGraphics : public JEspnowDevice{
         break;
       }
       if(e){
-        e->viewPort = viewPort;
-        e->viewPortOffset = viewPortOffset;
+        e->viewport = viewport;
+        e->viewportOffset = viewportOffset;
         e->writeRGB = this->writeRGBPtr; // Events use the static function of their parent to write to the LEDs
         addEvent(e);
       }
@@ -98,12 +96,12 @@ class JFixtureGraphics : public JEspnowDevice{
       char key = data[(sizeof(float)*4) + 2]; // Get Env by key, instead of always last. 
       Event* e = lastAdded;
       switch(bType){
-        // case 'b': e->triggerBrightnessEnv(a, s, r, b); break;
-        case 'b': e->addEnv('b', &e->brightness, a, s, r, b, e->brightness); break;
-        case 'x': e->addEnv('x', &e->loc[0], a, s, r, b, e->loc[0]); break;
-        case 'y': e->addEnv('y', &e->loc[1], a, s, r, b, e->loc[1]); break;
-        case 'w': e->addEnv('w', &e->size[0], a, s, r, b, e->size[0]); break;
-        case 'h': e->addEnv('h', &e->size[1], a, s, r, b, e->size[1]); break;
+        // case 'b': e->triggerBrightnessEnv(a, s, r, b, bKill); break;
+        case 'b': e->addEnv('b', &e->brightness, a, s, r, b, 1.0, bKill); break;
+        case 'x': e->addEnv('x', &e->loc[0], a, s, r, b, e->loc[0], bKill); break;
+        case 'y': e->addEnv('y', &e->loc[1], a, s, r, b, e->loc[1], bKill); break;
+        case 'w': e->addEnv('w', &e->size[0], a, s, r, b, e->size[0], bKill); break;
+        case 'h': e->addEnv('h', &e->size[1], a, s, r, b, e->size[1], bKill); break;
       }
     }
 

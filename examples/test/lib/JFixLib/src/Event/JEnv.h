@@ -27,6 +27,7 @@ public:
     char varName = '0';
     bool stateRandom = false;
     JEnvState state = IDLE;
+    bool bKill = false;
 };
 
 #endif  // JEnv_h

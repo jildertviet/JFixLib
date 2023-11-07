@@ -17,10 +17,10 @@ void JRect::draw(CRGB** leds, int numLedsPerString, char numStrings, int horizon
     canvas->setBrushColor(RGB888(r, rgba[1] * brightness * 255, rgba[2] * brightness * 255)); // Brightness gets calculated in checkLifeTime() of JEvent. Not very intuitive...
     canvas->fillRectangle(loc[0] * w, loc[1] * (brightness * 50), (loc[0] + size[0])*w, (loc[1] + size[1])*h);
   }
-  float x = loc[0] * viewPort[0]; // in Pixels
-  float y = loc[1] * viewPort[1];
-  float w = size[0] * viewPort[0];
-  float h = size[1] * viewPort[1]; // in Pixels
+  float x = loc[0] * viewport[0] - (viewportOffset[0] * viewport[0]); // in Pixels
+  float y = loc[1] * viewport[1] - (viewportOffset[1] * viewport[1]);
+  float w = size[0] * viewport[0];
+  float h = size[1] * viewport[1]; // in Pixels
   float xEnd = x + w;
   float yEnd = y + h;
   
@@ -31,15 +31,15 @@ void JRect::draw(CRGB** leds, int numLedsPerString, char numStrings, int horizon
   // Serial.print("xEnd: "); Serial.println(xEnd);
   // Serial.print("yEnd: "); Serial.println(yEnd);
   // tlFix specific :(
-  // if(x <= 0 || x < viewPort[0] && y <= 0 || y < viewPort[y]){
-    // Origin of rect lies within viewPort
+  // if(x <= 0 || x < viewport[0] && y <= 0 || y < viewport[y]){
+    // Origin of rect lies within viewport
   // }
   int xReadPositions[2] = {0, horizontalPixelSpacing}; // [0, 10]
   for(int j=0; j<numStrings; j++){
-    if(x > xReadPositions[j] || xEnd < xReadPositions[j] || yEnd < 0 || x > viewPort[0] || y > viewPort[1])
+    if(x > xReadPositions[j] || xEnd < xReadPositions[j] || yEnd < 0 || x > viewport[0] || y > viewport[1])
       continue;
     if(x <= xReadPositions[j] && xEnd >= xReadPositions[j]){
-      if(y < viewPort[1] || y <= 0){
+      if(y < viewport[1] || y <= 0){
         if(y < 0)
           y = 0;
         if(yEnd > numLedsPerString)

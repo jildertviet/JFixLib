@@ -131,6 +131,11 @@ class JEspnowDevice: public JFixture{
         }
       }
       break;
+      case 0x27:{
+        if(e->checkAddressed(data)){
+          memcpy(e->viewportOffset, data+6+1, sizeof(float)*2);
+        }
+      }
         default:
           break;
       }

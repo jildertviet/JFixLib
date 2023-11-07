@@ -25,6 +25,8 @@ bool Event::checkLifeTime(){
     if(envelopes[i]){
       envelopes[i]->update(); // Writes to float ptr 
       if(envelopes[i]->state == DONE){
+        if(envelopes[i]->bKill)
+          bActive = false;
         delete envelopes[i];
         envelopes[i] = nullptr;
       }
@@ -45,7 +47,7 @@ void Event::triggerBrightnessEnv(unsigned short a, unsigned short s, unsigned sh
   brightnessEnv.trigger(a, s, r, b);
 }
 
-void Event::addEnv(char varName, float* dest, unsigned short a, unsigned short s, unsigned short r, float b, float bias){
+void Event::addEnv(char varName, float* dest, unsigned short a, unsigned short s, unsigned short r, float b, float bias, bool bKill){
   // Check if another env is writing to the same value, if so: simply retrigger that one. 
   for(int i=0; i<MAX_ENV; i++){
     if(envelopes[i]){
@@ -59,6 +61,7 @@ void Event::addEnv(char varName, float* dest, unsigned short a, unsigned short s
     if(envelopes[i] == nullptr){
       envelopes[i] = new JEnv();
       envelopes[i]->trigger(dest, a, s, r, b, bias);
+      envelopes[i]->bKill = bKill;
       envelopes[i]->varName = varName;
       return;
     }

@@ -9,7 +9,7 @@ float JEnv::update(){
         return 0;
     float now = millis();
 
-    if(millis() >= stopTime){
+    if(now >= stopTime){
         Serial.println("Stop env");
         // bActive = false;
         state = DONE;
@@ -25,22 +25,7 @@ float JEnv::update(){
             value = ratio;
         } else if(now >= startTime + a && now < startTime + a + s){
             // Sustain phase
-            if(!stateRandom){
-                value = 1.;
-            } else{
-                int mod = 200;
-                int s = millis() * millis();
-                if(s % mod < mod * 0.3){
-                    value = 0.11;
-                } else if(s % mod > mod * 0.3 && s % mod < mod * 0.5){
-                    value = 0.3;
-                } else if(s % mod > mod * 0.5 && s % mod < mod * 0.65){
-                    value = 1.0;
-                } else{
-                    value = 0;
-                }
-                delay(random(10));
-            }
+            value = 1.0;
         } else if(now >= startTime + a + s && now < startTime + a + s + r){
 //            Serial.println("rel");
             // Release phase

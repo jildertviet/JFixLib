@@ -47,6 +47,9 @@ class JFixture: public JOtaServer, public JModes{
   unsigned long lastBlinked = 0;
   int blinkInterval[2] = {30, 1500};
   uint8_t blinkIndex = 0;
+  
+  float viewport[2] = {20, 144};
+  float viewportOffset[2] = {0,0}; // This is a scaling factor
 
   virtual void addEvent(const uint8_t *data, int data_len){};
   virtual void addEnv(const uint8_t *data, int data_len){};

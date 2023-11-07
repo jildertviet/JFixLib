@@ -21,8 +21,8 @@ public:
   unsigned long endTime = 0;
   bool checkLifeTime();
 
-  float* viewPort;
-  float* viewPortOffset;
+  float* viewport;
+  float* viewportOffset;
   int horizontalSpacing = 0;
                                 
   virtual void draw(){};
@@ -47,6 +47,6 @@ public:
   int numLedsPerString = 1;
   int numLeds = 1;
   JEnv* getIdleEnv();
-  void addEnv(char varName, float* dest, unsigned short a, unsigned short s, unsigned short r, float b, float bias);
+  void addEnv(char varName, float* dest, unsigned short a, unsigned short s, unsigned short r, float b, float bias, bool bKill=false);
 };
 #endif // JEVENT
