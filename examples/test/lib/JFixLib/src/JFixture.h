@@ -53,6 +53,8 @@ class JFixture: public JOtaServer, public JModes{
 
   virtual void addEvent(const uint8_t *data, int data_len){};
   virtual void addEnv(const uint8_t *data, int data_len){};
+  virtual void setVal(const uint8_t *data, int data_len){};
+  virtual void setValN(const uint8_t *data, int data_len){};
   virtual void deleteEvents(){};
   float rgbaBackground[4] = {0.0};
   // bool bDraw = false;

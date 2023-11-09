@@ -6,17 +6,15 @@ JRect::JRect(unsigned short lifeTime){
 }
 
 void JRect::draw(CRGB** leds, int numLedsPerString, char numStrings, int horizontalPixelSpacing){
-  if(canvas || 1 == 0){ // Disabled
-    float w = canvas->getWidth();
-    float h = canvas->getHeight();
-    // Serial.println(brightness);
-    // canvas->fillJRect(loc[0] * w, loc[1] * h, size[0], size[1], canvas->RGB(color[0], color[1], color[2]));
-    // Serial.println(brightness);
-    unsigned char r = rgba[0] * brightness * 255.0;
-    // Serial.println(r)
-    canvas->setBrushColor(RGB888(r, rgba[1] * brightness * 255, rgba[2] * brightness * 255)); // Brightness gets calculated in checkLifeTime() of JEvent. Not very intuitive...
-    canvas->fillRectangle(loc[0] * w, loc[1] * (brightness * 50), (loc[0] + size[0])*w, (loc[1] + size[1])*h);
-  }
+  if(bWaitForEnv)
+    return;
+  // if(1 == 0){ // Disabled
+    // float w = canvas->getWidth();
+    // float h = canvas->getHeight();
+    // unsigned char r = rgba[0] * brightness * 255.0;
+    // canvas->setBrushColor(RGB888(r, rgba[1] * brightness * 255, rgba[2] * brightness * 255)); // Brightness gets calculated in checkLifeTime() of JEvent. Not very intuitive...
+    // canvas->fillRectangle(loc[0] * w, loc[1] * (brightness * 50), (loc[0] + size[0])*w, (loc[1] + size[1])*h);
+  // }
   float x = loc[0] * viewport[0] - (viewportOffset[0] * viewport[0]); // in Pixels
   float y = loc[1] * viewport[1] - (viewportOffset[1] * viewport[1]);
   float w = size[0] * viewport[0];
@@ -55,6 +53,7 @@ void JRect::draw(CRGB** leds, int numLedsPerString, char numStrings, int horizon
 }
 
 void JRect::update(){
+  updateEnvelopes();
   if(checkLifeTime()){
    //
   }
@@ -70,4 +69,12 @@ void JRect::update(){
   //       speed[1] *= -1;
   //   }
   // }
+}
+void JRect::setVal(char type, float value){
+  Event::setVal(type, value);
+  switch(type){
+    // case 'h': size[1] = value; break;
+    default:
+    break;
+  }
 }

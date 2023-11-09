@@ -3,6 +3,9 @@
 JEnv::JEnv(){
 
 }
+JEnv::~JEnv(){
+
+}
 
 float JEnv::update(){
     if(state == IDLE || state==DONE)
@@ -10,8 +13,6 @@ float JEnv::update(){
     float now = millis();
 
     if(now >= stopTime){
-        Serial.println("Stop env");
-        // bActive = false;
         state = DONE;
         value = bias;
         if(writePtr)

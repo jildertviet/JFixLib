@@ -224,21 +224,19 @@ class JFixtureAddr: public JFixtureGraphics{
           // canvas.setBrushColor(RGB888(0,0,0)); // Brightness gets calculated in checkLifeTime() of JEvent. Not very intuitive...
           // canvas.clear();
         // }
+        parseMsgs();
         allBlack();
         bool bEventUpdate = false;
         for(char i=0; i<MAX_EVENTS; i++){
           if(events[i]){
             events[i]->update();
             if(events[i]->bActive){
-             // Serial.print("Active event: "); Serial.println((int)i);
               bEventUpdate = true;
               events[i]->draw(leds, numLedsPerString, numStrings, horizontalPixelDistance); // Write to LEDs, or canvas
             } else{
-              Serial.println("delete events[i];");
+              Serial.print("Delete "); Serial.println((int)events[i]->id);
               delete events[i];
-              Serial.println("events[i] = nullptr;");
               events[i] = nullptr;
-              Serial.println("done");
            }
         }
       }

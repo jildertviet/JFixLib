@@ -1,11 +1,23 @@
 #pragma once
 #include "JFixture.h"
 
+#define MAX_MSG 20
+#define MAX_MSG_LEN 250
+
 class JEspnowDevice;
 JEspnowDevice* e = nullptr;
 
+class JEspnowMsg{
+  public:
+    JEspnowMsg(){};
+    uint8_t data[MAX_MSG_LEN];
+    uint8_t len = 0;
+};
+
+
 class JEspnowDevice: public JFixture{
   public:
+    JEspnowMsg msgBuffer[MAX_MSG];
     uint8_t replyAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     uint8_t myAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
     unsigned long lastReceived = 0;
@@ -106,15 +118,11 @@ class JEspnowDevice: public JFixture{
           }
         }
       }
-      case 0x23:{
+      case 0x23:// addEvent
+      case 0x24:{ // addEnv
         if(e->checkAddressed(data)){
-          e->addEvent(data + 6 + 1, data_len - 6 - 1); // Don't pass address + msgType (0x23)
-        }
-      }
-      break;
-      case 0x24:{
-        if(e->checkAddressed(data)){
-          e->addEnv(data+6+1, data_len - 6 - 1);
+          e->saveMsg(data, data_len);
+          // e->addEnv(data+6+1, data_len - 6 - 1);
         }
       }
       break;
@@ -136,8 +144,40 @@ class JEspnowDevice: public JFixture{
           memcpy(e->viewportOffset, data+6+1, sizeof(float)*2);
         }
       }
+      case 0x28: // setVal
+      case 0x29:{ // setValN
+        if(e->checkAddressed(data)){
+          e->saveMsg(data, data_len);
+        }
+      }
+      break;
         default:
           break;
+      }
+    }
+
+    void saveMsg(const uint8_t* data, const uint8_t data_len){
+      for(int i=0; i<MAX_MSG; i++){
+        if(e->msgBuffer[i].len == 0){
+          Serial.print("Save @ "); Serial.println(i);
+          memcpy(e->msgBuffer[i].data, data, data_len);
+          e->msgBuffer[i].len = data_len;
+          return;
+        }
+      }
+    }
+
+    void parseMsgs(){
+      for(int i=0; i<MAX_MSG; i++){ // Reverse order
+        if(msgBuffer[i].len){
+          switch(msgBuffer[i].data[0]){
+            case 0x23: addEvent((msgBuffer[i].data)+6+1, msgBuffer[i].len-6-1); break;
+            case 0x24: addEnv((msgBuffer[i].data)+6+1, msgBuffer[i].len-6-1); break;
+            case 0x28: setVal((msgBuffer[i].data)+6+1, msgBuffer[i].len-6-1); break;
+            case 0x29: setValN((msgBuffer[i].data)+6+1, msgBuffer[i].len-6-1); break;
+          }
+          msgBuffer[i].len = 0;
+        }
       }
     }
 

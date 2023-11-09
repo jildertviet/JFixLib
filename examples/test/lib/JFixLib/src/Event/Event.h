@@ -20,6 +20,7 @@ public:
   bool bActive = false;
   unsigned long endTime = 0;
   bool checkLifeTime();
+  void updateEnvelopes();
 
   float* viewport;
   float* viewportOffset;
@@ -42,11 +43,14 @@ public:
   // RGBA8888 color = RGBA8888(255, 255, 255, 255);
   float rgba[4] = {1,1,1,1};
   float brightness = 1.0;
-  fabgl::Canvas* canvas = nullptr;
+  // fabgl::Canvas* canvas = nullptr;
   boundariesMode limitMode = MODE_BOUNCE;
   int numLedsPerString = 1;
   int numLeds = 1;
   JEnv* getIdleEnv();
   void addEnv(char varName, float* dest, unsigned short a, unsigned short s, unsigned short r, float b, float bias, bool bKill=false);
+  virtual void setVal(char type, float val);
+  bool bWaitForEnv = false;
+  int id = -1;
 };
 #endif // JEVENT

@@ -36,7 +36,5 @@ void expRandLines::update(){
 }
 
 void expRandLines::draw(){
-    if(canvas){
-        // canvas->fillRect(loc[0] * w, loc[1] * h, size[0], size[1], canvas->RGB(color[0], color[1], color[2]));
-    }
+  // canvas->fillRect(loc[0] * w, loc[1] * h, size[0], size[1], canvas->RGB(color[0], color[1], color[2]));
 }

@@ -8,4 +8,5 @@ public:
   // void draw() override;
   void draw(CRGB** leds, int numLedsPerString, char numStrings, int horizontalPixelDistance) override;
   void update() override;
+  void setVal(char type, float value) override;
 };

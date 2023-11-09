@@ -12,6 +12,7 @@ enum JEnvState{
 class JEnv{
 public:
     JEnv();
+    ~JEnv();
     float update();
     // bool bActive = false;
     unsigned long stopTime = 0;

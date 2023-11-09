@@ -19,9 +19,16 @@ Event::~Event(){
 }
 
 bool Event::checkLifeTime(){
-//  Serial.print("Millis: "); Serial.println(millis());
-//  Serial.print("endTime: "); Serial.println(endTime);
-  for(int i=0; i<MAX_ENV; i++){
+  if(endTime && millis() > endTime || brightnessEnv.state == DONE){
+    bActive = false;
+    return false;
+  } else{
+    return true;
+  }
+}
+ 
+void Event::updateEnvelopes(){
+ for(int i=0; i<MAX_ENV; i++){
     if(envelopes[i]){
       envelopes[i]->update(); // Writes to float ptr 
       if(envelopes[i]->state == DONE){
@@ -35,12 +42,6 @@ bool Event::checkLifeTime(){
 
   if(brightnessEnv.state != IDLE)
     brightness = brightnessEnv.update();
-  if(endTime && millis() > endTime || brightnessEnv.state == DONE){
-    bActive = false;
-    return false;
-  } else{
-    return true;
-  }
 }
 
 void Event::triggerBrightnessEnv(unsigned short a, unsigned short s, unsigned short r, float b){
@@ -65,5 +66,14 @@ void Event::addEnv(char varName, float* dest, unsigned short a, unsigned short s
       envelopes[i]->varName = varName;
       return;
     }
+  }
+}
+void Event::setVal(char type, float value){
+  switch(type){
+    case 'b': brightness = value; break;
+    case 'x': loc[0] = value; break;
+    case 'y': loc[1] = value; break;
+    case 'w': size[0] = value; break;
+    case 'h': size[1] = value; break;
   }
 }
