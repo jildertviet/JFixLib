@@ -16,13 +16,14 @@ j.address
 
 (
 {
-  [h,k].do{|e|
+  [j].do{|e|
     e.setOTAServer("Klank",  ~pw, "https://192.168.10.173/.pio/build/esp32dev/firmware.bin");
     50.wait;
   };
   "Done".postln;
 }.fork;
 )
+JFixture
 j.writeID(2)
 j.deepSleep(1);
 v = [1, 0, 0.1]
@@ -44,7 +45,7 @@ x = {
   }
 }.fork;
 )
-[j].do{|e| e.setBackground(0.002!4);};
+[j].do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.001);};
 j.bBroadcast = false
 j.bBroadcast = true
 j.getAddress()

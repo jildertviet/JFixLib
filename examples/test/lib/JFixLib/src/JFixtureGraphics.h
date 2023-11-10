@@ -159,23 +159,34 @@ class JFixtureGraphics : public JEspnowDevice{
       // Serial.print("id, type, value: "); Serial.print(id); Serial.print(", "); Serial.print(type); Serial.print(", "); Serial.println(value);
       Event* e = getEventByID(id);
       if(e){
-        e->setVal(type, value);
+        switch(type){
+          case 'c':{ // color
+            if(data_len >= (sizeof(int) + 1 + (sizeof(float)*4))){
+             memcpy(&(e->rgba), data+sizeof(int)+1, sizeof(float)*4);
+            }
+          }
+            break;
+          default:
+            e->setVal(type, value);
+            break;
+        }
       }
     }
+
     void setValN(const uint8_t *data, int data_len) override{
       // [id, type, value, value, value] : [423, 'b', 0.5, 0.1, 0.4] // Set brightness to 0.5 of Event w/ id 423 if this tlFix-id is 0
       int eventID;
       char type;
       char numValues = (data_len - sizeof(int) - sizeof(char))/sizeof(float);
-      float* values = new float[numValues];
+      float value;
       memcpy(&eventID, data, sizeof(int));
       memcpy(&type, data+sizeof(int), 1);
-      memcpy(values, data+sizeof(int)+1, sizeof(float) * numValues);
+      memcpy(&value, data+sizeof(int)+1+(sizeof(float)*this->id), sizeof(float));
       // Serial.print("id, type, value: "); Serial.print(id); Serial.print(", "); Serial.print(type); Serial.print(", "); Serial.println(value);
       Event* e = getEventByID(eventID);
       if(e){
-        if(this->id > 0 && this->id < numValues){
-          e->setVal(type, values[this->id]);
+        if(this->id >= 0 && this->id < numValues){
+          e->setVal(type, value);
         }
       }
     }
