@@ -76,9 +76,7 @@ class JFixture: public JOtaServer, public JModes{
     aliveBlink();
   }
   
-  virtual void blink(char num=1, short dur=100, short delayTime=100, char channel=0){
-
-  };
+  virtual void blink(char num=1, short dur=100, short delayTime=100, char channel=0){};
 
   void setLedBuiltin(char pin = 5){
     ledBuiltin = pin;
