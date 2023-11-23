@@ -1,5 +1,5 @@
 p = SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
-a = [0x3C,0x71,0xBF,0x10,0x80,0x5D]; // Green perf board
+a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
 a = [0x24, 0x6F, 0x28, 0xDD, 0x01, 0xB1];
 (
 a = [
@@ -15,12 +15,14 @@ j = a.collect({|e, i| JTLFix.new(i, e, p)});
 // k = JTLFix.new(0, q, p); // 3rd
 )
 
+c = List.new
+c.add(1)
 j.id
 j.address
 (
 {
   j.do{|e|
-    e.setOTAServer("Klank",  ~pw, "https://192.168.10.173/.pio/build/esp32dev/firmware.bin");
+    e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/.pio/build/esp32dev/firmware.bin");
     50.wait;
   };
   "Done".postln;

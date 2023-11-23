@@ -139,14 +139,10 @@ public:
       }
     }
     case 0x28:   // setVal
-    case 0x29: { // setValN
+    case 0x29:   // setValN
+    case 0x30: { // multiple / grouped
       if (e->checkAddressed(data)) {
         e->saveMsg(data, data_len);
-      }
-    } break;
-    case 0x30: { // Grouped msg
-      if (e->checkAddressed(data)) {
-        e->parseMultiple(data, data_len);
       }
     } break;
     default:
@@ -155,10 +151,14 @@ public:
   }
 
   void saveMsg(const uint8_t *data, const uint8_t data_len) {
+    // for (int i = 0; i < data_len; i++) {
+    // Serial.print((int)data[i]);
+    // Serial.print(" ");
+    // }
     for (int i = 0; i < MAX_MSG; i++) {
       if (e->msgBuffer[i].len == 0) {
-        Serial.print("Save @ ");
-        Serial.println(i);
+        // Serial.print("Save @ ");
+        // Serial.println(i);
         memcpy(e->msgBuffer[i].data, data, data_len);
         e->msgBuffer[i].len = data_len;
         return;
@@ -166,7 +166,21 @@ public:
     }
   }
 
-  void parseMultiple(const uint8_t *data, const uint8_t data_len) {}
+  void parseMultiple(const uint8_t *data, const uint8_t data_len) {
+    char numMsg = data[0];
+    unsigned char lengths[numMsg];
+    unsigned char writePos = numMsg + 1;
+    memcpy(&lengths, data + 1, numMsg);
+    // Serial.print("Num msg in grouped msg: ");
+    // Serial.println((int)numMsg);
+    for (int i = 0; i < numMsg; i++) {
+      // Serial.print("Length: ");
+      // Serial.println(lengths[i]);
+      saveMsg(data + writePos, lengths[i]);
+      writePos += lengths[i];
+    }
+    parseMsgs();
+  }
 
   void parseMsgs() {
     for (int i = 0; i < MAX_MSG; i++) { // Reverse order
@@ -184,6 +198,9 @@ public:
         case 0x29:
           setValN((msgBuffer[i].data) + 6 + 1, msgBuffer[i].len - 6 - 1);
           break;
+        case 0x30:
+          msgBuffer[i].len = 0;
+          parseMultiple((msgBuffer[i].data) + 6 + 1, msgBuffer[i].len - 6 - 1);
         }
         msgBuffer[i].len = 0;
       }
@@ -195,8 +212,8 @@ public:
                 true); // This sets the channel... ?
     Serial.print("AP MAC address: ");
     Serial.println(WiFi.softAPmacAddress());
-    String addr = WiFi.softAPmacAddress(); // 0D:XD:33: etc, replace : with 0x
-                                           // and prepend line w/ 0x
+    String addr = WiFi.softAPmacAddress(); // 0D:XD:33: etc, replace : with
+                                           // 0x and prepend line w/ 0x
     addr.replace(":", ",0x");
     addr = "0x" + addr;
     Serial.println(addr); // For copying in SC array, or JSON

@@ -118,6 +118,10 @@ public:
     rgb[0] = pow(r, 2.0) * 65535;
     rgb[1] = pow(g, 2.0) * 65535;
     rgb[2] = pow(b, 2.0) * 65535;
+    // rgb[0] = r * 65535;
+    // rgb[1] = g * 65535;
+    // rgb[2] = b * 65535;
+
     for (int i = 0; i < 3; i++) {
       memcpy(split[i], &rgb[i], 2);
     }
