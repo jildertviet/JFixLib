@@ -9,6 +9,8 @@
 class JFixtureAddr : public JFixtureGraphics {
 public:
   CRGB **leds = nullptr;
+  CRGB **ledsToWrite = nullptr; // Use this array for the brightness curve. The
+                                // other is for reading back
   float ***ledsValues = nullptr;
   float brightnessCurve[256];
   int numLedsPerString = 1;
@@ -31,21 +33,24 @@ public:
     this->numStrings = numStrings;
     if (mode == J_WS2812B) {
       leds = new CRGB *[numStrings];
+      ledsToWrite = new CRGB *[numStrings];
       for (int i = 0; i < numStrings; i++) {
         leds[i] = new CRGB[numLedsPerString];
+        ledsToWrite[i] = new CRGB[numLedsPerString];
         addLeds(pins[i], leds[i], numLedsPerString);
       }
     } else if (mode == J_WS2816B) {
       leds = new CRGB *[numStrings];
+      ledsToWrite = new CRGB *[numStrings];
       // ledsValues = new float**[numStrings];
       for (int i = 0; i < numStrings; i++) {
-        leds[i] = new CRGB[numLedsPerString * 2];
+        ledsToWrite[i] = new CRGB[numLedsPerString * 2];
         // ledsValues[i] = new float*[numLedsPerString];
         // for(int j=0; j<numLedsPerString; j++){
         // ledsValues[i][j] = new float[3];
         // memset(ledsValues[i][j], 0x00, sizeof(float)*3)
         // }
-        addLeds(pins[i], leds[i], numLedsPerString * 2);
+        addLeds(pins[i], ledsToWrite[i], numLedsPerString * 2);
       }
     }
     writeRGBPtr = &this->writeRGB;
@@ -92,7 +97,7 @@ public:
         {leds[channel][id * 2 + 1].b, leds[channel][id * 2 + 1].r},
     };
     for (int i = 0; i < 3; i++) {
-      memcpy(&rgb[i], split[i], 2);
+      memcpy(&rgb[i], split[i], 2); // Read the values currently on the LEDs
       rgbF[i] = rgb[i] / 65535.;
     }
 
@@ -115,12 +120,12 @@ public:
     // memcpy(&rTest, splitNew, 2);
     // float rTestF = rTest / 65535.;
 
-    rgb[0] = pow(r, 2.0) * 65535;
-    rgb[1] = pow(g, 2.0) * 65535;
-    rgb[2] = pow(b, 2.0) * 65535;
-    // rgb[0] = r * 65535;
-    // rgb[1] = g * 65535;
-    // rgb[2] = b * 65535;
+    // rgb[0] = pow(r, 2.0) * 65535;
+    // rgb[1] = pow(g, 2.0) * 65535;
+    // rgb[2] = pow(b, 2.0) * 65535;
+    rgb[0] = r * 65535;
+    rgb[1] = g * 65535;
+    rgb[2] = b * 65535;
 
     for (int i = 0; i < 3; i++) {
       memcpy(split[i], &rgb[i], 2);
@@ -177,7 +182,19 @@ public:
       }
     }
     if (bWrite)
-      FastLED.show();
+      writeLeds();
+  }
+
+  void writeLeds() {
+    memcpy(ledsToWrite, leds, sizeof(leds));
+    for (int j = 0; j < numStrings; j++) {
+      for (int i = 0; i < numLedsPerString; i++) {
+        ledsToWrite[j][i].r = pow(ledsToWrite[j][i].r, 2);
+        ledsToWrite[j][i].g = pow(ledsToWrite[j][i].g, 2);
+        ledsToWrite[j][i].b = pow(ledsToWrite[j][i].b, 2);
+      }
+    }
+    FastLED.show();
   }
 
   int ledIndex = 0;
@@ -191,7 +208,7 @@ public:
       writeRGB(10, 0, v, 0, 1, leds);
       writeRGB(20, 0, 0, v, 0, leds);
       // ledIndex = (ledIndex + 1) % numLedsPerString;
-      FastLED.show();
+      writeLeds();
     } break;
     case TEST_PERLIN: {
       // noiseScale = 0.00001;
@@ -207,7 +224,7 @@ public:
           writeRGB(i, 0.0, 0.0, val, j, leds);
         }
       }
-      FastLED.show();
+      writeLeds();
     } break;
     case LIVE: {
       // JFixtureGraphics::update(); // Update Events, currently happening below
@@ -243,7 +260,7 @@ public:
           }
         }
       }
-      FastLED.show();
+      writeLeds();
       if (bEventUpdate) {
         delayMicroseconds(1500); // Or even 0?
       } else {
