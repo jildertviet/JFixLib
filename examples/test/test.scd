@@ -18,17 +18,17 @@ j = a.collect({|e, i| JTLFix.new(i, e, p)});
 c = List.new
 c.add(1)
 j.id
+j.at([1,2])
 j.address
 (
 {
-  j.do{|e|
+j.at([1,2,3,4]).do{|e|
     e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/.pio/build/esp32dev/firmware.bin");
     50.wait;
   };
   "Done".postln;
 }.fork;
 )
-
 j.deepSleep(1);
 v = [1, 0, 0.1]
 v = [0.1, 0.5, 1.0, 0.5].stutter(2).scramble
@@ -49,7 +49,7 @@ x = {
   }
 }.fork;
 )
-[j].do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.001);};
+j.do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.001);};
 j.bBroadcast = false
 j.bBroadcast = true
 j.getAddress()
