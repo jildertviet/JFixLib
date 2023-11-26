@@ -275,16 +275,17 @@ public:
     // delayMicroseconds(500);
   }
 
-  void canvasToLeds() {
-    for (int x = 0; x < numStrings; x++) {
-      for (int y = 0; y < numLedsPerString; y++) {
-        RGB888 color =
-            canvas.getPixel(x * horizontalPixelDistance, y); // Read the pixel
-        // Serial.println(color.R);
-        writeRGB(y, color.R / 255., color.G / 255., color.B / 255., x, leds);
-      }
-    }
-  }
+  // void canvasToLeds() {
+  //   for (int x = 0; x < numStrings; x++) {
+  //     for (int y = 0; y < numLedsPerString; y++) {
+  //       RGB888 color =
+  //           canvas.getPixel(x * horizontalPixelDistance, y); // Read the
+  //           pixel
+  //       // Serial.println(color.R);
+  //       writeRGB(y, color.R / 255., color.G / 255., color.B / 255., x, leds);
+  //     }
+  //   }
+  // }
   void blink(char num = 1, short dur = 100, short delayTime = 100,
              char channel = 0) override {
     float values[3] = {0};

@@ -4,8 +4,15 @@ JOsc::JOsc(JWavetable *w) { this->w = w; }
 
 void JOsc::update() {
   double t = (millis() - startTime) / 1000.; // To seconds
-  phase = t * frequency;
+  int deltaTime =
+      millis() -
+      lastUpdated; // Translate this to a increment, based on frequency
+  // phase = t * frequency;
+  phase += (deltaTime / 1000.) * frequency;
   phase = fmod(phase, 1.0);
+  if (phase < 0) {
+    phase = 1.0 - phase;
+  }
   updateEnvelopes();
   checkLifeTime();
 }

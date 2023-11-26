@@ -4,26 +4,13 @@
 #include "Event/JOsc.h"
 #include "Event/JRect.h"
 #include "JEspnowDevice.h"
-#include "fabgl.h"
 
 #define MAX_EVENTS 128
-
-fabgl::VGAController vga;
-fabgl::Canvas canvas(&vga);
 
 class JFixtureGraphics : public JEspnowDevice {
 public:
   JFixtureGraphics() {
     memset(events, 0x00, sizeof(events));
-    // vga.begin(GPIO_NUM_20, GPIO_NUM_21, GPIO_NUM_25, GPIO_NUM_26,
-    // GPIO_NUM_2); // Fabgl doesn't seem to work without the VGA part
-    vga.begin(GPIO_NUM_20, GPIO_NUM_21, GPIO_NUM_19, GPIO_NUM_25, GPIO_NUM_16,
-              GPIO_NUM_17, GPIO_NUM_2, GPIO_NUM_4);
-    vga.setResolution(VGA_320x200_75Hz, 100, 144);
-    canvas.setBrushColor(Color::Black);
-    canvas.clear();
-    // canvas.setBrushColor(Color::Green);
-    // canvas.fillRectangle(0, 0, 20, 100);
     w = new JWavetable(1024);
     w->fillSineNorm(10);
   }
