@@ -140,7 +140,8 @@ public:
     }
     case 0x28:   // setVal
     case 0x29:   // setValN
-    case 0x30: { // multiple / grouped
+    case 0x30:   // multiple / grouped
+    case 0x31: { // customArg
       if (e->checkAddressed(data)) {
         e->saveMsg(data, data_len);
       }
@@ -201,8 +202,12 @@ public:
         case 0x30:
           msgBuffer[i].len = 0;
           parseMultiple((msgBuffer[i].data) + 6 + 1, msgBuffer[i].len - 6 - 1);
+          break;
+        case 0x31:
+          setCustomArg((msgBuffer[i].data) + 6 + 1, msgBuffer[i].len - 6 - 1);
+          break;
+          msgBuffer[i].len = 0;
         }
-        msgBuffer[i].len = 0;
       }
     }
   }

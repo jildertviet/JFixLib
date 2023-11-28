@@ -1,4 +1,5 @@
 #pragma once
+
 #include "FastLED.h"
 #include "FastLedContstants.h"
 #include "JFixture.h"
@@ -6,12 +7,12 @@
 #include "ofNoise.h"
 // Addressable leds
 //
+
 class JFixtureAddr : public JFixtureGraphics {
 public:
-  CRGB **leds = nullptr;
+  floatColor **leds = nullptr;
   CRGB **ledsToWrite = nullptr; // Use this array for the brightness curve. The
                                 // other is for reading back
-  float ***ledsValues = nullptr;
   float brightnessCurve[256];
   int numLedsPerString = 1;
   char numStrings = 1;
@@ -32,18 +33,19 @@ public:
     this->numLedsPerString = numLedsPerString;
     this->numStrings = numStrings;
     if (mode == J_WS2812B) {
-      leds = new CRGB *[numStrings];
+      leds = new floatColor *[numStrings];
       ledsToWrite = new CRGB *[numStrings];
       for (int i = 0; i < numStrings; i++) {
-        leds[i] = new CRGB[numLedsPerString];
+        leds[i] = new floatColor[numLedsPerString];
         ledsToWrite[i] = new CRGB[numLedsPerString];
-        addLeds(pins[i], leds[i], numLedsPerString);
+        addLeds(pins[i], ledsToWrite[i], numLedsPerString);
       }
     } else if (mode == J_WS2816B) {
-      leds = new CRGB *[numStrings];
+      leds = new floatColor *[numStrings];
       ledsToWrite = new CRGB *[numStrings];
       // ledsValues = new float**[numStrings];
       for (int i = 0; i < numStrings; i++) {
+        leds[i] = new floatColor[numLedsPerString];
         ledsToWrite[i] = new CRGB[numLedsPerString * 2];
         // ledsValues[i] = new float*[numLedsPerString];
         // for(int j=0; j<numLedsPerString; j++){
@@ -85,34 +87,27 @@ public:
   }
 
   static void writeRGB(int id, float r, float g, float b, char channel,
-                       CRGB **leds) {
+                       floatColor **leds) {
     if (!leds)
       return;
 
-    uint16_t rgb[3];
-    float rgbF[3];
-    char split[3][2] = {
-        {leds[channel][id * 2 + 1].g, leds[channel][id * 2 + 0].b},
-        {leds[channel][id * 2 + 0].r, leds[channel][id * 2 + 0].g},
-        {leds[channel][id * 2 + 1].b, leds[channel][id * 2 + 1].r},
-    };
-    for (int i = 0; i < 3; i++) {
-      memcpy(&rgb[i], split[i], 2); // Read the values currently on the LEDs
-      rgbF[i] = rgb[i] / 65535.;
-    }
+    if (r < leds[channel][id].r)
+      r = leds[channel][id].r;
+    if (g < leds[channel][id].g)
+      g = leds[channel][id].g;
+    if (b < leds[channel][id].b)
+      b = leds[channel][id].b;
 
-    if (r < rgbF[0])
-      r = rgbF[0];
-    if (g < rgbF[1])
-      g = rgbF[1];
-    if (b < rgbF[2])
-      b = rgbF[2];
     if (r < e->rgbaBackground[0])
       r = e->rgbaBackground[0];
     if (g < e->rgbaBackground[1])
       g = e->rgbaBackground[1];
     if (b < e->rgbaBackground[2])
       b = e->rgbaBackground[2];
+
+    leds[channel][id].r = r;
+    leds[channel][id].g = g;
+    leds[channel][id].b = b;
     // Check values in leds
     // Convert leds[2] to one RGB float pair
     // uint16_t rTest = 0;
@@ -123,23 +118,13 @@ public:
     // rgb[0] = pow(r, 2.0) * 65535;
     // rgb[1] = pow(g, 2.0) * 65535;
     // rgb[2] = pow(b, 2.0) * 65535;
-    rgb[0] = r * 65535;
-    rgb[1] = g * 65535;
-    rgb[2] = b * 65535;
-
-    for (int i = 0; i < 3; i++) {
-      memcpy(split[i], &rgb[i], 2);
-    }
-
-    leds[channel][(id * 2) + 0] = CRGB(split[1][0], split[1][1], split[0][1]);
-    leds[channel][(id * 2) + 1] = CRGB(split[2][1], split[0][0], split[2][0]);
     // leds[channel][(id*2)+0] = CRGB(split[1][0], split[1][1], split[0][0]); //
     // Different, because FastLED set to WS2812B instead of NEOPIXEL
     // leds[channel][(id*2)+1] = CRGB(split[0][1], split[2][0], split[2][1]);
   }
 
   void writeRGBHard(int id, float r, float g, float b, char channel,
-                    CRGB **leds) { // Doesn't check previous values
+                    floatColor **leds) { // Doesn't check previous values
     if (!leds)
       return;
 
@@ -150,16 +135,20 @@ public:
     if (b < e->rgbaBackground[2])
       b = e->rgbaBackground[2];
 
-    uint16_t rgb[3];
-    char split[3][2];
-    rgb[0] = r * 65535;
-    rgb[1] = g * 65535;
-    rgb[2] = b * 65535;
-    for (int i = 0; i < 3; i++) {
-      memcpy(split[i], &rgb[i], 2);
-    }
-    leds[channel][(id * 2) + 0] = CRGB(split[1][0], split[1][1], split[0][1]);
-    leds[channel][(id * 2) + 1] = CRGB(split[2][1], split[0][0], split[2][0]);
+    leds[channel][id].r = r;
+    leds[channel][id].g = g;
+    leds[channel][id].b = b;
+    // uint16_t rgb[3];
+    // char split[3][2];
+    // rgb[0] = r * 65535;
+    // rgb[1] = g * 65535;
+    // rgb[2] = b * 65535;
+    // for (int i = 0; i < 3; i++) {
+    //   memcpy(split[i], &rgb[i], 2);
+    // }
+    // leds[channel][(id * 2) + 0] = CRGB(split[1][0], split[1][1],
+    // split[0][1]); leds[channel][(id * 2) + 1] = CRGB(split[2][1],
+    // split[0][0], split[2][0]);
   }
 
   void testLED(){
@@ -186,12 +175,33 @@ public:
   }
 
   void writeLeds() {
-    memcpy(ledsToWrite, leds, sizeof(leds));
+    // for (int j = 0; j < numStrings; j++) {
+    // memcpy(ledsToWrite[j], leds[j], numLedsPerString * 2 * sizeof(CRGB));
+    // }
+
     for (int j = 0; j < numStrings; j++) {
       for (int i = 0; i < numLedsPerString; i++) {
-        ledsToWrite[j][i].r = pow(ledsToWrite[j][i].r, 2);
-        ledsToWrite[j][i].g = pow(ledsToWrite[j][i].g, 2);
-        ledsToWrite[j][i].b = pow(ledsToWrite[j][i].b, 2);
+        floatColor *c = &leds[j][i];
+        unsigned short rgb[3];
+        rgb[0] = pow(c->r, 2.0) * 65535;
+        // rgb[0] = c->r * 65535;
+        rgb[1] = pow(c->g, 2.0) * 65535;
+        rgb[2] = pow(c->b, 2.0) * 65535;
+
+        char split[3][2];
+        for (int i = 0; i < 3; i++) {
+          memcpy(split[i], &rgb[i], 2);
+        }
+
+        ledsToWrite[j][(i * 2) + 0] =
+            CRGB(split[1][0], split[1][1], split[0][1]);
+        ledsToWrite[j][(i * 2) + 1] =
+            CRGB(split[2][1], split[0][0], split[2][0]);
+
+        // Decode to float before pow...
+        // ledsToWrite[j][i].r = pow(ledsToWrite[j][i].r, 2);
+        // ledsToWrite[j][i].g = pow(ledsToWrite[j][i].g, 2);
+        // ledsToWrite[j][i].b = pow(ledsToWrite[j][i].b, 2);
       }
     }
     FastLED.show();

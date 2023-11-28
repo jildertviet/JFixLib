@@ -3,6 +3,9 @@
 Event::Event() {
   for (int i = 0; i < MAX_ENV; i++)
     envelopes[i] = nullptr;
+  for (int i = 0; i < NUM_CUSTOM_ARGS; i++) {
+    busses[i] = nullptr;
+  }
 }
 
 void Event::testFunc(){
@@ -91,4 +94,9 @@ void Event::setVal(char type, float value) {
     size[1] = value;
     break;
   }
+}
+
+void Event::setCustomArg(char id, float val) {
+  if (busses[id])
+    *busses[id] = val;
 }

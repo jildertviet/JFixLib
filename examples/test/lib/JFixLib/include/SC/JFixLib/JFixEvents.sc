@@ -50,6 +50,10 @@ JFixEvent{
     |type='b', values=#[0]|
     parent.send(0xFF!6 ++ [0x29] ++ parent.getAddress() ++ id.asBytes32 ++ type.ascii[0] ++ values.asBytes32F ++ "end");
   }
+  setCustomArg{
+    |argID_, val_|
+    this.send(0xFF!6 ++ [0x31] ++ parent.getAddress() ++ id.asBytes32 ++ [argID_, val_].asBytes32F ++ "end"); // Dummy 0x00's, why!?
+  }
 }
 
 JFixEvent_Perlin : JFixEvent{
@@ -104,6 +108,7 @@ JFixEvent_JOsc : JFixEvent{
   var <> phaseOffset = 0;
   var <> range = 1;
   var <> powVal = 10;
+  var <> bInvertHeight = 0;
   *new{
     |parent_ = nil|
     ^super.new.init(parent_);
@@ -118,5 +123,13 @@ JFixEvent_JOsc : JFixEvent{
     }, {
       ^[];
     });
+  }
+  invertHeight{
+    if(bInvertHeight == 0, {
+      bInvertHeight = 1;
+    }, {
+      bInvertHeight = 0;
+    });
+    this.setCustomArg(0, bInvertHeight.asFloat);
   }
 }

@@ -3,8 +3,10 @@
 
 #include "FastLED.h"
 #include "JEnv.h"
+#include "defines.h"
 
 #define MAX_ENV 6
+#define NUM_CUSTOM_ARGS 12
 
 enum boundariesMode { MODE_BOUNCE, MODE_RESET };
 
@@ -14,6 +16,7 @@ public:
   ~Event();
   void testFunc();
   bool bActive = false;
+  float bInvertHeight = false;
   unsigned long endTime = 0;
   bool checkLifeTime();
   void updateEnvelopes();
@@ -23,9 +26,9 @@ public:
   int horizontalSpacing = 0;
 
   virtual void draw(){};
-  virtual void draw(CRGB **leds, int numLedsPerString, char numStrings,
+  virtual void draw(floatColor **leds, int numLedsPerString, char numStrings,
                     int horizontalPixelDistance){};
-  void (*writeRGB)(int, float, float, float, char, CRGB **) = nullptr;
+  void (*writeRGB)(int, float, float, float, char, floatColor **) = nullptr;
 
   virtual void update() { checkLifeTime(); };
 
@@ -50,5 +53,7 @@ public:
   virtual void setVal(char type, float val);
   bool bWaitForEnv = false;
   int id = -1;
+  float *busses[NUM_CUSTOM_ARGS];
+  void setCustomArg(char id, float val);
 };
 #endif // JEVENT

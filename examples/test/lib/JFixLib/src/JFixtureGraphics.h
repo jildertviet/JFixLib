@@ -18,7 +18,7 @@ public:
   JWavetable *w;
   int lastIDAdded = -1;
 
-  void (*writeRGBPtr)(int, float, float, float, char, CRGB **) =
+  void (*writeRGBPtr)(int, float, float, float, char, floatColor **) =
       nullptr; // Will point to function of inherited class (JFixtureAddr)
 
   // void update() override{
@@ -178,6 +178,19 @@ public:
       }
     }
   }
+
+  void setCustomArg(const uint8_t *data, int data_len) override {
+    int eventID;
+    int argID;
+    float val;
+    memcpy(&id, data, sizeof(int));
+    memcpy(&argID, data + (sizeof(int) * 1), sizeof(int));
+    memcpy(&val, data + (sizeof(int) * 2), sizeof(int));
+    Event *e = getEventByID(eventID);
+    if (e) {
+      e->setCustomArg(argID, val);
+    }
+  };
 
   void setValN(const uint8_t *data, int data_len) override {
     // [id, type, value, value, value] : [423, 'b', 0.5, 0.1, 0.4] // Set
