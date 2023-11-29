@@ -1,16 +1,26 @@
 #pragma once
 
-#include "EEPROM.h"
-#include "JLag.h"
-#include "JModes.h"
-#include "JOtaServer.h"
 #include "defines.h"
+//
 #include <Arduino.h>
-#include <ArduinoOTA.h>
-#include <ESPmDNS.h>
-#include <WiFi.h>
-#include <WiFiUdp.h>
+//
 #include <esp_now.h>
+//
+#include <WiFi.h>
+//
+#include <ESPmDNS.h>
+//
+#include <WiFiUdp.h>
+//
+#include <ArduinoOTA.h>
+//
+#include "EEPROM.h"
+//
+#include "JModes.h"
+//
+#include "JOtaServer.h"
+//
+#include "JLag.h"
 // #include "JEspnowDevice.h"
 
 char jFixVersion[2] = {1, 2};

@@ -206,8 +206,8 @@ public:
         case 0x31:
           setCustomArg((msgBuffer[i].data) + 6 + 1, msgBuffer[i].len - 6 - 1);
           break;
-          msgBuffer[i].len = 0;
         }
+        msgBuffer[i].len = 0;
       }
     }
   }

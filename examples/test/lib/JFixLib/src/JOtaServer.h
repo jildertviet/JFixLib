@@ -1,7 +1,7 @@
 #pragma once
 
 #include "HttpsOTAUpdate.h"
-#include "WiFi.h"
+// #include "WiFi.h"
 #include "certificate.h" // Create one, like: static const char *server_certificate = "-----BEGIN CERTIFICATE
 #include <ArduinoJson.h>
 
