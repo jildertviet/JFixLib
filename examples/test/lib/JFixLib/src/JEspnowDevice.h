@@ -146,6 +146,13 @@ public:
         e->saveMsg(data, data_len);
       }
     } break;
+    case 0x32: {
+      if (e->checkAddressed(data)) {
+        int eventID;
+        memcpy(&eventID, data + 6 + 1, sizeof(int));
+        e->sync(eventID);
+      }
+    }
     default:
       break;
     }

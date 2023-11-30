@@ -16,5 +16,12 @@ JTLFix : JFixtureAddr{
     j = a.collect({|e, i| JTLFix.new(i, e, p)});
     ^j;
   }
+  * setViewportOffset{
+    |tlFixtures = #[]|
+    tlFixtures.do{
+      |e, i|
+      e.setViewportOffset([1.0 * i,0]);
+    }
+  }
 }
 

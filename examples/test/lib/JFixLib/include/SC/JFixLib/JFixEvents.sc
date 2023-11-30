@@ -52,7 +52,10 @@ JFixEvent{
   }
   setCustomArg{
     |argID_, val_|
-    this.send(0xFF!6 ++ [0x31] ++ parent.getAddress() ++ id.asBytes32 ++ [argID_, val_].asBytes32F ++ "end"); // Dummy 0x00's, why!?
+    parent.send(0xFF!6 ++ [0x31] ++ parent.getAddress() ++ id.asBytes32 ++ [argID_, val_].asBytes32F ++ "end"); // Dummy 0x00's, why!?
+  }
+  sync{
+    parent.send(0xFF!6 ++ [0x32] ++ parent.getAddress() ++ id.asBytes32 ++ "end"); 
   }
 }
 
@@ -78,14 +81,18 @@ JFixEvent_Perlin : JFixEvent{
   }
   getConstMsg{
     if(this.checkParent() == true, {
-      ^(0xFF!6 ++ [0x23] ++ parent.getAddress() ++ [type[\perlin]] ++ [noiseScale, noiseTimeScale, horizontalPixelDistance, horizontalPixelOffset].asBytes32F ++ loc.asBytes32F ++ size.asBytes32F ++ rgba.asBytes32F ++ "end");
+      ^(0xFF!6 ++ [0x23] ++ parent.getAddress() ++ [type[\perlin]] ++ id.asBytes32 ++ loc.asBytes32F ++ size.asBytes32F ++ rgba.asBytes32F ++ [bWaitForEnv] ++ [noiseScale, noiseTimeScale, horizontalPixelOffset].asBytes32F ++ "end");
     }, {
       ^[];
     });
   }
+  setNoiseScale{ |val| this.setCustomArg(0, val.asFloat); noiseScale = val}
+  setNoiseTimeScale{ |val| this.setCustomArg(1, val.asFloat); noiseTimeScale = val}
+  setHorizontalPixelOffset{ |val| this.setCustomArg(2, val.asFloat); horizontalPixelOffset = val}
 }
 
 JFixEvent_JRect : JFixEvent{
+  var <> bInvertHeight = 0;
   *new{
     |parent_ = nil|
     ^super.new.init(parent_);
@@ -101,6 +108,15 @@ JFixEvent_JRect : JFixEvent{
       ^[];
     });
   }
+  invertHeight{
+    if(bInvertHeight == 0, {
+      bInvertHeight = 1;
+    }, {
+      bInvertHeight = 0;
+    });
+    this.setCustomArg(0, bInvertHeight.asFloat);
+  }
+
 }
 
 JFixEvent_JOsc : JFixEvent{
@@ -108,7 +124,6 @@ JFixEvent_JOsc : JFixEvent{
   var <> phaseOffset = 0;
   var <> range = 1;
   var <> powVal = 10;
-  var <> bInvertHeight = 0;
   *new{
     |parent_ = nil|
     ^super.new.init(parent_);
@@ -123,13 +138,5 @@ JFixEvent_JOsc : JFixEvent{
     }, {
       ^[];
     });
-  }
-  invertHeight{
-    if(bInvertHeight == 0, {
-      bInvertHeight = 1;
-    }, {
-      bInvertHeight = 0;
-    });
-    this.setCustomArg(0, bInvertHeight.asFloat);
   }
 }

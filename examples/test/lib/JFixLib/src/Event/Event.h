@@ -20,6 +20,7 @@ public:
   unsigned long endTime = 0;
   bool checkLifeTime();
   void updateEnvelopes();
+  unsigned long syncTime = 0;
 
   float *viewport;
   float *viewportOffset;

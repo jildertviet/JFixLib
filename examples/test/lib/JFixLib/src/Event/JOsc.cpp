@@ -5,7 +5,7 @@ JOsc::JOsc(JWavetable *w) { this->w = w; }
 void JOsc::update() {
   // double t = (millis() - startTime) / 1000.; // To seconds
   int deltaTime =
-      millis() -
+      (millis() - syncTime) -
       lastUpdated; // Translate this to a increment, based on frequency
   // phase = t * frequency;
   phase += (deltaTime / 1000.) * frequency;
@@ -15,12 +15,12 @@ void JOsc::update() {
   }
   updateEnvelopes();
   checkLifeTime();
-  lastUpdated = millis();
+  lastUpdated = (millis() - syncTime);
 }
 
 void JOsc::start() {
   bActive = true;
-  startTime = millis();
+  startTime = millis() - syncTime;
 }
 
 void JOsc::draw(floatColor **leds, int numLedsPerString, char numStrings,

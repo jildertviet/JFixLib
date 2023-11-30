@@ -17,14 +17,15 @@ j = a.collect({|e, i| JTLFix.new(i, e, p)});
 
 c = List.new
 c.add(1)
-j.id
+j
 j.at([1,2])
 j.address
+j[0].end;
 (
 {
-j.at([1,2,3,4]).do{|e|
+j.at([0, 1,2,3,4]).do{|e|
     e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/.pio/build/esp32dev/firmware.bin");
-    50.wait;
+    35.wait;
   };
   "Done".postln;
 }.fork;

@@ -43,10 +43,23 @@ public:
     Event *e = nullptr;
     switch (data[0]) {
     case 0x01: { // Perlin
-      e = (Event *)new JEvent_Perlin();
-      // [noiseScale, noiseTimeScale, horizontalPixelDistance,
-      // horizontalPixelOffset].asBytes32F ++ pos.asBytes32F ++ size.asBytes32F
-      // ++ rgb ++ "end");
+      JEvent_Perlin *p = new JEvent_Perlin();
+      memcpy(&(p->id), data + 1, sizeof(int) * 1);
+      memcpy(&(p->loc), data + 1 + (sizeof(float) * 1), sizeof(float) * 2);
+      memcpy(&(p->size), data + 1 + (sizeof(float) * 3), sizeof(float) * 2);
+      memcpy(&(p->rgba), data + 1 + (sizeof(float) * 5), sizeof(float) * 4);
+      memcpy(&p->bWaitForEnv, data + 1 + (sizeof(float) * 9), 1);
+
+      memcpy(&(p->noiseScale), data + 1 + 1 + (sizeof(float) * 9),
+             sizeof(float));
+      memcpy(&(p->noiseTimeScale), data + 1 + 1 + (sizeof(float) * 10),
+             sizeof(float));
+      memcpy(&(p->horizontalPixelOffset), data + 1 + 1 + (sizeof(float) * 11),
+             sizeof(float));
+      Serial.println(p->noiseScale);
+      Serial.println(p->noiseTimeScale);
+      Serial.println(p->horizontalPixelOffset);
+      e = (Event *)p;
     } break;
     case 0x02: { // JRect
       Serial.println("R");
@@ -181,13 +194,18 @@ public:
 
   void setCustomArg(const uint8_t *data, int data_len) override {
     int eventID;
-    int argID;
+    float argID;
     float val;
-    memcpy(&id, data, sizeof(int));
-    memcpy(&argID, data + (sizeof(int) * 1), sizeof(int));
-    memcpy(&val, data + (sizeof(int) * 2), sizeof(int));
+    memcpy(&eventID, data, sizeof(int));
+    memcpy(&argID, data + (sizeof(int) * 1), sizeof(float));
+    memcpy(&val, data + (sizeof(int) * 2), sizeof(float));
+    // Serial.println("setCustomArg");
+    // Serial.println(eventID);
+    // Serial.println(argID);
+    // Serial.println(val);
     Event *e = getEventByID(eventID);
     if (e) {
+      // Serial.println("x");
       e->setCustomArg(argID, val);
     }
   };
@@ -231,5 +249,10 @@ public:
         events[i] = nullptr;
       }
     }
+  }
+  void sync(int eventID) {
+    Event *eTemp = getEventByID(eventID);
+    if (eTemp)
+      eTemp->syncTime = millis();
   }
 };

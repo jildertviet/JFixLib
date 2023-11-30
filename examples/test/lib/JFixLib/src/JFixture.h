@@ -60,6 +60,7 @@ public:
   virtual void setVal(const uint8_t *data, int data_len){};
   virtual void setValN(const uint8_t *data, int data_len){};
   virtual void setCustomArg(const uint8_t *data, int data_len){};
+  virtual void sync(int eventID){};
   virtual void deleteEvents(){};
   float rgbaBackground[4] = {0.0};
   // bool bDraw = false;

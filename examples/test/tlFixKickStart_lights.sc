@@ -5,6 +5,7 @@
 ~klankBus = Bus.alloc(\audio, s, 2);
 ~kickG = Group.new();
 ~bassG = Group.new(~kickG, \addAfter);
+TempoClock.default.tempo = 100/120;
 Pdefn(\rhythm, Pseq([16, 16/7, 4, 4].reciprocal, inf) * 2).quant_(4);
 (
 Pdef(\kickStart2,

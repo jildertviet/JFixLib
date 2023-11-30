@@ -21,6 +21,11 @@ void JRect::draw(floatColor **leds, int numLedsPerString, char numStrings,
   float yEnd = y + h;
   if (yEnd < 0)
     yEnd = 0;
+  if (bInvertHeight) {
+    float yCopy = y;
+    y = yEnd;
+    yEnd = yCopy;
+  }
 
   int xReadPositions[2] = {0, horizontalPixelSpacing}; // [0, 10]
   for (int j = 0; j < numStrings; j++) {
