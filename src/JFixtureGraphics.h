@@ -1,9 +1,9 @@
 #pragma once
-#include "Event.h"
+#include "Event/Event.h"
+#include "Event/JEvent_Perlin.h"
+#include "Event/JOsc.h"
+#include "Event/JRect.h"
 #include "JEspnowDevice.h"
-#include "JEvent_Perlin.h"
-#include "JOsc.h"
-#include "JRect.h"
 
 #define MAX_EVENTS 128
 
