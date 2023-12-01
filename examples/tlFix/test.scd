@@ -23,7 +23,7 @@ j.address
 j[0].end;
 (
 {
-j.at([0, 1,2,3,4]).do{|e|
+j.at([0]).do{|e|
     e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/.pio/build/esp32dev/firmware.bin");
     35.wait;
   };

@@ -20,6 +20,7 @@ public:
   uint8_t replyAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   uint8_t myAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   unsigned long lastReceived = 0;
+  String networkName = "JV_";
 
   virtual void setup(String networkName) override {
     JFixture::setup(networkName);
@@ -59,7 +60,7 @@ public:
   static void receive(const uint8_t *mac_addr, const uint8_t *data,
                       int data_len) {
     char msgType = data[0];
-    if (msgType != 'a') {
+    if (msgType != 'a') { // Ignore 'alive'-packets from other ESP32's
       e->lastReceived = millis();
     }
 
@@ -220,6 +221,7 @@ public:
   }
 
   void initEspnow(String networkName) {
+    this->networkName = networkName;
     WiFi.softAP(networkName.c_str(), randomPw().c_str(), CHANNEL,
                 true); // This sets the channel... ?
     Serial.print("AP MAC address: ");
@@ -240,5 +242,83 @@ public:
     }
     e = this;
     esp_now_register_recv_cb(receive);
+  }
+
+  void addPeer(uint8_t *addr) {
+    esp_now_peer_info_t slave;
+
+    slave.channel = CHANNEL;
+    slave.encrypt = 0;
+    memcpy(slave.peer_addr, addr, 6);
+    if (slave.channel == CHANNEL) {
+      Serial.print("Slave Status: ");
+      const esp_now_peer_info_t *peer = &slave;
+      const uint8_t *peer_addr = slave.peer_addr;
+      bool exists = esp_now_is_peer_exist(peer_addr);
+      if (exists) {
+        Serial.println("Already Paired");
+      } else {
+        // Slave not paired, attempt pair
+        esp_err_t addStatus = esp_now_add_peer(peer);
+        if (addStatus == ESP_OK) {
+          // Pair success
+          Serial.println("Pair success");
+        } else if (addStatus == ESP_ERR_ESPNOW_NOT_INIT) {
+          Serial.println("ESPNOW Not Init");
+        } else if (addStatus == ESP_ERR_ESPNOW_ARG) {
+          Serial.println("Invalid Argument");
+        } else if (addStatus == ESP_ERR_ESPNOW_FULL) {
+          Serial.println("Peer list full");
+        } else if (addStatus == ESP_ERR_ESPNOW_NO_MEM) {
+          Serial.println("Out of memory");
+        } else if (addStatus == ESP_ERR_ESPNOW_EXIST) {
+          Serial.println("Peer Exists");
+        } else {
+          Serial.println("Not sure what happened");
+        }
+      }
+    } else {
+      // No slave found to process
+      Serial.println("No Slave found to process");
+    }
+  }
+
+  void sendPing(bool bOverride = false) override {
+    if (otaMode != IDLE)
+      return;
+
+    // Only send when no msg is received for x seconds
+    if (millis() > lastReceived + 60000 && millis() > 10000 || bOverride) {
+      WiFi.mode(WIFI_OFF);
+      WiFi.mode(WIFI_STA);
+      // Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
+
+      initEspnow(networkName);
+      uint8_t broadcastAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+      memcpy(replyAddr, &broadcastAddr, 6);
+      addPeer(replyAddr);
+
+      uint8_t msg[7] = {'a', 'l', 'i', 'v', 'e', 0, 0};
+#ifdef JONISK_BATTERY_CHECK
+      int v = measureBattery();
+#else
+      int v = 1;
+#endif
+      memcpy(msg + 1, &v, 4); // Prefix is 'a'
+      memcpy(
+          msg + 1 + 4, &version,
+          2); // Msg looks like: 'a', batteryVal (4 bytes), version (2 bytes);
+
+      // esp_err_t result =
+      esp_now_send(replyAddr, msg, 7);
+      //    if (result == ESP_OK) {
+      //      blinkLed(1, 100, 1);
+      //    } else {
+      //      blinkLed(0, 50, 2);
+      //    }
+      WiFi.mode(WIFI_OFF);
+      initEspnow(networkName);
+      lastReceived = millis();
+    }
   }
 };

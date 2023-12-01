@@ -83,8 +83,9 @@ public:
     handleOtaServer();
     checkOneShots();
     aliveBlink();
+    sendPing();
   }
-
+  virtual void sendPing(bool b = false){};
   virtual void blink(char num = 1, short dur = 100, short delayTime = 100,
                      char channel = 0){};
 

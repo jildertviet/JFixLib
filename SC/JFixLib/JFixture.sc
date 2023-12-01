@@ -23,6 +23,9 @@ JFixture : JModes{
       ^this.address;
     });
   }
+  getAddressHexString{
+    ^(this.address.collect({|e| e.asHexString.at([6,7])}).collect({|e| "0x" ++ e[0] ++ e[1]}).asString.replace("[", "").replace("]", ""));
+  }
   send{
 		|msg|
     msg.postln;
