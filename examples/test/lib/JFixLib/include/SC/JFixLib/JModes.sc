@@ -1,5 +1,0 @@
-JModes{
-  *new{
-    ^super.new();
-  }
-}
