@@ -8,6 +8,7 @@ t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/of_v0.11.2_linux64gcc6_release/apps/TIYCS/jonisk.config", 0);
 t.gui;
 t.startReadingSerial;
+t.children[0].gui
 (
 {
 j.at([0]).do{|e|
@@ -17,26 +18,3 @@ j.at([0]).do{|e|
   "Done".postln;
 }.fork;
 )
-0xf9
-t.children[17].address
-t.children
-t.children[17].setRGBW([1.0, 0, 0, 1.0]);
-j[0].setRGBW([1.0, 0, 0, 1.0]);
-j[0].deepSleep(1);
-j[0].setBrightness(0.0);
-t.children[17].setBrightness(0.0);
-j[0].setLag("b", 100.0);
-
-(
-x.stop;
-x = {
-  inf.do{
-    |i|
-    [j].do{|e| e.setBackground([0.1, 0.5, 0.25].wrapAt(i)!4);};
-    0.2.wait;
-  }
-}.fork;
-)
-j.do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.001);};
-j.bBroadcast = false
-j.bBroadcast = true

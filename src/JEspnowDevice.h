@@ -154,6 +154,13 @@ public:
         e->sync(eventID);
       }
     }
+    case 0x33: { // Set RGBW 2-bit short
+      short[4] values;
+      memcpy(values, data + 1 + (id * (4 * sizeof(short)), 4 * sizeof(short));
+      for(int i=0; i<4; i++){
+        channels[i] = values[i] / 65536.;
+      }
+    } break;
     default:
       break;
     }
@@ -291,7 +298,6 @@ public:
     if (millis() > lastReceived + 60000 && millis() > 10000 || bOverride) {
       WiFi.mode(WIFI_OFF);
       WiFi.mode(WIFI_STA);
-      // Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
 
       initEspnow(networkName);
       uint8_t broadcastAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -299,23 +305,14 @@ public:
       addPeer(replyAddr);
 
       uint8_t msg[7] = {'a', 'l', 'i', 'v', 'e', 0, 0};
-#ifdef JONISK_BATTERY_CHECK
-      int v = measureBattery();
-#else
-      int v = 1;
-#endif
-      memcpy(msg + 1, &v, 4); // Prefix is 'a'
+      // The function below will add delay() !
+      int v = measureBattery(); // This will return 0 if no batteryPin is set
+      memcpy(msg + 1, &v, 4);   // Prefix is 'a'
       memcpy(
           msg + 1 + 4, &version,
           2); // Msg looks like: 'a', batteryVal (4 bytes), version (2 bytes);
 
-      // esp_err_t result =
       esp_now_send(replyAddr, msg, 7);
-      //    if (result == ESP_OK) {
-      //      blinkLed(1, 100, 1);
-      //    } else {
-      //      blinkLed(0, 50, 2);
-      //    }
       WiFi.mode(WIFI_OFF);
       initEspnow(networkName);
       lastReceived = millis();

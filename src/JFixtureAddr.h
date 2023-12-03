@@ -16,9 +16,6 @@ public:
   float brightnessCurve[256];
   int numLedsPerString = 1;
   char numStrings = 1;
-
-  float noiseScale = 0.01;
-  float noiseTimeScale = 0.0005;
   int horizontalPixelDistance = 10; // Beams are 10 pixels from eachother
 
   JFixtureAddr(){};
@@ -221,20 +218,18 @@ public:
       writeLeds();
     } break;
     case TEST_PERLIN: {
-      // noiseScale = 0.00001;
-      // noiseTimeScale = 0.000001;
-      for (float j = 0; j < numStrings; j++) {
-        for (float i = 0; i < numLedsPerString; i++) {
-          float val = ofNoise(i * noiseScale,
-                              (j * horizontalPixelDistance) * noiseScale,
-                              millis() * noiseTimeScale);
-          val = pow(val, 2.0);
-          if (val < 0.005)
-            val = 0.005;
-          writeRGB(i, 0.0, 0.0, val, j, leds);
-        }
-      }
-      writeLeds();
+      // for (float j = 0; j < numStrings; j++) {
+      //   for (float i = 0; i < numLedsPerString; i++) {
+      //     float val = ofNoise(i * noiseScale,
+      //                         (j * horizontalPixelDistance) * noiseScale,
+      //                         millis() * noiseTimeScale);
+      //     val = pow(val, 2.0);
+      //     if (val < 0.005)
+      //       val = 0.005;
+      //     writeRGB(i, 0.0, 0.0, val, j, leds);
+      //   }
+      // }
+      // writeLeds();
     } break;
     case LIVE: {
       // JFixtureGraphics::update(); // Update Events, currently happening below

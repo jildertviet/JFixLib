@@ -1,4 +1,19 @@
-JFixture : JModes{
+JFixtureSynthController : JModes{
+  var <> color; // use Color instead of array (as in ESP32)
+  var <> brightness = 1.0; // Amp of synth
+  var <> brightnessAdd = 0.0; // DC added to output
+  var <> lagTime = 0; // Lag time in synth, not to be confused with lagTime in ESP32
+  var <> bus = 0;
+  var <> asr;
+  var <> mode = "static"; // [static, st_rgbw, st_brightness]
+  var <> synth = nil;
+  setAttack{|v| asr[0] = v; synth.set(\a, v);}
+  setSustain{|v| asr[1] = v; synth.set(\s, v);}
+  setRelease{|v| asr[2] = v; synth.set(\r, v);}
+  trigger{ synth.set(\gate, 1.0.rand);}
+}
+
+JFixture : JFixtureSynthController{
 	var <>address = #[0xFF,0xFF,0xFF,0xFF,0xFF,0xFF];
   var <>id;
   var <>serial;
@@ -15,6 +30,8 @@ JFixture : JModes{
     this.address = addr;
     this.serial = serial;
     msgList = List.new;
+    color = Color.white;
+    asr = [0.1, 1.0, 1.0];
   }
   getAddress{
     if(bBroadcast == true, {
@@ -27,11 +44,11 @@ JFixture : JModes{
     ^(this.address.collect({|e| e.asHexString.at([6,7])}).collect({|e| "0x" ++ e[0] ++ e[1]}).asString.replace("[", "").replace("]", ""));
   }
   send{
-		|msg|
-    msg.postln;
+		|msg, bMute = false|
+    if(bMute == false, {msg.postln});
 		if(serial != nil, {
       if(bCollectMsgs, {
-        "Save msg".postln;
+        // "Save msg".postln;
         msgList.add(msg);
       }, {
         {serial.putAll(msg);}.defer(Server.default.latency);
@@ -69,14 +86,22 @@ JFixture : JModes{
   setRGBW{
     |rgbw|
     if(rgbw.isArray, {
-      var msg = 0xFF!6 ++ [0x20] ++ this.getAddress() ++ rgbw.asBytes32F() ++ "end";
-      this.send(msg);
-    });
+      if(mode == "static" || mode == "st_brightness", {
+        var msg = 0xFF!6 ++ [0x20] ++ this.getAddress() ++ rgbw.asBytes32F() ++ "end";
+        this.send(msg);
+      });
+      color = Color.fromArray(rgbw);
+      synth.set(\rgbw, rgbw); 
+   });
   }
   setBrightness{
     |b|
-    var msg = 0xFF!6 ++ [0x21] ++ this.getAddress() ++ b.asFloat.asBytes32 ++ "end";
-    this.send(msg);
+    if(mode == "static", {
+      var msg = 0xFF!6 ++ [0x21] ++ this.getAddress() ++ b.asFloat.asBytes32 ++ "end";
+      this.send(msg);
+    });
+    brightness = b;
+    synth.set(\amp, b);
   }
   setLag{
     |dst="b", val=0|

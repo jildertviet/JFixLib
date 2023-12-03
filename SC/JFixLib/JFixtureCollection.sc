@@ -9,6 +9,11 @@ JFixtureCollection {
 	var <> message = "";
 	var <>bWriteMsg = false;
   var <> serialReadRoutine;
+  var <> updateRoutine;
+  var <> frameDur = 0.01;
+  var <> mode = "static";
+  var modes = #["static", "st_rgbw", "st_brightness"];
+  var <> modeIndex = 0; // ["static", "st_rgbw", "st_brightness"];
   *new{
     |serial=nil|
     ^super.new.init(serial);
@@ -182,6 +187,52 @@ JFixtureCollection {
 		}.fork;
 	}
 
+  updateRGBW{
+    // Read synths, send to all
+    this.sendRGBWn();
+    "URGBW".postln;
+  }
+  updateBrightness{
+    // Read synths, send to all
+    "UBR".postln;
+  }
+  start{
+		if(serial != nil, {
+			if(serial.isOpen, {
+				updateRoutine.stop;
+        if(mode != "static", {
+          updateRoutine = {
+            inf.do{
+              switch(mode, 
+              "st_rgbw", {this.updateRGBW},
+              "st_brightness", {this.updateBrightness}
+              );
+              frameDur.wait;
+            }
+          }.fork;
+        });
+				children.do{|e| e.mode = mode};
+				^true;
+			}, {
+				"Serial port not open".error;
+				^false;
+			});
+		}, {
+			"No serial port initiated".error;
+			^false;
+		});
+	}
+	stop{
+		children.do{|e| e.mode = "static"};
+		updateRoutine.stop;
+	}
+
+  sendRGBWn{
+    var arrayToSend = children.collect({|e| e.color.asArray}).reshape(children.size*4);
+    arrayToSend.collect({|e| Int16(e * 65536).asBytes}).reshape(children.size*4*2);
+    children[0].send(0xFF!6 ++ 0x33 ++ arrayToSend ++ "end", bMute: false);
+  }
+
   gui{
     |windowName="JFixtures"|
 		var canvasLocal = View(); // .background_(Color.black);
@@ -193,44 +244,29 @@ JFixtureCollection {
 		window.view.hasBorder_(false);
 		window = ScrollView(window, bounds:  bounds.insetBy(2,0)).hasBorder_(false);
 		window.palette_(QPalette.dark);
-		liveButton = Button().string_("Idle").action_({
-			|e|
-			e.states_([["GO LIVE", Color.white, Color.new255(49,222,75)], ["STOP", Color.white, Color.new255(255,65,54)]]).action_({
-				|e|
-			// 	if(e.value == 1, {
-			// 		"Start live mode".postln;
-			// 		if(this.start() == true, {
-			//
-			// 		}, {
-			// 			e.value_(0);
-			// 		});
-			// 	}, {
-			// 		"Stop live mode".postln;
-			// 		this.stop();
-			// 	})
-			});
-			e.valueAction_(1);
-		});
-
 		canvasLocal.palette_(QPalette.dark);
     lastSeenData = Array.fill(children.size, {
 			[View().background_(Color.gray), 0]
 		});
-		globalButton = Button().string_("Global").action_({/*this.openGlobalGui*/});
 		window.layout = VLayout(
 			HLayout(
-				[liveButton],
-				// [NumberBox().value_(frameDur).action_({|e| frameDur = e.value}).normalColor_(Color.white)],
+        [PopUpMenu().items_(["Static", "RGBW","Brightness"]).stringColor_(Color.white).action_({
+					|menu|
+          this.stop;
+          modeIndex = menu.value;
+          mode = modes[modeIndex];
+          this.start;
+				}).value_(modeIndex)],
 				[PopUpMenu().items_([10, 25, 30, 60]).stringColor_(Color.white).action_({
 					|menu|
-					// menu.item.postln;
-					// frameDur = (1/menu.item);
+					frameDur = (menu.item.reciprocal);
 					// lagTime = frameDur;
-					// frameRate = menu.item;
-          "Not implemented".error;
+          "Should update lagTime".error;
+					frameRate = menu.item;
+          frameDur.postln;
 				}).value_(frameRateIndex)],
-				globalButton,
-				Button().string_("Config").action_({/*this.configLights*/}),
+        Button().string_("Global").action_({/*this.openGlobalGui*/ "to do: global gui".error}),
+				Button().string_("Config").action_({/*this.configLights*/ "To do: testpatter".error}),
 				Button().string_("Test pattern").action_({
 					// this.toggleTestPatttern();
 					// Document.open(testPatternPath).front;
