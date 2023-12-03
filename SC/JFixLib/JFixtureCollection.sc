@@ -14,6 +14,7 @@ JFixtureCollection {
   var <> mode = "static";
   var modes = #["static", "st_rgbw", "st_brightness"];
   var <> modeIndex = 0; // ["static", "st_rgbw", "st_brightness"];
+  var <> guiDict;
   *new{
     |serial=nil|
     ^super.new.init(serial);
@@ -26,6 +27,7 @@ JFixtureCollection {
       this.serial = serial;
     });
     children = List.new;
+    this.initGuiDict();
     this.startReadingSerial();
   }
   *openDefaultSerial{
@@ -228,9 +230,22 @@ JFixtureCollection {
 	}
 
   sendRGBWn{
-    var arrayToSend = children.collect({|e| e.color.asArray}).reshape(children.size*4);
-    arrayToSend.collect({|e| Int16(e * 65536).asBytes}).reshape(children.size*4*2);
-    children[0].send(0xFF!6 ++ 0x33 ++ arrayToSend ++ "end", bMute: false);
+    children[0].bus.getn(children.size * 4, {
+			|v|
+			var msg = (0xFF!6) ++ [0x33] ++ v.collect({|e| Int16(e * 65536).asBytes}).reshape(v.size * 2) ++ "end";
+      children[0].send(msg);
+		});
+  }
+
+  sendBrightnessN{ // Send brightness as float
+    children[0].bus.getn(children.size * 4, {
+			|v|
+			var msg;
+      var arrayToWrite = 0!(v.size/4);
+      (v.size/4).do{|i| arrayToWrite[i].asBytes32F = v[i*4]}; // Channel 0. Set mode to 1 in synths 
+      msg = (0xFF!6) ++ [0x34] ++ arrayToWrite ++ "end";
+      children[0].send(msg);
+		});
   }
 
   gui{
@@ -255,6 +270,12 @@ JFixtureCollection {
           this.stop;
           modeIndex = menu.value;
           mode = modes[modeIndex];
+          if(mode == "st_rgbw"){
+            children.do{|e| e.synth.set(\mode, 0);}
+          }
+          if(mode == "st_brightness", {
+            children.do{|e| e.synth.set(\mode, 1);}
+          })
           this.start;
 				}).value_(modeIndex)],
 				[PopUpMenu().items_([10, 25, 30, 60]).stringColor_(Color.white).action_({
@@ -265,7 +286,7 @@ JFixtureCollection {
 					frameRate = menu.item;
           frameDur.postln;
 				}).value_(frameRateIndex)],
-        Button().string_("Global").action_({/*this.openGlobalGui*/ "to do: global gui".error}),
+        globalButton = Button().string_("Global").action_({this.openGlobalGui()}),
 				Button().string_("Config").action_({/*this.configLights*/ "To do: testpatter".error}),
 				Button().string_("Test pattern").action_({
 					// this.toggleTestPatttern();
@@ -299,5 +320,95 @@ JFixtureCollection {
 		canvasLocal.layout = layout;
 		window.canvas = canvasLocal;
 		globalButton.valueAction_(1);
+	}
+  openGlobalGui{
+		var bounds;
+		var globalJoniskWindow;
+		var windowAndSliders = JFixture.getGuiWindow(nil, guiDict);
+		// slidersDict = windowAndSliders[1];
+		globalJoniskWindow = windowAndSliders[0];
+		bounds = globalJoniskWindow.bounds;
+		globalJoniskWindow.bounds_(bounds + Rect(window.bounds.width, 0, 0, 0));
+		// globalGuiSliders
+	}
+
+  initGuiDict{
+		guiDict = Dictionary.newFrom([
+			\test, {"Inactive".postln},
+			\ota, {},
+			\battery, {},
+			\testEnv, {children.do{|j| j.trigger()}},
+			\deepsleep, {
+				var w = Window("Deep sleep duration: all", Rect(window.bounds.left, 500, window.bounds.width, 100));
+				var b = NumberBox(w, Rect(150, 10, 100, 20));
+				b.value = 1;
+				b.action = {
+					arg numb;
+					var min = numb.value;
+					w.close;
+					{
+						("Put all Jonisks to sleep for " ++ min.asString ++ " minutes").postln;
+						children.do{|e|
+							e.deepSleep(min);
+							0.25.wait;
+						};
+					}.fork;
+				};
+				w.front;
+			},
+			\setColor, {
+				|e, i|
+				children.do{
+					|object|
+          var newColor = object.color.asArray.put(i, e.value);
+					object.setRGBW(newColor.postln);
+					object.synth.set(\rgbw, newColor);
+				}
+			},
+			\getColor, {
+				|i|
+				Color.black.alpha_(0)[i];
+			},
+			\getEnv, {
+				|i|
+				1
+			},
+			\setEnv, {
+				|e, i|
+				children.do{
+					|object|
+					switch(i,
+						0, {object.setAttack(e.value)},
+						1, {object.setSustain(e.value)},
+						2, {object.setRelease(e.value)}
+					);
+				}
+			},
+			\getBrightness, {
+				1
+			},
+			\setBrightness, {
+				|e|
+				children.do{ |object|
+					object.setBrightness(e.value);
+				}
+			},
+			\getBrightnessAdd, {
+				1
+			},
+			\setBrightnessAdd, {
+				|e|
+				children.do{ |object|
+          object.brightnessAdd = e.value;
+          object.synth.set(\brightnessAdd, e.value);
+				}
+			},
+			\getAddress, {
+				"All";
+			},
+			\getBus, {
+				children[0].bus;
+			}
+		]);
 	}
 }

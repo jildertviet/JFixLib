@@ -30,12 +30,9 @@
 				},
 				\setColor, {
 					|e, i|
-					var color = object.color;
-					var newColor = [color.red, color.green, color.blue, color.alpha];
-					newColor[i] = e.value;
-					object.color = color = Color(newColor[0], newColor[1], newColor[2], newColor[3]);
-					object.setRGBW(color.asArray);
-					object.synth.set(\rgbw, color.asArray);
+					var newColor = object.color.asArray.put(i, e.value);
+					object.setRGBW(newColor.postln);
+					object.synth.set(\rgbw, newColor);
 				},
 				\getColor, {
 					|i|

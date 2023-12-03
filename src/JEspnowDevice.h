@@ -155,11 +155,17 @@ public:
       }
     }
     case 0x33: { // Set RGBW 2-bit short
-      short[4] values;
-      memcpy(values, data + 1 + (id * (4 * sizeof(short)), 4 * sizeof(short));
-      for(int i=0; i<4; i++){
-        channels[i] = values[i] / 65536.;
+      short values[4];
+      memcpy(&values, data + 1 + (e->id * (4 * sizeof(short))),
+             4 * sizeof(short));
+      for (int i = 0; i < 4; i++) {
+        e->channels[i] = values[i] / 65536.;
       }
+    } break;
+    case 0x34: { // Set brightness 4-bit float
+      float b;
+      memcpy(&b, data + 1 + (e->id * sizeof(float)), sizeof(float));
+      e->setBrightness(b);
     } break;
     default:
       break;
