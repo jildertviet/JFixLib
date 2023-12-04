@@ -15,6 +15,7 @@ JFixtureCollection {
   var modes = #["static", "st_rgbw", "st_brightness"];
   var <> modeIndex = 0; // ["static", "st_rgbw", "st_brightness"];
   var <> guiDict;
+  var globalSettingsWindow;
   *new{
     |serial=nil|
     ^super.new.init(serial);
@@ -35,8 +36,9 @@ JFixtureCollection {
     ^p;
   }
   readConfigFile{
-		|path, type="JJonisk[0], JTlFixture[1]"|
+		|path, type="0: JJonisk, 1: JTlFixture"|
 		var file = JSONFileReader.read(path);
+    children.clear();
 		file[0]["activeJonisks"].do{
 			|j, i|
 			var addr = j[0];
@@ -151,7 +153,7 @@ JFixtureCollection {
 							}, {
 								if(byte < 127, {
 									if(byte == 10, { // Newline?
-										"".postln;
+										// "".postln;
 									}, {
 										// byte.asAscii.post; // Monitor incoming bytes
 									});
@@ -192,11 +194,12 @@ JFixtureCollection {
   updateRGBW{
     // Read synths, send to all
     this.sendRGBWn();
-    "URGBW".postln;
+    // "URGBW".postln;
   }
   updateBrightness{
     // Read synths, send to all
-    "UBR".postln;
+    this.sendBrightnessN();
+    // "UBR".postln;
   }
   start{
 		if(serial != nil, {
@@ -233,7 +236,7 @@ JFixtureCollection {
     children[0].bus.getn(children.size * 4, {
 			|v|
 			var msg = (0xFF!6) ++ [0x33] ++ v.collect({|e| Int16(e * 65536).asBytes}).reshape(v.size * 2) ++ "end";
-      children[0].send(msg);
+      children[0].send(msg, true);
 		});
   }
 
@@ -242,9 +245,9 @@ JFixtureCollection {
 			|v|
 			var msg;
       var arrayToWrite = 0!(v.size/4);
-      (v.size/4).do{|i| arrayToWrite[i].asBytes32F = v[i*4]}; // Channel 0. Set mode to 1 in synths 
-      msg = (0xFF!6) ++ [0x34] ++ arrayToWrite ++ "end";
-      children[0].send(msg);
+      (v.size/4).do{|i| arrayToWrite[i] = v[i*4]}; // Channel 0. Set mode to 1 in synths 
+      msg = (0xFF!6) ++ [0x34] ++ arrayToWrite.asBytes32F ++ "end";
+      children[0].send(msg, true);
 		});
   }
 
@@ -257,7 +260,7 @@ JFixtureCollection {
     var liveButton;
 		window = Window(windowName, bounds, scroll: true).front;
 		window.view.hasBorder_(false);
-		window = ScrollView(window, bounds:  bounds.insetBy(2,0)).hasBorder_(false);
+		window = ScrollView(window, bounds:  bounds.insetBy(0,0)).hasBorder_(false); // Why the inset?
 		window.palette_(QPalette.dark);
 		canvasLocal.palette_(QPalette.dark);
     lastSeenData = Array.fill(children.size, {
@@ -270,12 +273,12 @@ JFixtureCollection {
           this.stop;
           modeIndex = menu.value;
           mode = modes[modeIndex];
-          if(mode == "st_rgbw"){
+          if(mode == "st_rgbw", {
             children.do{|e| e.synth.set(\mode, 0);}
-          }
+          });
           if(mode == "st_brightness", {
             children.do{|e| e.synth.set(\mode, 1);}
-          })
+          });
           this.start;
 				}).value_(modeIndex)],
 				[PopUpMenu().items_([10, 25, 30, 60]).stringColor_(Color.white).action_({
@@ -321,15 +324,15 @@ JFixtureCollection {
 		window.canvas = canvasLocal;
 		globalButton.valueAction_(1);
 	}
-  openGlobalGui{
+  openGlobalGui{ // JFixture GUI, but controlling all children of JFixtureCollection
 		var bounds;
-		var globalJoniskWindow;
 		var windowAndSliders = JFixture.getGuiWindow(nil, guiDict);
-		// slidersDict = windowAndSliders[1];
-		globalJoniskWindow = windowAndSliders[0];
-		bounds = globalJoniskWindow.bounds;
-		globalJoniskWindow.bounds_(bounds + Rect(window.bounds.width, 0, 0, 0));
-		// globalGuiSliders
+    if(globalSettingsWindow != nil, {
+      globalSettingsWindow.close();
+    });
+		globalSettingsWindow = windowAndSliders[0];
+  	bounds = globalSettingsWindow.bounds;
+		globalSettingsWindow.bounds_(bounds + Rect(window.bounds.width, 0, 0, 0));
 	}
 
   initGuiDict{
@@ -361,13 +364,13 @@ JFixtureCollection {
 				children.do{
 					|object|
           var newColor = object.color.asArray.put(i, e.value);
-					object.setRGBW(newColor.postln);
+					object.setRGBW(newColor);
 					object.synth.set(\rgbw, newColor);
 				}
 			},
 			\getColor, {
 				|i|
-				Color.black.alpha_(0)[i];
+				Color.black.alpha_(0).asArray[i];
 			},
 			\getEnv, {
 				|i|

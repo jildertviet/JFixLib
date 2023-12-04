@@ -6,10 +6,15 @@
 		var id = if(object != nil, {object.id}, {"X"});
 		var colorSliders;
 		var windowName = if(id != nil, {"JFixture " ++ id.asString}, {"JFixture x"});
-		var dict = Dictionary();
+		var dict = Dictionary(); // Holds GUI items
     var scope;
     var margin = 5;
-		window = Window(windowName).front.setInnerExtent(360, 500);
+    var newLine = {
+      window.view.decorator.nextLine;
+      window.view.decorator.left = margin;
+    };
+    if(object != nil, {object.guiDict = dict});
+		window = Window(windowName).front.setInnerExtent(360, 410);
 		window.bounds_(window.bounds.moveTo(0,0));
 		window.view.palette_(QPalette.dark);
 		window.view.decorator_(FlowLayout(window.view.bounds));
@@ -17,7 +22,6 @@
 		if(functions==nil, {
 			functions = Dictionary.newFrom([
 				\test, {object.testLed()},
-				// \ota, {object.ota()},
 				\otaServer, {object.setOTAServer()},
 				// \battery, {object.requestBattery()},
 				\testEnv, {object.trigger()},
@@ -54,10 +58,15 @@
             );
           });
 				},
-				\getBrightness, {
+		  	\getBrightness, {
 					object.brightness;
 				},
-				\setBrightness, {
+				\setSynthBrightness, {
+					|e|
+          "SXDADSAsd".postln;
+					object.synth.set(\amp, e.value);
+				},
+  			\setBrightness, {
 					|e|
 					object.setBrightness(e.value);
 				},
@@ -86,20 +95,18 @@
 			// ["OtaS",functions[\otaServer]],
 		].do{
 			|e|
-			Button.new(window, 50@40).string_(e[0]).action_(e[1]);
+			Button.new(window, 60@40).string_(e[0]).action_(e[1]);
 		};
-    window.view.decorator.nextLine;
-    window.view.decorator.left = margin;
-		dict[\rgbw] = colorSliders = Array.fill(4, {
+    newLine.();
+    dict[\rgbw] = colorSliders = Array.fill(4, {
 			|i|
-			var slider = EZSlider.new(window, label:["Red","Green","Blue","White"].at(i), controlSpec: ControlSpec(0.0, 1.0, 'lin', step: 1e-8)).value_(functions[\getColor].value(i)).action_({
+			var slider = EZSlider.new(window, label:["Red","Green","Blue","White"].at(i), controlSpec: ControlSpec(0.0, 1.0, 'lin', step: 1e-3)).value_(functions[\getColor].value(i)).action_({
 				|e|
 				functions[\setColor].value(e, i);
 			};
 			);
-      window.view.decorator.nextLine;
-      window.view.decorator.left = margin;
-			slider.setColors(numNormalColor: Color.white).labelView.align_(\left);
+      newLine.();
+      slider;
 		});
 		dict[\asr] = Array.fill(3, {
 			|i|
@@ -107,28 +114,34 @@
 				|e|
 				functions[\setEnv].value(e, i);
 			});
-      window.view.decorator.nextLine;
-      window.view.decorator.left = margin;
-			slider.setColors(numNormalColor: Color.white).labelView.align_(\left);
+      newLine.();
+      slider;
 		});
-		dict[\brightness] = EZSlider.new(window,
-			label:"Brightness",
-			controlSpec: ControlSpec(0, 1, 'lin', 1e-8),
-			labelWidth: 80).value_(functions[\getBrightness].value()).action_({
-			|e|
-			functions[\setBrightness].value(e);
-		}).setColors(numNormalColor: Color.white).labelView.align_(\left);
-    window.view.decorator.nextLine;
-    window.view.decorator.left = margin;
+		dict[\synthBrightness] = EZSlider.new(window,
+      label:"synthBrightness",
+			controlSpec: ControlSpec(0, 1, 'lin', 1e-3),
+			labelWidth: 80).action_(functions[\setSynthBrightness]);
+    newLine.();
 		dict[\brightnessAdd] = EZSlider.new(window,
-			label:"bAdd",
-			controlSpec: ControlSpec(0, 1, 'lin', 1e-8),
-			labelWidth: 80).value_(functions[\getBrightnessAdd].value()).action_({
-			|e|
-			functions[\setBrightnessAdd].value(e);
-		}).setColors(numNormalColor: Color.white).labelView.align_(\left);
-    window.view.decorator.nextLine;
-    window.view.decorator.left = margin;
+			label:"synth bAdd",
+			controlSpec: ControlSpec(0, 1, 'lin', 1e-3),
+			labelWidth: 80).value_(functions[\getBrightnessAdd].value()).action_(functions[\setBrightnessAdd]);
+    newLine.();
+    dict[\brightness] = EZSlider.new(window,
+			label:"Brightness",
+			controlSpec: ControlSpec(0, 1, 'lin', 1e-3),
+			labelWidth: 80).value_(functions[\getBrightness].value()).action_(functions[\setBrightness]);
+    // Set properties for all EZSliders
+    dict.do{|e| if(e.isArray == true, {
+      e.do{
+        |c|
+        c.setColors(numNormalColor: Color.white).labelView.align_(\left)
+      }
+    }, {
+      e.setColors(numNormalColor: Color.white).labelView.align_(\left)
+    });
+   };
+
 		// window.view.decorator.top = window.view.decorator.top + margin;
 		TextView.new(window, Rect(0,0, window.bounds.width - (2*margin), 28)).string_(functions[\getAddress].value()).editable_(false).hasVerticalScroller_(false);
     window.view.decorator.nextLine;
@@ -141,9 +154,14 @@
     scope.view.bounds_(Rect(scope.view.bounds.left, scope.view.bounds.top, window.bounds.width - (2*margin), 100));
     // scope.view.bounds.height_(100);
     scope.scopeView.waveColors_([Color.red, Color.green, Color.blue, Color.white]).alpha_(0.1);
+    if(object != nil, {
+      object.synth.get(\amp, {|v| {dict[\synthBrightness].value_(v);}.defer});
+      object.synth.get(\brightnessAdd, {|v| {dict[\brightnessAdd].value_(v);}.defer});
+    });
 		^[window, dict];
 	}
 	gui{
 		^JFixture.getGuiWindow(this);
 	}
 }
+

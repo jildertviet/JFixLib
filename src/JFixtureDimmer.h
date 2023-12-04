@@ -8,7 +8,7 @@ public:
   enum PwmMode { PWM12BIT };
   PwmMode pwmMode = PwmMode::PWM12BIT;
   uint8_t *pins;
-  float brightnessCurve[256];
+  // float brightnessCurve[256];
 
   JFixtureDimmer(){};
 
@@ -29,35 +29,35 @@ public:
         }
       }
     }
-    initCurve();
+    // initCurve();
     testLED();
   }
 
-  void initCurve() { // 0.0 -- 1.0
-    for (int i = 0; i < 256; i++) {
-      if (i < 30) {
-        float v = i / 30.0;
-        v = pow(v, 0.5);
-        v *= 30.0;
-        brightnessCurve[i] = pow((v / 256.), 2.0);
-      } else {
-        brightnessCurve[i] = pow((i / 256.), 2.0);
-      }
-    }
-  }
+  // void initCurve() { // 0.0 -- 1.0
+  //   for (int i = 0; i < 256; i++) {
+  //     if (i < 30) {
+  //       float v = i / 30.0;
+  //       v = pow(v, 0.5);
+  //       v *= 30.0;
+  //       brightnessCurve[i] = pow((v / 256.), 2.0);
+  //     } else {
+  //       brightnessCurve[i] = pow((i / 256.), 2.0);
+  //     }
+  //   }
+  // }
 
-  void setLED(char channel, int value) { // Receives 0 - 255
-    float v = brightnessCurve[value];
+  void setLED(char channel, float value) { // Receives 0 - 255
+    // float v = brightnessCurve[value];    // Return 0.0 - 1.0
     if (pwmMode == PWM12BIT) {
-      value = v * 4096;
+      value *= 4096;
     } else {
-      value = v * 256;
+      value *= 256;
     }
     ledcWrite(channel + 1, value);
   }
   void testLED() {
     for (int i = 0; i < numChannels; i++) {
-      setLED(i, 100);
+      setLED(i, 100 / 256.);
       delay(700);
       setLED(i, 0);
     }
@@ -70,7 +70,7 @@ public:
   void showSucces() override {}
   void show() override {
     for (int i = 0; i < numChannels; i++) {
-      setLED(i, channels[i] * getBrightness() * 255);
+      setLED(i, channels[i] * getBrightness());
     }
   };
   void setChannel(char i, float val) override {

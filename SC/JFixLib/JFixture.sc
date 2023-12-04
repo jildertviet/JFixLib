@@ -7,6 +7,7 @@ JFixtureSynthController : JModes{
   var <> asr;
   var <> mode = "static"; // [static, st_rgbw, st_brightness]
   var <> synth = nil;
+  var <> guiDict;
   setAttack{|v| asr[0] = v; synth.set(\a, v);}
   setSustain{|v| asr[1] = v; synth.set(\s, v);}
   setRelease{|v| asr[2] = v; synth.set(\r, v);}
@@ -30,7 +31,7 @@ JFixture : JFixtureSynthController{
     this.address = addr;
     this.serial = serial;
     msgList = List.new;
-    color = Color.white;
+    color = Color.fromArray(0!4);
     asr = [0.1, 1.0, 1.0];
   }
   getAddress{
@@ -86,7 +87,7 @@ JFixture : JFixtureSynthController{
   setRGBW{
     |rgbw|
     if(rgbw.isArray, {
-      if(mode == "static" || mode == "st_brightness", {
+      if((mode == "static").or(mode == "st_brightness"), {
         var msg = 0xFF!6 ++ [0x20] ++ this.getAddress() ++ rgbw.asBytes32F() ++ "end";
         this.send(msg);
       });
@@ -101,7 +102,7 @@ JFixture : JFixtureSynthController{
       this.send(msg);
     });
     brightness = b;
-    synth.set(\amp, b);
+    // synth.set(\amp, b);
   }
   setLag{
     |dst="b", val=0|
