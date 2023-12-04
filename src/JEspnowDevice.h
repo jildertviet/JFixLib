@@ -25,6 +25,7 @@ public:
   virtual void setup(String networkName) override {
     JFixture::setup(networkName);
     initEspnow("JV_");
+    sendPing(true); // Send ping @ boot
   }
   String randomPw() {
     String r = "01234567";
@@ -155,11 +156,11 @@ public:
       }
     }
     case 0x33: { // Set RGBW 2-bit short
-      short values[4];
+      unsigned short values[4];
       memcpy(&values, data + 1 + (e->id * (4 * sizeof(short))),
              4 * sizeof(short));
       for (int i = 0; i < 4; i++) {
-        e->channels[i] = values[i] / 65536.;
+        e->setChannel(i, values[i] / 65536.);
       }
     } break;
     case 0x34: { // Set brightness 4-bit float
