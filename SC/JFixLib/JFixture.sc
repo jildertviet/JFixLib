@@ -52,7 +52,11 @@ JFixture : JFixtureSynthController{
         // "Save msg".postln;
         msgList.add(msg);
       }, {
-        {serial.putAll(msg);}.defer(Server.default.latency);
+        if(mode == "static", {
+          {serial.putAll(msg);}.defer(Server.default.latency);
+        },{
+          serial.putAll(msg);
+        });
       });
 		});
 	}

@@ -14,7 +14,7 @@
       window.view.decorator.left = margin;
     };
     if(object != nil, {object.guiDict = dict});
-		window = Window(windowName).front.setInnerExtent(360, 410);
+		window = Window(windowName).front.setInnerExtent(360, 430);
 		window.bounds_(window.bounds.moveTo(0,0));
 		window.view.palette_(QPalette.dark);
 		window.view.decorator_(FlowLayout(window.view.bounds));
@@ -26,7 +26,7 @@
 				// \battery, {object.requestBattery()},
 				\testEnv, {object.trigger()},
 				\deepsleep, {
-					var w = Window("Deep sleep duration", Rect(window.bounds.left, 500, window.bounds.width, 100));
+					var w = Window("Deep sleep duration", Rect(window.bounds.left, 160, window.bounds.width, 40));
 					var b = NumberBox(w, Rect(150, 10, 100, 20));
 					b.value = 1;
 					b.action = {arg numb; object.deepSleep(numb.value); w.close;};
@@ -118,19 +118,24 @@
       slider;
 		});
 		dict[\synthBrightness] = EZSlider.new(window,
-      label:"synthBrightness",
-			controlSpec: ControlSpec(0, 1, 'lin', 1e-3),
-			labelWidth: 80).action_(functions[\setSynthBrightness]);
+      label:"Brightness (s)",
+			controlSpec: ControlSpec(0, 1, 'lin', 1e-2),
+			labelWidth: 90).action_(functions[\setSynthBrightness]);
     newLine.();
 		dict[\brightnessAdd] = EZSlider.new(window,
-			label:"synth bAdd",
-			controlSpec: ControlSpec(0, 1, 'lin', 1e-3),
-			labelWidth: 80).value_(functions[\getBrightnessAdd].value()).action_(functions[\setBrightnessAdd]);
+			label:"bAdd (s)",
+			controlSpec: ControlSpec(0, 1, 'lin', 1e-2),
+			labelWidth: 90).value_(functions[\getBrightnessAdd].value()).action_(functions[\setBrightnessAdd]);
     newLine.();
     dict[\brightness] = EZSlider.new(window,
 			label:"Brightness",
-			controlSpec: ControlSpec(0, 1, 'lin', 1e-3),
-			labelWidth: 80).value_(functions[\getBrightness].value()).action_(functions[\setBrightness]);
+			controlSpec: ControlSpec(0, 1, 'lin', 1e-2),
+			labelWidth: 90).value_(functions[\getBrightness].value()).action_(functions[\setBrightness]);
+
+    // Set background for 'non-synth sliders'
+    dict[\brightness].setColors(sliderBackground: Color.fromHexString(string:"#9a9996"));
+    dict[\rgbw].do{|e| e.setColors(sliderBackground: Color.fromHexString(string:"#9a9996"))};
+
     // Set properties for all EZSliders
     dict.do{|e| if(e.isArray == true, {
       e.do{

@@ -25,6 +25,10 @@ public:
       JFixtureDimmer::setup(settings.numChannels, settings.pins);
     }
     setLedBuiltin(settings.ledBuiltin);
+    this->batteryPin = settings.batterpyPin;
+    if (batteryPin > 0) {
+      pinMode(batteryPin, INPUT);
+    }
   }
   void update() override { JFixtureDimmer::update(); }
 

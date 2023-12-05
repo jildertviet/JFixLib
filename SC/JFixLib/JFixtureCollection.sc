@@ -14,7 +14,8 @@ JFixtureCollection {
   var <> mode = "static";
   var modes = #["static", "st_rgbw", "st_brightness"];
   var <> modeIndex = 0; // ["static", "st_rgbw", "st_brightness"];
-  var <> guiDict;
+  var <> guiDict; // For JFixtureMain window
+  var <> guiItems;
   var globalSettingsWindow;
   *new{
     |serial=nil|
@@ -28,6 +29,7 @@ JFixtureCollection {
       this.serial = serial;
     });
     children = List.new;
+    guiItems = List.new;
     this.initGuiDict();
     this.startReadingSerial();
   }
@@ -114,7 +116,6 @@ JFixtureCollection {
 			addr = addr + [0, 0, 0, 0, 0, 1];
 			addr.postln;
 
-
 			batteryVoltage = msg.split($:)[6].asInteger;
 			batteryVoltage = batteryVoltage / 2.pow(12); // 0V is 0, 16.8V is 4096. Value is now a percentage / 100.
 			batteryVoltage = batteryVoltage - (2/3); // 0.66 is shut-down voltage
@@ -129,8 +130,12 @@ JFixtureCollection {
 				if(e.address == addr, {
 					{lastSeenData[i][0].background_(Color.green)}.defer;
 					// e.setBatteryPct(batteryVoltage);
-					// {e.fwVersionField.string_(fwVersion.asString)}.defer;
-          "To do: battery and fwVersion".error;
+          this.guiItems.do{|c| if(c[0].sum == addr.sum, {
+            {
+              c[1].string_(batteryVoltage.asString ++ "%");
+              c[2].string_(fwVersion.asString);
+            }.defer;
+          })};
 					lastSeenData[i][1] = Date.getDate.rawSeconds;
 				}
 			)};
@@ -285,6 +290,9 @@ JFixtureCollection {
 					|menu|
 					frameDur = (menu.item.reciprocal);
 					// lagTime = frameDur;
+          children[0].bBroadcast = true;
+          children[0].setLag(frameDur);
+          children[0].bBroadcast = false;
           "Should update lagTime".error;
 					frameRate = menu.item;
           frameDur.postln;
@@ -310,11 +318,14 @@ JFixtureCollection {
 				var testButton = Button(testButtonView, Rect(0, 0, 40, 20)).states_([
 					["Test", Color.white, Color.black.alpha_(0.1)],
 				]).action_({e.testLed()});
+        var batteryField = StaticText.new().background_(Color.black.alpha_(0.1)).align_(\center).string_("" ++ "%");
+        var fwVersion = StaticText.new().background_(Color.black.alpha_(0.1)).align_(\center).string_("..."); 
+        guiItems.add([e.address, batteryField, fwVersion]);
 				HLayout(
 					[StaticText.new().string_(e.id).background_(Color.black.alpha_(0.1)), s: 5],
 					[StaticText.new().string_(e.getAddressHexString.asCompileString.replace("\"", "").replace("]", "").replace("[", "")).background_(Color.black.alpha_(0.1)), s: 60],
-					// [e.createBatteryField(), s: 10],
-					// [e.createFwVersionField(), s: 10],
+          [batteryField, s: 10],          
+          [fwVersion, s: 10],
 					[guiButtonView, s: 10],
 					[testButtonView, s: 10],
 					[lastSeenData[i][0], s: 1]
@@ -399,6 +410,12 @@ JFixtureCollection {
 			\getBrightnessAdd, {
 				1
 			},
+      \setSynthBrightness, {
+        |e|
+        children.do{|object|
+          object.synth.set(\amp, e.value);
+        };
+      },
 			\setBrightnessAdd, {
 				|e|
 				children.do{ |object|
