@@ -29,6 +29,7 @@ public:
     if (batteryPin > 0) {
       pinMode(batteryPin, INPUT);
     }
+    sendPing(true); // Send ping @ boot
   }
   void update() override { JFixtureDimmer::update(); }
 

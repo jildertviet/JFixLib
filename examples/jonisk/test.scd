@@ -10,6 +10,7 @@ t.gui
 [0,1,2,3,4,].hash
 t.guiItems
 t.guiItems[17][1].hash
+t.guiItems[17][0].sum
 t.children[0].guiDict[\asr].isArray\sk
 EZSlider
 t.children[0].synth.set(\rgbw, [0.0, 0.5, 1.0, 1.0]);
@@ -18,13 +19,14 @@ a = (0..15).collect({|e, i| if(i.mod(4) == 0, {e}, {nil})})
 t.children[17].gui
 t.children[17].mode = "static";
 t.children[17].setRGBW([1.0, 0.0, 0.0, 0]);
-t.children[17].setBrightness(0.2)
-t.children[17].setLag(60.reciprocal)
+t.children[17].setBrightness(1.0)
+t.children[8].setLag(60.reciprocal)
+t.children[8].synth.set(\noiseMul, 0)
 1/30
 if((1==1).or(2==1), {2})
 (
 {
-(t.children[17]).do{|e|
+(t.children[8]).do{|e|
     e.setOTAServer("Klank",  ~pw, "https://192.168.10.47/.pio/build/esp32dev/firmware.bin");
     // e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/firmware.bin");
     35.wait;

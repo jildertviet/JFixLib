@@ -63,7 +63,6 @@
 				},
 				\setSynthBrightness, {
 					|e|
-          "SXDADSAsd".postln;
 					object.synth.set(\amp, e.value);
 				},
   			\setBrightness, {
@@ -110,7 +109,7 @@
 		});
 		dict[\asr] = Array.fill(3, {
 			|i|
-			var slider = EZSlider.new(window, label:["Attack", "Sustain", "Release"].at(i), controlSpec: ControlSpec(0, [4,10,10].at(i), 'lin')).value_(functions[\getEnv].value(i)).action_({
+			var slider = EZSlider.new(window, label:["Attack", "Sustain", "Release"].at(i), controlSpec: ControlSpec(0, 10, 'lin')).value_(functions[\getEnv].value(i)).action_({
 				|e|
 				functions[\setEnv].value(e, i);
 			});
@@ -146,6 +145,10 @@
       e.setColors(numNormalColor: Color.white).labelView.align_(\left)
     });
    };
+   if(object != nil, {
+     // object.synth.get(\brightnessAdd, {{|v| dict[\brightnessAdd].value_(v)}.defer;});
+     object.synth.get(\amp, {|v|{dict[\synthBrightness].value_(v);}.defer;});
+   });
 
 		// window.view.decorator.top = window.view.decorator.top + margin;
 		TextView.new(window, Rect(0,0, window.bounds.width - (2*margin), 28)).string_(functions[\getAddress].value()).editable_(false).hasVerticalScroller_(false);
@@ -159,10 +162,8 @@
     scope.view.bounds_(Rect(scope.view.bounds.left, scope.view.bounds.top, window.bounds.width - (2*margin), 100));
     // scope.view.bounds.height_(100);
     scope.scopeView.waveColors_([Color.red, Color.green, Color.blue, Color.white]).alpha_(0.1);
-    if(object != nil, {
-      object.synth.get(\amp, {|v| {dict[\synthBrightness].value_(v);}.defer});
-      object.synth.get(\brightnessAdd, {|v| {dict[\brightnessAdd].value_(v);}.defer});
-    });
+    // if(object != nil, {
+       // });
 		^[window, dict];
 	}
 	gui{

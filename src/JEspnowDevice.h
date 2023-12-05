@@ -25,7 +25,6 @@ public:
   virtual void setup(String networkName) override {
     JFixture::setup(networkName);
     initEspnow("JV_");
-    sendPing(true); // Send ping @ boot
   }
   String randomPw() {
     String r = "01234567";

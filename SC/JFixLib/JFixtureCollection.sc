@@ -210,6 +210,29 @@ JFixtureCollection {
 		if(serial != nil, {
 			if(serial.isOpen, {
 				updateRoutine.stop;
+        "Init values".error;
+        switch(mode,
+        "static", {
+          // Send brightness and colors
+          children[0].bBroadcast = true;
+          children[0].start();
+          children[0].setBrightness(children[0].brightness);
+          children[0].setRGBW(children[0].rgbw);
+          children[0].end();
+          children[0].bBroadcast = false;
+        },
+        "st_rgbw", {
+          // Send brightness
+          children[0].bBroadcast = true;
+          children[0].setBrightness(children[0].brightness);
+          children[0].bBroadcast = false;
+        },
+        "st_brightness", {
+          // Send colors
+          children[0].bBroadcast = true;
+          children[0].setRGBW(children[0].rgbw);
+          children[0].bBroadcast = false;
+        });
         if(mode != "static", {
           updateRoutine = {
             inf.do{
@@ -293,7 +316,6 @@ JFixtureCollection {
           children[0].bBroadcast = true;
           children[0].setLag(frameDur);
           children[0].bBroadcast = false;
-          "Should update lagTime".error;
 					frameRate = menu.item;
           frameDur.postln;
 				}).value_(frameRateIndex)],
@@ -338,6 +360,9 @@ JFixtureCollection {
   openGlobalGui{ // JFixture GUI, but controlling all children of JFixtureCollection
 		var bounds;
 		var windowAndSliders = JFixture.getGuiWindow(nil, guiDict);
+    children[0].synth.get(\amp, {|v| {windowAndSliders[1][\synthBrightness].value_(v)}.defer});
+    children[0].synth.get(\brightnessAdd, {|v| {windowAndSliders[1][\brightnessAdd].value_(v);}.defer});
+
     if(globalSettingsWindow != nil, {
       globalSettingsWindow.close();
     });
@@ -381,11 +406,11 @@ JFixtureCollection {
 			},
 			\getColor, {
 				|i|
-				Color.black.alpha_(0).asArray[i];
+        children[0].color.asArray[i];
 			},
 			\getEnv, {
 				|i|
-				1
+				children[0].asr.at(i);
 			},
 			\setEnv, {
 				|e, i|
@@ -399,7 +424,7 @@ JFixtureCollection {
 				}
 			},
 			\getBrightness, {
-				1
+				children[0].brightness;
 			},
 			\setBrightness, {
 				|e|
@@ -408,13 +433,13 @@ JFixtureCollection {
 				}
 			},
 			\getBrightnessAdd, {
-				1
+				children[0].brightnessAdd;
 			},
       \setSynthBrightness, {
         |e|
         children.do{|object|
           object.synth.set(\amp, e.value);
-        };
+        }
       },
 			\setBrightnessAdd, {
 				|e|

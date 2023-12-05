@@ -31,6 +31,7 @@ public:
     }
     setLedBuiltin(settings.ledBuiltin);
     horizontalPixelDistance = settings.horizontalPixelDistance;
+    sendPing(true);
   }
 
   void update() override {
