@@ -35,7 +35,7 @@
 				\setColor, {
 					|e, i|
 					var newColor = object.color.asArray.put(i, e.value);
-					object.setRGBW(newColor.postln);
+          object.setRGBW(newColor.postln);
 					object.synth.set(\rgbw, newColor);
 				},
 				\getColor, {
@@ -101,7 +101,9 @@
 			|i|
 			var slider = EZSlider.new(window, label:["Red","Green","Blue","White"].at(i), controlSpec: ControlSpec(0.0, 1.0, 'lin', step: 1e-3)).value_(functions[\getColor].value(i)).action_({
 				|e|
+        var rectColor = dict[\rgbaColors].children[i].background;
 				functions[\setColor].value(e, i);
+        dict[\rgbaColors].children[i].background_(rectColor.alpha_(e.value));
 			};
 			);
       newLine.();
@@ -153,17 +155,28 @@
 		// window.view.decorator.top = window.view.decorator.top + margin;
 		TextView.new(window, Rect(0,0, window.bounds.width - (2*margin), 28)).string_(functions[\getAddress].value()).editable_(false).hasVerticalScroller_(false);
     window.view.decorator.nextLine;
-		window.view.decorator.left = margin;
+		window.view.decorator.left = margin + 1;
 		// window.view.decorator.top = window.view.decorator.top + 30;
-    window.view.decorator.nextLine;
-		window.view.decorator.left = margin;
-		scope = JStethoscope.new(Server.default, functions[\getBus].value().numChannels, functions[\getBus].value().index, rate: 'control', view: window.view, bAddSliders: false);
-    scope.style_(1);
-    scope.view.bounds_(Rect(scope.view.bounds.left, scope.view.bounds.top, window.bounds.width - (2*margin), 100));
-    // scope.view.bounds.height_(100);
-    scope.scopeView.waveColors_([Color.red, Color.green, Color.blue, Color.white]).alpha_(0.1);
-    // if(object != nil, {
-       // });
+    // window.view.decorator.nextLine;
+		// window.view.decorator.left = margin;
+    {
+      var scopeContainer = View.new(window, (window.bounds.width - (2 * margin) - 3)@ 100);
+      var rgbaColorsContainer = View.new(scopeContainer, Rect(0, 0, (window.bounds.width - (2 * margin) - 2),100));
+      dict[\scope] = scope = JStethoscope.new(Server.default, functions[\getBus].value().numChannels, functions[\getBus].value().index, rate: 'control', view: scopeContainer, bAddSliders: false);
+      scope.style_(1);
+      scope.view.bounds_(Rect(scope.view.bounds.left - 2, scope.view.bounds.top, window.bounds.width - (2*margin), 100));
+      scope.scopeView.waveColors_([Color.red, Color.green, Color.blue, Color.white]).alpha_(0.1);
+      scope.scopeView.visible_(false);
+      dict[\rgbaColors] = rgbaColorsContainer;
+      {
+      var w;
+        w = (rgbaColorsContainer.bounds.width - 2) / 4;
+        View.new(rgbaColorsContainer, Rect(0, 0, w , rgbaColorsContainer.bounds.height)).background_(Color.red);
+        View.new(rgbaColorsContainer, Rect(w*1, 0, w , rgbaColorsContainer.bounds.height)).background_(Color.green);
+        View.new(rgbaColorsContainer, Rect(w*2, 0, w , rgbaColorsContainer.bounds.height)).background_(Color.blue);
+        View.new(rgbaColorsContainer, Rect(w*3, 0, w  , rgbaColorsContainer.bounds.height)).background_(Color.white);
+     }.();
+   }.();
 		^[window, dict];
 	}
 	gui{

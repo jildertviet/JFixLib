@@ -7,17 +7,26 @@ j = a.collect({|e, i| JJonisk.new(i, e, p)});
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/of_v0.11.2_linux64gcc6_release/apps/TIYCS/jonisk.config", 0);
 t.gui
+t.globalGuiDict['rgbaColors'].children[0].
+
+View
+t.children[0].guiDict[\scope].scopeView.visible_(true)
+t.globalGuiDict[\scope].scopeView.visible_()
+t.globalGuiDict[\rgbaColors]
+Stethoscope
+visible
 [0,1,2,3,4,].hash
 t.guiItems
 t.guiItems[17][1].hash
 t.guiItems[17][0].sum
-t.children[0].guiDict[\asr].isArray\sk
+t.children[0].guiDict[\synthBrightness].value_(0.88)
 EZSlider
 t.children[0].synth.set(\rgbw, [0.0, 0.5, 1.0, 1.0]);
 a = (0..15).collect({|e, i| if(i.mod(4) == 0, {e}, {nil})})
 [0,1,2].put(1, 3)
 t.children[17].gui
 t.children[17].mode = "static";
+t.children[17].brightness
 t.children[17].setRGBW([1.0, 0.0, 0.0, 0]);
 t.children[17].setBrightness(1.0)
 t.children[8].setLag(60.reciprocal)
@@ -26,7 +35,7 @@ t.children[8].synth.set(\noiseMul, 0)
 if((1==1).or(2==1), {2})
 (
 {
-(t.children[8]).do{|e|
+(t.children.at([8, 17])).do{|e|
     e.setOTAServer("Klank",  ~pw, "https://192.168.10.47/.pio/build/esp32dev/firmware.bin");
     // e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/firmware.bin");
     35.wait;
@@ -34,14 +43,15 @@ if((1==1).or(2==1), {2})
   "Done".postln;
 }.fork;
 )
-Pseq( {|i| [1, 0, 0].wrapAt(i.mod(7)) }.dup(7), inf).asStream.nextN(7)
-[1,0,0].wchoose([1,0,0])
-
 (
-var a = 0.45;
-var b = a.linlin(0, 1, 1/3, 1-(1/3));
-var c = a.linlin(0, 1, 2/3, 1-(2/3));
-b.postln;
-c.postln;
+var rgbw, container, w;
+var p = Window.new("x", 200@200);
+rgbw = 0!4;
+w = p.bounds.width / 4;
+container = View.new(p, (p.bounds.width@40));
+rgbw[0] = View.new(container).background_(Color.red).bounds_(container.bounds.width_(w));
+rgbw[1] = View.new(container).background_(Color.blue).bounds_(container.bounds.width_(w).left_(w*1));
+rgbw[2] = View.new(container).background_(Color.green).bounds_(container.bounds.width_(w).left_(w*2));
+rgbw[3] = View.new(container).background_(Color.white).bounds_(container.bounds.width_(w).left_(w*3));
+p.front;
 )
-ceil

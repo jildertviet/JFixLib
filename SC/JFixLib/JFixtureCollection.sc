@@ -16,6 +16,7 @@ JFixtureCollection {
   var <> modeIndex = 0; // ["static", "st_rgbw", "st_brightness"];
   var <> guiDict; // For JFixtureMain window
   var <> guiItems;
+  var <> globalGuiDict;
   var globalSettingsWindow;
   *new{
     |serial=nil|
@@ -217,7 +218,7 @@ JFixtureCollection {
           children[0].bBroadcast = true;
           children[0].start();
           children[0].setBrightness(children[0].brightness);
-          children[0].setRGBW(children[0].rgbw);
+          children[0].setRGBW(children[0].color.asArray);
           children[0].end();
           children[0].bBroadcast = false;
         },
@@ -230,7 +231,7 @@ JFixtureCollection {
         "st_brightness", {
           // Send colors
           children[0].bBroadcast = true;
-          children[0].setRGBW(children[0].rgbw);
+          children[0].setRGBW(children[0].color.asArray);
           children[0].bBroadcast = false;
         });
         if(mode != "static", {
@@ -302,10 +303,18 @@ JFixtureCollection {
           modeIndex = menu.value;
           mode = modes[modeIndex];
           if(mode == "st_rgbw", {
-            children.do{|e| e.synth.set(\mode, 0);}
+            children.do{|e| e.synth.set(\mode, 0);};
+            globalGuiDict[\scope].scopeView.visible_(true);
+            globalGuiDict[\rgbaColors].visible_(false);
           });
           if(mode == "st_brightness", {
-            children.do{|e| e.synth.set(\mode, 1);}
+            globalGuiDict[\scope].scopeView.visible_(true);
+            globalGuiDict[\rgbaColors].visible_(false);
+            children.do{|e| e.synth.set(\mode, 1);};
+          });
+          if(mode == "static", {
+            globalGuiDict[\scope].scopeView.visible_(false);
+            globalGuiDict[\rgbaColors].visible_(true);
           });
           this.start;
 				}).value_(modeIndex)],
@@ -362,6 +371,7 @@ JFixtureCollection {
 		var windowAndSliders = JFixture.getGuiWindow(nil, guiDict);
     children[0].synth.get(\amp, {|v| {windowAndSliders[1][\synthBrightness].value_(v)}.defer});
     children[0].synth.get(\brightnessAdd, {|v| {windowAndSliders[1][\brightnessAdd].value_(v);}.defer});
+    globalGuiDict = windowAndSliders[1];
 
     if(globalSettingsWindow != nil, {
       globalSettingsWindow.close();
@@ -397,12 +407,14 @@ JFixtureCollection {
 			},
 			\setColor, {
 				|e, i|
-				children.do{
-					|object|
-          var newColor = object.color.asArray.put(i, e.value);
-					object.setRGBW(newColor);
-					object.synth.set(\rgbw, newColor);
-				}
+        var newColor = children[0].color.asArray.put(i, e.value);
+        children[0].bBroadcast = true;
+        children[0].setRGBW(newColor);
+        children[0].bBroadcast = false;
+        children.do{|object|
+          object.synth.set(\rgbw, newColor);
+          object.color = Color.fromArray(newColor);
+        };
 			},
 			\getColor, {
 				|i|
@@ -428,8 +440,11 @@ JFixtureCollection {
 			},
 			\setBrightness, {
 				|e|
+        children[0].bBroadcast = true;
+        children[0].setBrightness(e.value);
+        children[0].bBroadcast = false;
 				children.do{ |object|
-					object.setBrightness(e.value);
+					object.brightness = e.value;
 				}
 			},
 			\getBrightnessAdd, {
