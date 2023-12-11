@@ -22,7 +22,7 @@
 		if(functions==nil, {
 			functions = Dictionary.newFrom([
 				\test, {object.testLed()},
-				\otaServer, {object.setOTAServer()},
+				\otaServer, {/*object.setOTAServer()*/ "Should be able to pass PW".error},
 				// \battery, {object.requestBattery()},
 				\testEnv, {object.trigger()},
 				\deepsleep, {
@@ -97,6 +97,7 @@
 			Button.new(window, 60@40).string_(e[0]).action_(e[1]);
 		};
     newLine.();
+
     dict[\rgbw] = colorSliders = Array.fill(4, {
 			|i|
 			var slider = EZSlider.new(window, label:["Red","Green","Blue","White"].at(i), controlSpec: ControlSpec(0.0, 1.0, 'lin', step: 1e-3)).value_(functions[\getColor].value(i)).action_({
@@ -159,14 +160,28 @@
 		// window.view.decorator.top = window.view.decorator.top + 30;
     // window.view.decorator.nextLine;
 		// window.view.decorator.left = margin;
+
     {
       var scopeContainer = View.new(window, (window.bounds.width - (2 * margin) - 3)@ 100);
       var rgbaColorsContainer = View.new(scopeContainer, Rect(0, 0, (window.bounds.width - (2 * margin) - 2),100));
-      dict[\scope] = scope = JStethoscope.new(Server.default, functions[\getBus].value().numChannels, functions[\getBus].value().index, rate: 'control', view: scopeContainer, bAddSliders: false);
+      var numChannels = 4;
+      var busIndex = 0;
+      if(object == nil, {
+        numChannels = 4;
+        busIndex = 0;
+      },{
+        if(object.bus != nil, {
+          numChannels = functions[\getBus].().numChannels;
+          busIndex = functions[\getBus].().index;
+        });
+      });
+      dict[\scope] = scope = JStethoscope.new(Server.default, numChannels, busIndex, rate: 'control', view: scopeContainer, bAddSliders: false);
       scope.style_(1);
       scope.view.bounds_(Rect(scope.view.bounds.left - 2, scope.view.bounds.top, window.bounds.width - (2*margin), 100));
       scope.scopeView.waveColors_([Color.red, Color.green, Color.blue, Color.white]).alpha_(0.1);
       scope.scopeView.visible_(false);
+    // });
+        // });
       dict[\rgbaColors] = rgbaColorsContainer;
       {
       var w;
@@ -177,6 +192,7 @@
         View.new(rgbaColorsContainer, Rect(w*3, 0, w  , rgbaColorsContainer.bounds.height)).background_(Color.white);
      }.();
    }.();
+
 		^[window, dict];
 	}
 	gui{

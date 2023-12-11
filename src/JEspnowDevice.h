@@ -20,11 +20,13 @@ public:
   uint8_t replyAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   uint8_t myAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   unsigned long lastReceived = 0;
+  int pingOffsetSeed = 0;
   String networkName = "JV_";
 
   virtual void setup(String networkName) override {
     JFixture::setup(networkName);
     initEspnow("JV_");
+    pingOffsetSeed = random(2000);
   }
   String randomPw() {
     String r = "01234567";
@@ -301,7 +303,9 @@ public:
       return;
 
     // Only send when no msg is received for x seconds
-    if (millis() > lastReceived + 60000 && millis() > 10000 || bOverride) {
+    if (millis() > lastReceived + (60000 + pingOffsetSeed) &&
+            millis() > 10000 ||
+        bOverride) {
       WiFi.mode(WIFI_OFF);
       WiFi.mode(WIFI_STA);
 

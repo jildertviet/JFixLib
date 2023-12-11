@@ -35,23 +35,27 @@ t.children[8].synth.set(\noiseMul, 0)
 if((1==1).or(2==1), {2})
 (
 {
-(t.children.at([8, 17])).do{|e|
+(t.children.at([15])).do{|e|
     e.setOTAServer("Klank",  ~pw, "https://192.168.10.47/.pio/build/esp32dev/firmware.bin");
     // e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/firmware.bin");
-    35.wait;
+    35.wait;                     
   };
   "Done".postln;
 }.fork;
 )
 (
-var rgbw, container, w;
-var p = Window.new("x", 200@200);
-rgbw = 0!4;
-w = p.bounds.width / 4;
-container = View.new(p, (p.bounds.width@40));
-rgbw[0] = View.new(container).background_(Color.red).bounds_(container.bounds.width_(w));
-rgbw[1] = View.new(container).background_(Color.blue).bounds_(container.bounds.width_(w).left_(w*1));
-rgbw[2] = View.new(container).background_(Color.green).bounds_(container.bounds.width_(w).left_(w*2));
-rgbw[3] = View.new(container).background_(Color.white).bounds_(container.bounds.width_(w).left_(w*3));
-p.front;
+q.stop; q = {
+var a = t.lastSeenData.collect{|e,i|if(e[1] > 0, {i}, {-1})};
+  inf.do{
+    |i|
+    var id = a.wrapAt(i);
+    if(id >= 0, {
+      t.children[a.wrapAt(i)].trigger();
+      0.2.wait;
+    })
+  }
+}.fork;
 )
+q.stop;
+t.children.do{|e|e.synth.set(\noiseMul, 0)}
+t.children[0].

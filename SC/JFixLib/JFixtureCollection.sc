@@ -42,14 +42,14 @@ JFixtureCollection {
 		|path, type="0: JJonisk, 1: JTlFixture"|
 		var file = JSONFileReader.read(path);
     children.clear();
-		file[0]["activeJonisks"].do{
+		file[0]["active"].do{
 			|j, i|
 			var addr = j[0];
 			// addr.postln;
 			addr = addr.collect({|e| e.split($x)[1].asHexIfPossible});
       switch(type, 
         0, {children.add(JJonisk.new(i, addr, serial));},
-        1, {children.add(JTlFix.new(i, addr, serial));},
+        1, {children.add(JTLFix.new(i, addr, serial));},
       );
 		};
     lastSeenData = [0, 0]!children.size; // [button, time]
@@ -304,16 +304,22 @@ JFixtureCollection {
           mode = modes[modeIndex];
           if(mode == "st_rgbw", {
             children.do{|e| e.synth.set(\mode, 0);};
-            globalGuiDict[\scope].scopeView.visible_(true);
+            if(globalGuiDict[\scope] != nil, {
+              globalGuiDict[\scope].scopeView.visible_(true);
+            });
             globalGuiDict[\rgbaColors].visible_(false);
           });
           if(mode == "st_brightness", {
-            globalGuiDict[\scope].scopeView.visible_(true);
+            if(globalGuiDict[\scope] != nil, {
+              globalGuiDict[\scope].scopeView.visible_(true);
+            });
             globalGuiDict[\rgbaColors].visible_(false);
             children.do{|e| e.synth.set(\mode, 1);};
           });
           if(mode == "static", {
-            globalGuiDict[\scope].scopeView.visible_(false);
+            if(globalGuiDict[\scope] != nil, {
+              globalGuiDict[\scope].scopeView.visible_(false);
+            });
             globalGuiDict[\rgbaColors].visible_(true);
           });
           this.start;
@@ -467,7 +473,9 @@ JFixtureCollection {
 				"All";
 			},
 			\getBus, {
+        if(children[0].bus != nil, {
 				children[0].bus;
+      }, {0});
 			}
 		]);
 	}

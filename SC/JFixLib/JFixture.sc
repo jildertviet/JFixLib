@@ -3,7 +3,7 @@ JFixtureSynthController : JModes{
   var <> brightness = 1.0; // Amp of synth
   var <> brightnessAdd = 0.0; // DC added to output
   var <> lagTime = 0; // Lag time in synth, not to be confused with lagTime in ESP32
-  var <> bus = 0;
+  var <> bus = nil;
   var <> asr;
   var <> mode = "static"; // [static, st_rgbw, st_brightness]
   var <> synth = nil;
@@ -101,10 +101,10 @@ JFixture : JFixtureSynthController{
   }
   setBrightness{
     |b|
-    if(mode == "static", {
+    // if(mode == "static", {
       var msg = 0xFF!6 ++ [0x21] ++ this.getAddress() ++ b.asFloat.asBytes32 ++ "end";
       this.send(msg);
-    });
+    // });
     brightness = b;
     // synth.set(\amp, b);
   }
