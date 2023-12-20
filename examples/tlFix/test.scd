@@ -2,6 +2,10 @@ p = SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
 a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
 j = a.collect({|e, i| JTLFix.new(i, e, p)});
 
+SerialPort.name
+NetAddr.identityHash
+SinOsc
+
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/tlFix/tlFix.config", 1);
 t.gui
@@ -37,11 +41,10 @@ t.children.do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.0);};
 t.children[0].deleteEvents
 c = JTlFixComp.new(t)
 ~osc = c.hzTicks;
+c.stop;
 ~osc.setVal('b',1.0);
 ~osc.setVal('f', 6.0);
 ~osc.setValN('o', (0..4) / 4);
 ~osc.setVal('r', 0.1);
 ~osc.setVal('q', 10.0);
 ~osc.setVal('c', [1.0, 0.8, 0.5, 1.0]);
-
-

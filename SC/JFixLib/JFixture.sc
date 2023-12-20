@@ -8,6 +8,8 @@ JFixtureSynthController : JModes{
   var <> mode = "static"; // [static, st_rgbw, st_brightness]
   var <> synth = nil;
   var <> guiDict;
+  var <> bSyncServer = true;
+  var <> espnowBridge;
   setAttack{|v| asr[0] = v; synth.set(\a, v);}
   setSustain{|v| asr[1] = v; synth.set(\s, v);}
   setRelease{|v| asr[2] = v; synth.set(\r, v);}
@@ -29,7 +31,15 @@ JFixture : JFixtureSynthController{
     |id, addr, serial|
     this.id = id;
     this.address = addr;
-    this.serial = serial;
+    if(serial.class == SerialPort,{
+      "Use SerialPort".postln;
+      this.serial = serial;
+    },{
+      if(serial.class == NetAddr, {
+        "Use ESPNOW-bridge".postln;
+        this.espnowBridge = serial;
+      });
+    });
     msgList = List.new;
     color = Color.fromArray(0!4);
     asr = [0.1, 1.0, 1.0];
@@ -47,19 +57,31 @@ JFixture : JFixtureSynthController{
   send{
 		|msg, bMute = false|
     if(bMute == false, {msg.postln});
-		if(serial != nil, {
+		if((serial != nil).or(espnowBridge != nil), {
       if(bCollectMsgs, {
         // "Save msg".postln;
         msgList.add(msg);
       }, {
-        if(mode == "static", {
-          {serial.putAll(msg);}.defer(Server.default.latency);
+        if((mode == "static").and(bSyncServer == true), {
+          {this.sendRaw(msg);}.defer(Server.default.latency);
         },{
-          serial.putAll(msg);
+         this.sendRaw(msg); 
         });
       });
 		});
 	}
+  sendRaw{
+    |msg|
+    if(serial != nil, {
+      serial.pulAll(msg);
+    },{
+      if(espnowBridge != nil, {
+        6.do{msg.removeAt(0);}; // Remove 0xFF (Used in espnowSender (dongle))
+        3.do{msg.removeAt(msg.size-1);}; // Remove "end"-bytes
+        espnowBridge.sendMsg("/espnow", Int8Array.newFrom(msg));
+      });
+    });
+  }
   start{
     bCollectMsgs = true;
     msgList.clear();

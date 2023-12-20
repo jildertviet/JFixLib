@@ -18,16 +18,25 @@ JFixtureCollection {
   var <> guiItems;
   var <> globalGuiDict;
   var globalSettingsWindow;
+  var <> espnowBridge;
   *new{
     |serial=nil|
     ^super.new.init(serial);
   }
   init{
     |serial|
-    if(serial != nil, {
+    if(serial == nil, {
       this.serial = JFixtureCollection.openDefaultSerial();
     }, {
-      this.serial = serial;
+      if(serial.class == SerialPort, {
+        this.serial = serial;
+          "Use Serial".postln;
+      },{
+        if(serial.class == NetAddr, {
+          this.espnowBridge = serial;
+          "Use ESPNOW-Bridge".postln;
+        });
+      });
     });
     children = List.new;
     guiItems = List.new;
@@ -45,11 +54,19 @@ JFixtureCollection {
 		file[0]["active"].do{
 			|j, i|
 			var addr = j[0];
+      var serialOrNetAddr;
+      if(serial != nil, {
+        serialOrNetAddr = serial;
+      },{
+        if(espnowBridge != nil, {
+          serialOrNetAddr = espnowBridge;
+        });
+      });
 			// addr.postln;
 			addr = addr.collect({|e| e.split($x)[1].asHexIfPossible});
       switch(type, 
-        0, {children.add(JJonisk.new(i, addr, serial));},
-        1, {children.add(JTLFix.new(i, addr, serial));},
+        0, {children.add(JJonisk.new(i, addr, serialOrNetAddr));},
+        1, {children.add(JTLFix.new(i, addr, serialOrNetAddr));},
       );
 		};
     lastSeenData = [0, 0]!children.size; // [button, time]

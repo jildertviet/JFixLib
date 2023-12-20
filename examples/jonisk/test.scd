@@ -57,5 +57,5 @@ var a = t.lastSeenData.collect{|e,i|if(e[1] > 0, {i}, {-1})};
 }.fork;
 )
 q.stop;
-t.children.do{|e|e.synth.set(\noiseMul, 0)}
+t.children.do{|e|e.synth.set(\noiseMul, 1)}
 t.children[0].
