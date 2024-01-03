@@ -1,20 +1,17 @@
-p = SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
+SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
 a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
 j = a.collect({|e, i| JTLFix.new(i, e, p)});
 
-SerialPort.name
-NetAddr.identityHash
-SinOsc
-
+p = NetAddr.new("localhost", 7997);
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/tlFix/tlFix.config", 1);
 t.gui
-t.children
-
+t.children[0].espnowBridge
+~f = t.children
 (
 {
-t.children.at([16]).do{|e|
-    e.setOTAServer("Klank",  ~pw, "https://192.168.10.164/.pio/build/esp32dev/firmware.bin");
+t.children.at([0]).do{|e|
+    e.setOTAServer("Klank", ~pw, "https://192.168.10.55/.pio/build/esp32dev/firmware.bin");
     35.wait;
   };
   "Done".postln;
@@ -35,13 +32,25 @@ x = {
   }
 }.fork;
 )
-t.children.do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.1);};
+t.children.at([0]).do{|e| e.setBackground([1.0, 1.0, 1.0, 0.0] * 0.1);};
 t.children.do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.0);};
+{"x".postln}.fork(TempoClock.default.nextBar);
+TempoClock.default.schedAbk(TempoClock.default.nextBar, {"x".postln});
 
 t.children[0].deleteEvents
+t.children[0].bBroadcast = true
+JTLFix.setViewportOffset(t.children)
+j = t.children
+(
+b = JFixEvent_JRect.new(j[0]).size_([5.0, 0.1]).rgba_([1.0, 1.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
+j[0].addEvent(b);
+)
 c = JTlFixComp.new(t)
 ~osc = c.hzTicks;
+c.minimal1;
+c.minimal2;
 c.stop;
+
 ~osc.setVal('b',1.0);
 ~osc.setVal('f', 6.0);
 ~osc.setValN('o', (0..4) / 4);

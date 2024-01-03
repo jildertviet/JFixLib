@@ -1,6 +1,6 @@
 JTlFixComp { 
   var <> mainColor;
-  var <> f;
+  var <> f; // Fixtures
   var <> synths;
   var <> patterns;
   var <> stopFunc;
@@ -20,7 +20,7 @@ JTlFixComp {
     var e = f[0];
     var osc;
     var pattern;
-    f.postln;
+    f.do{|e, i| e.setViewportOffset([0, 0]);};
     e.bBroadcast = true;
     osc = JFixEvent_JOsc.new(e)
     .phaseOffset_(1.0.rand)
@@ -34,7 +34,7 @@ JTlFixComp {
     // "tlFixSinePulse.sc".error;
     pattern = "/home/jildert/Music/supercollider/tlFixSinePulse.scd".load;
     patterns.add(pattern);
-    e.addEvent(osc);
+    TempoClock.default.schedAbs(TempoClock.default.nextBar, {e.addEvent(osc);});
     stopFunc = {e.deleteEvents};
     // Register pattern and synth
     ^osc;
@@ -45,6 +45,26 @@ JTlFixComp {
     patterns.clear();
   }
   minimal1{
-
+    var pattern;
+    JTLFix.setViewportOffset(f);
+    f[0].bBroadcast = true;
+    ~f = f; // Make global?
+    pattern = "/home/jildert/Music/supercollider/tlFixKickStart_v1.sc".load;
+    patterns.add(pattern);
+    stopFunc = {
+      ~compressor.free; 
+      ~kickG.free; 
+      ~bassG.free; 
+      f[0].bBroadcast = false; 
+      f.do{|e, i| e.setViewportOffset([0, 0]);};
+    };
+  }
+  minimal2{
+    var p;
+    ~f = f; 
+    JTLFix.setViewportOffset(f);
+    f[0].bBroadcast = true;
+    p = "/home/jildert/Music/supercollider/aokiTest_v1.sc".load;
+    patterns.add(p);
   }
 }

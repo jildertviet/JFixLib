@@ -45,7 +45,7 @@ public:
   float busses[NUM_BUSSES];
   float *channels = nullptr; // Colors
   char numChannels = 4;
-  virtual int measureBattery(){};
+  virtual int measureBattery() { return 0; };
   int batteryPin = -1;
 
   int ledBuiltin = 5;

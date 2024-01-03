@@ -1,4 +1,4 @@
-#pragma once
+#ifndef JFIXTURE_ADDR
 
 #include "FastLED.h"
 #include "FastLedContstants.h"
@@ -298,3 +298,5 @@ public:
     writeRGB(1, values[0], values[1], values[2], 0, leds);
   }
 };
+#define JFIXTURE_ADDR
+#endif

@@ -320,7 +320,7 @@ public:
       int v = measureBattery(); // This will return 0 if no batteryPin is set
       memcpy(msg + 1, &v, 4);   // Prefix is 'a'
       memcpy(
-          msg + 1 + 4, &version,
+          msg + 1 + 4, &VERSION,
           2); // Msg looks like: 'a', batteryVal (4 bytes), version (2 bytes);
 
       esp_now_send(replyAddr, msg, 7);

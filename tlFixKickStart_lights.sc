@@ -1,3 +1,4 @@
+// This is merged in tlFixKickStart_v1.sc
 "/home/jildert/Music/supercollider/synths/kick.scd".load;
 "/home/jildert/Music/supercollider/synths/hihat.scd".load;
 ~bassBus = Bus.alloc(\audio, s, 2);

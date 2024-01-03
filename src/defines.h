@@ -1,7 +1,8 @@
-#pragma once
+#ifndef JFIXDEFINES
 #define CHANNEL 1
-char version[2] = {
-    1, 1}; // A 0 isn't printed in SC, so use 1.1 as first version :)
+#define VERSION "11"
+
+// A 0 isn't printed in SC, so use 1.1 as first version :)
 
 struct floatColor {
   float r;
@@ -13,3 +14,5 @@ struct floatColor {
     this->b = b;
   }
 };
+#define JFIXDEFINES
+#endif

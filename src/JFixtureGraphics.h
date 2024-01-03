@@ -1,9 +1,9 @@
 #pragma once
-#include "Event/Event.h"
-#include "Event/JEvent_Perlin.h"
-#include "Event/JOsc.h"
-#include "Event/JRect.h"
+#include "Event.h"
 #include "JEspnowDevice.h"
+#include "JEvent_Perlin.h"
+#include "JOsc.h"
+#include "JRect.h"
 
 #define MAX_EVENTS 128
 
@@ -67,6 +67,12 @@ public:
       memcpy(&(r->id), data + 1, sizeof(int) * 1);
       memcpy(&(r->loc), data + 1 + (sizeof(float) * 1), sizeof(float) * 2);
       memcpy(&(r->size), data + 1 + (sizeof(float) * 3), sizeof(float) * 2);
+      Serial.print(r->loc[0]);
+      Serial.print(",");
+      Serial.println(r->loc[1]);
+      Serial.print(r->size[0]);
+      Serial.print(",");
+      Serial.println(r->size[1]);
       memcpy(&(r->rgba), data + 1 + (sizeof(float) * 5), sizeof(float) * 4);
       e = (Event *)r;
       memcpy(&e->bWaitForEnv, data + 1 + (sizeof(float) * 9), 1);

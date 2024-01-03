@@ -1,12 +1,8 @@
-j = JTLFix.initDefault;
-JTLFix.setViewportOffset(j);
-
-j[0].bBroadcast = true
-(
+// j = JTLFix.initDefault;
 ~doComb = {
   5.do{
     |index|
-    var e = j[0];
+    var e = ~f[0];
     var toFlip = [0,1].choose;
     2.do{
       |i|
@@ -27,9 +23,8 @@ j[0].bBroadcast = true
   };
 }
 };
-~doComb.();
 ~preComb = {
-  var e = j[0];
+  var e = ~f[0];
   b = JFixEvent_JRect.new(e)
   .size_([5.0, 0.1])
   .loc_([0.0,0.5 - 0.05])
@@ -40,19 +35,13 @@ j[0].bBroadcast = true
   b.doEnv('b', 20, 1, 100, 1.0, bKill: 1);
   e.end;
 };
-)
-~preComb.();
-j[0].deleteEvents
-t.stop; t = {inf.do{~doComb.(); 3.wait;}}.fork;
-t.stop;
-(
 ~linesH = {
   |yStart = 0.3, brightness = 0.8|
   var num = 1;
   var spacing = rrand(0.04, 0.06) + 0.1;
   num.do{
   |i|
-  var e = j[0];
+  var e = ~f[0];
   var h = 0.1;
     var b = JFixEvent_JRect.new(e)
     .size_([5.0, h])
@@ -64,14 +53,10 @@ t.stop;
     b.doEnv('b', 1, 200, 2, brightness, bKill: 1);
     e.end();
   };
-}
-// ~linesH = {};
-)
-
-(
+};
 ~kickLight = {
   |a=0.7|
-  var e = j[0];
+  var e = ~f[0];
   var h = 1.0;
   var b;
   if(a.asFloat >= 0.5, {
@@ -86,5 +71,3 @@ t.stop;
     e.end();
   });
 };
-)
-~kickLight.();

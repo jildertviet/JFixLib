@@ -73,7 +73,7 @@ JFixture : JFixtureSynthController{
   sendRaw{
     |msg|
     if(serial != nil, {
-      serial.pulAll(msg);
+      serial.putAll(msg);
     },{
       if(espnowBridge != nil, {
         6.do{msg.removeAt(0);}; // Remove 0xFF (Used in espnowSender (dongle))
