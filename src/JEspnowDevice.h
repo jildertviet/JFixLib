@@ -62,7 +62,7 @@ public:
   static void receive(const uint8_t *mac_addr, const uint8_t *data,
                       int data_len) {
     char msgType = data[0];
-    Serial.println("X");
+    // Serial.println("X");
     if (msgType != 'a') { // Ignore 'alive'-packets from other ESP32's
       e->lastReceived = millis();
     }

@@ -1,12 +1,14 @@
+p = NetAddr.new("localhost", 7997);
+t = JFixtureCollection.new(p);
+t.readConfigFile("/home/jildert/JFixLib/examples/tlFix/tlFix.config", 1);
+c = JTlFixComp.new(t)
+// Define red function
+
 SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
 a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
 j = a.collect({|e, i| JTLFix.new(i, e, p)});
 
-p = NetAddr.new("localhost", 7997);
-t = JFixtureCollection.new(p);
-t.readConfigFile("/home/jildert/JFixLib/examples/tlFix/tlFix.config", 1);
 t.gui
-t.children[0].espnowBridge
 ~f = t.children
 (
 {
@@ -17,7 +19,6 @@ t.children.at([0]).do{|e|
   "Done".postln;
 }.fork;
 )
-j.deepSleep(1);
 {inf.do{|i|j.setBrightness(v.wrapAt(i)); 1.0.wait;}}.fork;
 j.setRGBW([1, 0, 0, 0]);
 j.setBrightness(1.0.rand);
@@ -32,28 +33,61 @@ x = {
   }
 }.fork;
 )
-t.children.at([0]).do{|e| e.setBackground([1.0, 1.0, 1.0, 0.0] * 0.1);};
-t.children.do{|e| e.setBackground([1.0, 0.7, 0.4, 0.0] * 0.0);};
-{"x".postln}.fork(TempoClock.default.nextBar);
-TempoClock.default.schedAbk(TempoClock.default.nextBar, {"x".postln});
+
+// t.children.at([0]).do{|e| e.setBackground([1.0, 1.0, 1.0, 0.0] * 0.1);};
+t.children.do{|e| e.setBackground([1.0, 1.0, 1,0, 0.0] * 0.0);};
 
 t.children[0].deleteEvents
 t.children[0].bBroadcast = true
-JTLFix.setViewportOffset(t.children)
-j = t.children
-(
-b = JFixEvent_JRect.new(j[0]).size_([5.0, 0.1]).rgba_([1.0, 1.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
-j[0].addEvent(b);
-)
-c = JTlFixComp.new(t)
-~osc = c.hzTicks;
-c.minimal1;
-c.minimal2;
-c.stop;
+JTLFix.setViewportOffset(t.children, true);
 
-~osc.setVal('b',1.0);
-~osc.setVal('f', 6.0);
-~osc.setValN('o', (0..4) / 4);
-~osc.setVal('r', 0.1);
-~osc.setVal('q', 10.0);
-~osc.setVal('c', [1.0, 0.8, 0.5, 1.0]);
+(// RED
+~red = {
+    var j = t.children;
+var b;
+j[0].start;
+b = JFixEvent_JRect.new(j[0]).size_([0.5, 1.0]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
+j[0].addEvent(b);
+b.doEnv('b', 1, 900, 50, bKill: 1);
+// b.doEnv('w', 500, 900, 400, 10); // seq on from L to R. 
+b.doEnv('w', 1, 1000, 400, 10);
+j[0].end;
+};
+~red.();
+)
+t.children[0].deleteEvents
+s.scope
+
+(
+{
+8.do{ // RECORD AUDIO
+  c.minimal1;
+  14.wait;
+  c.stop; 
+  0.3.wait;
+  c.minimal2;
+  36.wait; // Compensate for tempo change...
+  "Stop".postln;
+  c.stop; 0.3.wait;
+  TempoClock.default.tempo = 1;
+  c.hzTicks;
+  10.wait;
+  c.stop; 
+  1.0.wait;
+  c.soundscape;
+  30.wait;
+  c.stop; 
+  0.3.wait;
+  c.klankTickers;
+  30.wait;
+  c.stop; 0.3.wait;
+  c.perlin;
+  20.wait;
+  c.stop; 0.3.wait;
+  ~red.();
+  5.wait;
+  }
+}.fork;
+)
+
+t.children.do{|e| e.deepSleep(1.0)};

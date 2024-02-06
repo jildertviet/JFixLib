@@ -23,7 +23,7 @@
 #include "JLag.h"
 // #include "JEspnowDevice.h"
 
-char jFixVersion[2] = {1, 2};
+// char jFixVersion[2] = {1, 2};
 
 using namespace std;
 #define NUM_BUSSES 12
@@ -73,9 +73,9 @@ public:
     Serial.begin(115200);
     Serial.println("Start");
     Serial.print("Version: ");
-    Serial.print((int)jFixVersion[0]);
+    Serial.print((int)VERSION[0]);
     Serial.print(".");
-    Serial.println((int)jFixVersion[1]);
+    Serial.println((int)VERSION[1]);
     readEEPROM();
     writeStatusLedPtr = &digitalWriteBuiltinLed;
   }

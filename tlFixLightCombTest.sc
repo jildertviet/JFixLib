@@ -71,3 +71,20 @@
     e.end();
   });
 };
+~tickLight = {
+  |a=0.7, p=0|
+  var e = ~f[0];
+  var h = 0.25;
+  var b;
+  // if(a.asFloat >= 0.5, {
+    b = JFixEvent_JRect.new(e)
+    .size_([0.25, h])
+    .loc_([p  + [0, 0.5].choose, 0.75])
+    .bWaitForEnv_(1)
+    .rgba_(1.0!4);
+    e.start;
+    e.addEvent(b);
+    b.doEnv('b', 1, 1, 100, 0.8, bKill: 1);
+    e.end();
+  // });
+};
