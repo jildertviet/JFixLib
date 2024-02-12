@@ -1,12 +1,20 @@
 #ifndef JFIXTURE_ADDR
 
+#define ADAFRUIT_NEOPIXEL
+#ifdef ADAFRUIT_NEOPIXEL
+#include <Adafruit_NeoPixel.h>
+#else
 #include "FastLED.h"
 #include "FastLedContstants.h"
+#endif
+
 #include "JFixture.h"
 #include "JFixtureGraphics.h"
 #include "ofNoise.h"
 // Addressable leds
-//
+
+Adafruit_NeoPixel pixels(ADAFRUIT_NUM_PIXELS, ADAFRUIT_DATA_PIN,
+                         NEO_GRB + NEO_KHZ800);
 
 class JFixtureAddr : public JFixtureGraphics {
 public:
@@ -22,11 +30,13 @@ public:
   enum JAddressableMode { J_WS2812B, J_WS2816B };
   enum JDrawMode { TEST, TEST_PERLIN, LIVE };
   JDrawMode drawMode = LIVE;
+  JAddressableMode ledMode; // Type of LEDS
 
   void setup(char numColorChannels = 6, const uint8_t *pins = nullptr,
              short numLedsPerString = 60, JAddressableMode mode = J_WS2812B,
              int numStrings = 1) {
     channels = new float[numColorChannels];
+    ledMode = mode;
     this->numLedsPerString = numLedsPerString;
     this->numStrings = numStrings;
     if (mode == J_WS2812B) {
@@ -35,7 +45,9 @@ public:
       for (int i = 0; i < numStrings; i++) {
         leds[i] = new floatColor[numLedsPerString];
         ledsToWrite[i] = new CRGB[numLedsPerString];
+#ifndef ADAFRUIT_NEOPIXEL
         addLeds(pins[i], ledsToWrite[i], numLedsPerString);
+#endif
       }
     } else if (mode == J_WS2816B) {
       leds = new floatColor *[numStrings];
@@ -48,8 +60,12 @@ public:
         // for(int j=0; j<numLedsPerString; j++){
         // ledsValues[i][j] = new float[3];
         // memset(ledsValues[i][j], 0x00, sizeof(float)*3)
-        // }
+#ifndef ADAFRUIT_NEOPIXEL
+        // pixels = new Adafruit_NeoPixel(numLedsPerString, pins[0],
+        // NEO_GRB + NEO_KHZ800);
         addLeds(pins[i], ledsToWrite[i], numLedsPerString * 2);
+#endif
+        // }
       }
     }
     writeRGBPtr = &this->writeRGB;
@@ -121,7 +137,8 @@ public:
   }
 
   void writeRGBHard(int id, float r, float g, float b, char channel,
-                    floatColor **leds) { // Doesn't check previous values
+                    floatColor **leds) { // Doesn't check previous values, but
+                                         // does not override backgroundColor
     if (!leds)
       return;
 
@@ -148,8 +165,18 @@ public:
     // split[0][0], split[2][0]);
   }
 
-  void testLED(){
-
+  void testLED() {
+    for (int h = 0; h < 3; h++) {
+      for (int j = 0; j < numStrings; j++) {
+        for (int i = 0; i < numLedsPerString; i++) {
+          float c[3] = {0, 0, 0};
+          c[h] = 1.0;
+          writeRGBHard(i, c[0], c[1], c[2], j, leds);
+        }
+      }
+      writeLeds();
+      delay(1000);
+    }
   };
   void showSucces() override {}
   void show() override{
@@ -180,28 +207,52 @@ public:
       for (int i = 0; i < numLedsPerString; i++) {
         floatColor *c = &leds[j][i];
         unsigned short rgb[3];
-        rgb[0] = pow(c->r, 2.0) * 65535;
-        // rgb[0] = c->r * 65535;
-        rgb[1] = pow(c->g, 2.0) * 65535;
-        rgb[2] = pow(c->b, 2.0) * 65535;
+        switch (ledMode) {
+        case J_WS2812B: {
+          rgb[0] = pow(c->r, 2.0) * 255;
+          // rgb[0] = c->r * 65535;
+          rgb[1] = pow(c->g, 2.0) * 255;
+          rgb[2] = pow(c->b, 2.0) * 255;
 
-        char split[3][2];
-        for (int i = 0; i < 3; i++) {
-          memcpy(split[i], &rgb[i], 2);
+          ledsToWrite[j][i] = CRGB(rgb[0], rgb[1], rgb[2]);
+        } break;
+        case J_WS2816B: {
+          rgb[0] = pow(c->r, 2.0) * 65535;
+          // rgb[0] = c->r * 65535;
+          rgb[1] = pow(c->g, 2.0) * 65535;
+          rgb[2] = pow(c->b, 2.0) * 65535;
+
+          char split[3][2];
+          for (int i = 0; i < 3; i++) {
+            memcpy(split[i], &rgb[i], 2);
+          }
+
+          ledsToWrite[j][(i * 2) + 0] =
+              CRGB(split[1][0], split[1][1], split[0][1]);
+          ledsToWrite[j][(i * 2) + 1] =
+              CRGB(split[2][1], split[0][0], split[2][0]);
+
+        } break;
         }
-
-        ledsToWrite[j][(i * 2) + 0] =
-            CRGB(split[1][0], split[1][1], split[0][1]);
-        ledsToWrite[j][(i * 2) + 1] =
-            CRGB(split[2][1], split[0][0], split[2][0]);
-
         // Decode to float before pow...
         // ledsToWrite[j][i].r = pow(ledsToWrite[j][i].r, 2);
         // ledsToWrite[j][i].g = pow(ledsToWrite[j][i].g, 2);
         // ledsToWrite[j][i].b = pow(ledsToWrite[j][i].b, 2);
       }
     }
+#ifdef ADAFRUIT_NEOPIXEL
+    for (int j = 0; j < numStrings; j++) {
+      for (int i = 0; i < numLedsPerString; i++) {
+        pixels.setPixelColor(i, pixels.Color(ledsToWrite[j][i].red,
+                                             ledsToWrite[j][i].green,
+                                             ledsToWrite[j][i].blue));
+      }
+      pixels.show();
+    }
+
+#else
     FastLED.show();
+#endif
   }
 
   int ledIndex = 0;

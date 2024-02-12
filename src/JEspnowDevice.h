@@ -265,6 +265,7 @@ public:
 
     slave.channel = CHANNEL;
     slave.encrypt = 0;
+    slave.ifidx = WIFI_IF_AP;
     memcpy(slave.peer_addr, addr, 6);
     if (slave.channel == CHANNEL) {
       Serial.print("Slave Status: ");
@@ -304,13 +305,21 @@ public:
       return;
 
     // Only send when no msg is received for x seconds
-    if (millis() > lastReceived + (60000 + pingOffsetSeed) &&
-            millis() > 10000 ||
+    if (millis() > lastReceived + (60000 + pingOffsetSeed) && millis() > 100 ||
         bOverride) {
       WiFi.mode(WIFI_OFF);
       WiFi.mode(WIFI_STA);
 
       initEspnow(networkName);
+
+      // if (esp_now_init() == ESP_OK) {
+      //   Serial.println("ESPNow Init Success");
+      // } else {
+      //   Serial.println("ESPNow Init Failed, restart...");
+      //   ESP.restart();
+      // }
+      //
+      delay(100);
       uint8_t broadcastAddr[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
       memcpy(replyAddr, &broadcastAddr, 6);
       addPeer(replyAddr);
@@ -318,12 +327,15 @@ public:
       uint8_t msg[7] = {'a', 'l', 'i', 'v', 'e', 0, 0};
       // The function below will add delay() !
       int v = measureBattery(); // This will return 0 if no batteryPin is set
-      memcpy(msg + 1, &v, 4);   // Prefix is 'a'
+      // int v = 1;
+      memcpy(msg + 1, &v, 4); // Prefix is 'a'
       memcpy(
           msg + 1 + 4, &VERSION,
           2); // Msg looks like: 'a', batteryVal (4 bytes), version (2 bytes);
 
       esp_now_send(replyAddr, msg, 7);
+      Serial.println("Send ping!");
+      delay(100);
       WiFi.mode(WIFI_OFF);
       initEspnow(networkName);
       lastReceived = millis();
