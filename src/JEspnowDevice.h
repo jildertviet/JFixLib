@@ -1,5 +1,7 @@
 #pragma once
 #include "JFixture.h"
+// #include <esp_wifi_internal.h>
+#include "esp_private/wifi.h"
 
 #define MAX_MSG 20
 #define MAX_MSG_LEN 250
@@ -62,7 +64,7 @@ public:
   static void receive(const uint8_t *mac_addr, const uint8_t *data,
                       int data_len) {
     char msgType = data[0];
-    // Serial.println("X");
+    // Serial.println("ESPNOW msg received");
     if (msgType != 'a') { // Ignore 'alive'-packets from other ESP32's
       e->lastReceived = millis();
     }
@@ -240,6 +242,8 @@ public:
     this->networkName = networkName;
     WiFi.softAP(networkName.c_str(), randomPw().c_str(), CHANNEL,
                 true); // This sets the channel... ?
+    Serial.print("Using WiFi channel: ");
+    Serial.println(CHANNEL);
     Serial.print("AP MAC address: ");
     Serial.println(WiFi.softAPmacAddress());
     String addr = WiFi.softAPmacAddress(); // 0D:XD:33: etc, replace : with
@@ -249,6 +253,29 @@ public:
     Serial.println(addr); // For copying in SC array, or JSON
     WiFi.softAPmacAddress(myAddr);
     WiFi.disconnect();
+
+    //==================================================
+    WiFi.mode(WIFI_STA);
+
+    /*Stop wifi to change config parameters*/
+    esp_wifi_stop();
+    esp_wifi_deinit();
+
+    /*Disabling AMPDU is necessary to set a fix rate*/
+    wifi_init_config_t my_config =
+        WIFI_INIT_CONFIG_DEFAULT(); // We use the default config ...
+    my_config.ampdu_tx_enable = 0;  //... and modify only what we want.
+    esp_wifi_init(&my_config);      // set the new config
+
+    esp_wifi_start();
+
+    /*You'll see that in the next subsection ;)*/
+    esp_wifi_set_channel(CHANNEL, WIFI_SECOND_CHAN_NONE);
+
+    /*set the rate*/
+    esp_wifi_internal_set_fix_rate(WIFI_IF_STA, true, DATARATE);
+
+    //==================================================
 
     if (esp_now_init() == ESP_OK) {
       Serial.println("ESPNow Init Success");

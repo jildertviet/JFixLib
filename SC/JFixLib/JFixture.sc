@@ -78,7 +78,10 @@ JFixture : JFixtureSynthController{
       if(espnowBridge != nil, {
         6.do{msg.removeAt(0);}; // Remove 0xFF (Used in espnowSender (dongle))
         3.do{msg.removeAt(msg.size-1);}; // Remove "end"-bytes
+        msg.postln;
+        msg = msg.collect({|e| if(e.isInteger, {e}, {e.ascii})});
         espnowBridge.sendMsg("/espnow", Int8Array.newFrom(msg));
+        // espnowBridge.sendMsg("/espnow", msg);
       });
     });
   }

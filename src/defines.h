@@ -1,5 +1,7 @@
 #ifndef JFIXDEFINES
 #define CHANNEL 1
+#define DATARATE WIFI_PHY_RATE_24M
+
 #define VERSION "11"
 
 // A 0 isn't printed in SC, so use 1.1 as first version :)

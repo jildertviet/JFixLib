@@ -5,5 +5,6 @@ Library for light-fixtures.
 - Jonisk
 - tlFixture
 - ledbeam
+    1m and 2m versions
 - pontLights
-- LCD
+- LCD (TODO)
