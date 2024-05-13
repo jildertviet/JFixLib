@@ -1,8 +1,11 @@
 #ifndef JFIXTURE_ADDR
 
-#define ADAFRUIT_NEOPIXEL
+// #define ADAFRUIT_NEOPIXEL // Set this is in the .ini file with build_flags =
+// -D ADAFRUIT_NEOPIXEL=1
 #ifdef ADAFRUIT_NEOPIXEL
 #include <Adafruit_NeoPixel.h>
+Adafruit_NeoPixel pixels(ADAFRUIT_NUM_PIXELS, ADAFRUIT_DATA_PIN,
+                         NEO_GRB + NEO_KHZ800);
 #else
 #include "FastLED.h"
 #include "FastLedContstants.h"
@@ -11,10 +14,6 @@
 #include "JFixture.h"
 #include "JFixtureGraphics.h"
 #include "ofNoise.h"
-// Addressable leds
-
-Adafruit_NeoPixel pixels(ADAFRUIT_NUM_PIXELS, ADAFRUIT_DATA_PIN,
-                         NEO_GRB + NEO_KHZ800);
 
 class JFixtureAddr : public JFixtureGraphics {
 public:
