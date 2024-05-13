@@ -1,0 +1,4 @@
+SPI
+arduino-libraries/Ethernet@^2.0.2
+ArduinoJson
+FastLED
