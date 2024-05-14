@@ -19,6 +19,7 @@ JFixtureCollection {
   var <> globalGuiDict;
   var globalSettingsWindow;
   var <> espnowBridge;
+  var <> broadcaster;
   *new{
     |serial=nil|
     ^super.new.init(serial);
@@ -33,8 +34,13 @@ JFixtureCollection {
           "Use Serial".postln;
       },{
         if(serial.class == NetAddr, {
-          this.espnowBridge = serial;
-          "Use ESPNOW-Bridge".postln;
+          if(serial.hostname.split($.)[3] == "255", {
+            "Use broadcast UDP".postln;
+            this.broadcaster = serial;
+          }, {
+            this.espnowBridge = serial;
+            "Use ESPNOW-Bridge".postln;
+          });
         });
       });
     });
@@ -48,25 +54,30 @@ JFixtureCollection {
     ^p;
   }
   readConfigFile{
-		|path, type="0: JJonisk, 1: JTlFixture"|
+		|path, type="0: JJonisk, 1: JTlFixture, 2: llllllllllll"|
 		var file = JSONFileReader.read(path);
     children.clear();
 		file[0]["active"].do{
 			|j, i|
-			var addr = j[0];
       var serialOrNetAddr;
+			var addr;//  = j[0];
+      if(j["address"] != nil, {addr = j["address"]}, {addr = j[0]});
       if(serial != nil, {
         serialOrNetAddr = serial;
       },{
         if(espnowBridge != nil, {
           serialOrNetAddr = espnowBridge;
         });
+        if(broadcaster != nil, {
+          serialOrNetAddr = broadcaster;
+        })
       });
 			// addr.postln;
 			addr = addr.collect({|e| e.split($x)[1].asHexIfPossible});
       switch(type, 
         0, {children.add(JJonisk.new(i, addr, serialOrNetAddr));},
         1, {children.add(JTLFix.new(i, addr, serialOrNetAddr));},
+        2, {children.add(Jllllllllllll.new(i, addr, serialOrNetAddr));},
       );
 		};
     lastSeenData = [0, 0]!children.size; // [button, time]

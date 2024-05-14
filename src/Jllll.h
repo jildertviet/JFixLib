@@ -34,10 +34,11 @@ public:
     JEspnowDevice::setup(settings.networkName);
     Serial.println("After espnow setup");
 
-    // if (id == 0) {
-    ip = IPAddress(192, 168, 1, 1);
-    // } else {
-    // ip = IPAddress(192, 168, 1, id);
+    if (id == 255 || id == 0) {
+      ip = IPAddress(192, 168, 1, 1);
+    } else {
+      ip = IPAddress(192, 168, 1, id);
+    }
 
     Ethernet.init(5);
     Ethernet.begin(myAddr, ip);
@@ -66,23 +67,11 @@ public:
     JFixtureAddr::update();
     int packetSize = Udp.parsePacket();
     if (packetSize) {
-      Serial.print("Received packet of size ");
-      Serial.println(packetSize);
-      Serial.print("From ");
-      IPAddress remote = Udp.remoteIP();
-      for (int i = 0; i < 4; i++) {
-        Serial.print(remote[i], DEC);
-        if (i < 3) {
-          Serial.print(".");
-        }
-      }
-      Serial.print(", port ");
-      Serial.println(Udp.remotePort());
-
       // read the packet into packetBuffer
-      Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
-      Serial.println("Contents:");
-      Serial.println(packetBuffer);
+      Udp.read(packetBuffer,
+               UDP_TX_PACKET_MAX_SIZE); // Write to char[]
+      Serial.println("Msg received");
+      receive(nullptr, (const uint8_t *)packetBuffer, packetSize);
     }
     // JFixture::update();
   }

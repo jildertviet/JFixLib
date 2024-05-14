@@ -1,11 +1,17 @@
 p = NetAddr.new("localhost", 7997);
+p = NetAddr.new("192.168.1.255", 1111);
 t = JFixtureCollection.new(p);
-t.readConfigFile("/home/jildert/JFixLib/examples/tlFix/tlFix.config", 1);
+t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
+t.children[0].writeID(1) // works
+
 c = JTlFixComp.new(t)
 c.perlin
 c.stop
+"1223.123.123.4444".split($.)[3]
+NetAddr
 // Define red function
-
+d = Dictionary.newFrom(["a", 1]);
+d["a"]
 SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
 a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
 j = a.collect({|e, i| JTLFix.new(i, e, p)});

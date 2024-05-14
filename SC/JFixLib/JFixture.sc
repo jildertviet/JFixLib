@@ -10,6 +10,7 @@ JFixtureSynthController : JModes{
   var <> guiDict;
   var <> bSyncServer = true;
   var <> espnowBridge;
+  var <> broadcaster;
   setAttack{|v| asr[0] = v; synth.set(\a, v);}
   setSustain{|v| asr[1] = v; synth.set(\s, v);}
   setRelease{|v| asr[2] = v; synth.set(\r, v);}
@@ -36,8 +37,14 @@ JFixture : JFixtureSynthController{
       this.serial = serial;
     },{
       if(serial.class == NetAddr, {
-        "Use ESPNOW-bridge".postln;
-        this.espnowBridge = serial;
+        if(serial.hostname.split($.)[3] == "255", {
+          this.broadcaster = serial;
+          NetAddr.broadcastFlag = true;
+          "Use broadcast UDP".postln;
+        }, {
+          "Use ESPNOW-bridge".postln;
+          this.espnowBridge = serial;
+        });
       });
     });
     msgList = List.new;
@@ -57,7 +64,8 @@ JFixture : JFixtureSynthController{
   send{
 		|msg, bMute = false|
     if(bMute == false, {msg.postln});
-		if((serial != nil).or(espnowBridge != nil), {
+    broadcaster.postln;
+		if((serial != nil).or(espnowBridge != nil).or(broadcaster != nil), {
       if(bCollectMsgs, {
         // "Save msg".postln;
         msgList.add(msg);
@@ -75,13 +83,16 @@ JFixture : JFixtureSynthController{
     if(serial != nil, {
       serial.putAll(msg);
     },{
+      6.do{msg.removeAt(0);}; // Remove 0xFF (Used in espnowSender (dongle))
+      3.do{msg.removeAt(msg.size-1);}; // Remove "end"-bytes
+      msg.postln;
       if(espnowBridge != nil, {
-        6.do{msg.removeAt(0);}; // Remove 0xFF (Used in espnowSender (dongle))
-        3.do{msg.removeAt(msg.size-1);}; // Remove "end"-bytes
-        msg.postln;
         msg = msg.collect({|e| if(e.isInteger, {e}, {e.ascii})});
         espnowBridge.sendMsg("/espnow", Int8Array.newFrom(msg));
-        // espnowBridge.sendMsg("/espnow", msg);
+      },{
+        if(broadcaster != nil, {
+          broadcaster.sendRaw(Int8Array.newFrom(msg));
+        })
       });
     });
   }
