@@ -23,12 +23,34 @@ public:
   //   JEspnowDevice::setup(networkName);
   //   JFixtureDimmer::setup(numChannels, pins);
   // }
+  //     Ethernet/examples/UDPSendReceiveString/UDPSendReceiveString.ino
   IPAddress ip;
   unsigned int localPort = 1111;
+  char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; // buffer to hold incoming packet,
+  EthernetUDP Udp;
 
   void setup(JllllSettings settings) {
+    bEspnowEnabled = false;
     JEspnowDevice::setup(settings.networkName);
-    ip = IPAddress(192, 168, 1, id);
+    Serial.println("After espnow setup");
+
+    // if (id == 0) {
+    ip = IPAddress(192, 168, 1, 1);
+    // } else {
+    // ip = IPAddress(192, 168, 1, id);
+
+    Ethernet.init(5);
+    Ethernet.begin(myAddr, ip);
+    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
+      Serial.println("Ethernet shield was not found.  Sorry, can't run without "
+                     "hardware. :(");
+    }
+    if (Ethernet.linkStatus() == LinkOFF) {
+      Serial.println("Ethernet cable is not connected.");
+    }
+
+    // start UDP
+    Udp.begin(localPort);
 
     if (settings.pins) {
       JFixtureAddr::setup(settings.numChannels, settings.pins,
@@ -42,6 +64,26 @@ public:
 
   void update() override {
     JFixtureAddr::update();
+    int packetSize = Udp.parsePacket();
+    if (packetSize) {
+      Serial.print("Received packet of size ");
+      Serial.println(packetSize);
+      Serial.print("From ");
+      IPAddress remote = Udp.remoteIP();
+      for (int i = 0; i < 4; i++) {
+        Serial.print(remote[i], DEC);
+        if (i < 3) {
+          Serial.print(".");
+        }
+      }
+      Serial.print(", port ");
+      Serial.println(Udp.remotePort());
+
+      // read the packet into packetBuffer
+      Udp.read(packetBuffer, UDP_TX_PACKET_MAX_SIZE);
+      Serial.println("Contents:");
+      Serial.println(packetBuffer);
+    }
     // JFixture::update();
   }
   void blink(char num = 1, short dur = 100, short delayTime = 100,

@@ -24,6 +24,7 @@ public:
   unsigned long lastReceived = 0;
   int pingOffsetSeed = 0;
   String networkName = "JV_";
+  bool bEspnowEnabled = true;
 
   virtual void setup(String networkName) override {
     JFixture::setup(networkName);
@@ -250,9 +251,13 @@ public:
                                            // 0x and prepend line w/ 0x
     addr.replace(":", ",0x");
     addr = "0x" + addr;
-    Serial.println(addr); // For copying in SC array, or JSON
-    WiFi.softAPmacAddress(myAddr);
+    Serial.println(addr);          // For copying in SC array, or JSON
+    WiFi.softAPmacAddress(myAddr); // Ethernet uses this
     WiFi.disconnect();
+    if (!bEspnowEnabled) {
+      e = this;
+      return;
+    }
 
     //==================================================
     WiFi.mode(WIFI_STA);
@@ -329,6 +334,8 @@ public:
 
   void sendPing(bool bOverride = false) override {
     if (otaMode != IDLE)
+      return;
+    if (!bEspnowEnabled)
       return;
 
     // Only send when no msg is received for x seconds
