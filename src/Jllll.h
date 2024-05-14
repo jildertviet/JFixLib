@@ -1,9 +1,8 @@
 #include "JFixture.h"
 // #include "JEspnowDevice.h"
 // #include "JFixtureDimmer.h"
+#include "JEthernetDevice.h"
 #include "JFixtureAddr.h"
-#include <Ethernet.h>
-#include <EthernetUdp.h>
 
 class JllllSettings {
 public:
@@ -16,43 +15,21 @@ public:
   uint8_t *pins = nullptr;
 };
 
-class Jllll : public JFixtureAddr {
+class Jllll : public JFixtureAddr, public JEthernetDevice {
 public:
   // void setup(String networkName, char numChannels = 4, uint8_t* pins =
   // nullptr){
   //   JEspnowDevice::setup(networkName);
   //   JFixtureDimmer::setup(numChannels, pins);
   // }
-  //     Ethernet/examples/UDPSendReceiveString/UDPSendReceiveString.ino
-  IPAddress ip;
-  unsigned int localPort = 1111;
-  char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; // buffer to hold incoming packet,
-  EthernetUDP Udp;
 
   void setup(JllllSettings settings) {
     bEspnowEnabled = false;
     JEspnowDevice::setup(settings.networkName);
-    Serial.println("After espnow setup");
 
-    if (id == 255 || id == 0) {
-      ip = IPAddress(192, 168, 1, 1);
-    } else {
-      ip = IPAddress(192, 168, 1, id);
+    if (initEthernet(id, myAddr)) {
+      Serial.println("Ethernet is OK");
     }
-
-    Ethernet.init(5);
-    Ethernet.begin(myAddr, ip);
-    if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-      Serial.println("Ethernet shield was not found.  Sorry, can't run without "
-                     "hardware. :(");
-    }
-    if (Ethernet.linkStatus() == LinkOFF) {
-      Serial.println("Ethernet cable is not connected.");
-    }
-
-    // start UDP
-    Udp.begin(localPort);
-
     if (settings.pins) {
       JFixtureAddr::setup(settings.numChannels, settings.pins,
                           settings.numLedsPerString,
@@ -65,14 +42,9 @@ public:
 
   void update() override {
     JFixtureAddr::update();
-    int packetSize = Udp.parsePacket();
-    if (packetSize) {
-      // read the packet into packetBuffer
-      Udp.read(packetBuffer,
-               UDP_TX_PACKET_MAX_SIZE); // Write to char[]
-      Serial.println("Msg received");
-      receive(nullptr, (const uint8_t *)packetBuffer, packetSize);
-    }
+    JEthernetDevice::receiveUDP(receive);
+
+    // }
     // JFixture::update();
   }
   void blink(char num = 1, short dur = 100, short delayTime = 100,

@@ -3,4 +3,4 @@ tags
 tags.lock
 tags.temp
 */lib_deps
-doxygen
+doxygen/*

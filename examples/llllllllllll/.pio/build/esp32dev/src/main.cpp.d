@@ -284,6 +284,7 @@
  /home/jildert/JFixLib/src/ofNoise.h /home/jildert/JFixLib/src/JOsc.h \
  /home/jildert/JFixLib/src/JWavetable.h /home/jildert/JFixLib/src/JRect.h \
  /home/jildert/JFixLib/src/Jllll.h \
+ /home/jildert/JFixLib/src/JEthernetDevice.h \
  .pio/libdeps/esp32dev/Ethernet/src/Ethernet.h \
  .pio/libdeps/esp32dev/Ethernet/src/EthernetUdp.h \
  .pio/libdeps/esp32dev/Ethernet/src/Ethernet.h
