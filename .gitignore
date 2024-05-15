@@ -2,5 +2,5 @@ certificate.h
 tags
 tags.lock
 tags.temp
-*/lib_deps
+*/lib_deps/
 doxygen/*

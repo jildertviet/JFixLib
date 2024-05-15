@@ -3,6 +3,7 @@
 // #include "JFixtureDimmer.h"
 #include "JEthernetDevice.h"
 #include "JFixtureAddr.h"
+#include "JMotorController.h"
 
 class JllllSettings {
 public:
@@ -15,7 +16,9 @@ public:
   uint8_t *pins = nullptr;
 };
 
-class Jllll : public JFixtureAddr, public JEthernetDevice {
+class Jllll : public JFixtureAddr,
+              public JEthernetDevice,
+              public JMotorController {
 public:
   // void setup(String networkName, char numChannels = 4, uint8_t* pins =
   // nullptr){
@@ -26,6 +29,7 @@ public:
   void setup(JllllSettings settings) {
     bEspnowEnabled = false;
     JEspnowDevice::setup(settings.networkName);
+    // JMotorController::setup();
 
     if (initEthernet(id, myAddr)) {
       Serial.println("Ethernet is OK");
@@ -43,6 +47,7 @@ public:
   void update() override {
     JFixtureAddr::update();
     JEthernetDevice::receiveUDP(receive);
+    JMotorController::updateMotor();
 
     // }
     // JFixture::update();
