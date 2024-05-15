@@ -1,8 +1,10 @@
+#pragma once
 #include <TMCStepper.h>
 
-#define EN_PIN 18           // Enable
-#define DIR_PIN 13          // Direction
-#define STEP_PIN 4          // Step
+#define EN_PIN 18  // Enable
+#define DIR_PIN 13 // Direction
+#define STEP_PIN 4 // Step
+
 #define CS_PIN 42           // Chip select
 #define SW_MOSI 66          // Software Master Out Slave In (MOSI)
 #define SW_MISO 44          // Software Master In Slave Out (MISO)
@@ -22,9 +24,14 @@
 // TMC2130Stepper driver = TMC2130Stepper(CS_PIN, R_SENSE); // Hardware SPI
 // TMC2130Stepper driver = TMC2130Stepper(CS_PIN, R_SENSE, SW_MOSI, SW_MISO,
 // SW_SCK); // Software SPI
-TMC2208Stepper driver = TMC2208Stepper(
-    &SERIAL_PORT,
-    R_SENSE); // Hardware Serial0 TMC2208Stepper driver = TMC2208Stepper(SW_RX,
+// TMC2209Stepper driver = TMC2209Stepper(
+// &SERIAL_PORT, R_SENSE,
+// 0b00); // Hardware Serial0 TMC2209Stepper driver = TMC2209Stepper(SW_RX,
+
+TMC2208Stepper driver =
+    TMC2208Stepper(&SERIAL_PORT, R_SENSE); // Hardware Serial0 TMC2209Stepper
+                                           // driver = TMC2209Stepper(SW_RX,
+// SW_TX, R_SENSE); // Software serial TMC2660Stepper driver =
 // SW_TX, R_SENSE); // Software serial TMC2660Stepper driver =
 // TMC2660Stepper(CS_PIN, R_SENSE); // Hardware SPI TMC2660Stepper driver =
 // TMC2660Stepper(CS_PIN, R_SENSE, SW_MOSI, SW_MISO, SW_SCK); TMC5160Stepper
@@ -36,17 +43,29 @@ constexpr uint32_t steps_per_mm = 80;
 #include <AccelStepper.h>
 AccelStepper stepper = AccelStepper(stepper.DRIVER, STEP_PIN, DIR_PIN);
 
+bool bForward = 1;
+void Task1code(void *pvParameters) {
+  Serial.print("Task1 running on core ");
+  Serial.println(xPortGetCoreID());
+
+  for (;;) {
+    stepper.run();
+  }
+}
+
 class JMotorController {
 public:
-  bool bForward = 1;
-  JMotorController() {
-    SPI.begin();
-    pinMode(CS_PIN, OUTPUT);
-    digitalWrite(CS_PIN, HIGH);
+  JMotorController() {}
+
+  TaskHandle_t Task1;
+  void initMotor() {
+    // SPI.begin();
+    // pinMode(CS_PIN, OUTPUT);
+    // digitalWrite(CS_PIN, HIGH);
     driver.begin(); // Initiate pins and registeries
     driver.toff();
     driver.rms_current(
-        400); // Set stepper current to 600mA. The command is the
+        100); // Set stepper current to 600mA. The command is the
               // same as command TMC2130.setCurrent(600, 0.11, 0.5);
     // driver.en_pwm_mode(1); // Enable extremely quiet stepping
     driver.pwm_autoscale(1);
@@ -58,11 +77,28 @@ public:
     stepper.setEnablePin(EN_PIN);
     stepper.setPinsInverted(false, false, true);
     stepper.enableOutputs();
+    xTaskCreatePinnedToCore(
+        Task1code, /* Task function. */
+        "Task1",   /* name of task. */
+        10000,     /* Stack size of task */
+        NULL,      /* parameter of the task */
+        1,         /* priority of the task */
+        &Task1,    /* Task handle to keep track of created task */
+        1);
   }
-  void receiveMotorCommands(const uint8_t *, const uint8_t *, int) {}
+
+  static void receiveMotorCommands(const uint8_t *mac_addr, const uint8_t *data,
+                                   int data_len) {
+    switch (data[0]) {
+    case 0x01: // Unaddressed
+      Serial.println("TEST");
+      break;
+    }
+  }
   void updateMotor() {
+    // Serial.println("Update motor");
+    // Always running
     if (stepper.distanceToGo() == 0) {
-      // digitalWrite(DIR_PIN, bForward);
       stepper.disableOutputs();
       delay(800);
       int dir = bForward ? 1 : -1;
@@ -70,6 +106,5 @@ public:
       stepper.enableOutputs();
       bForward = !bForward;
     }
-    stepper.run();
   }
 };

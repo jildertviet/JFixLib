@@ -1,6 +1,7 @@
 #pragma once
 #include "JFixture.h"
 // #include <esp_wifi_internal.h>
+#include "JMotorController.h"
 #include "esp_private/wifi.h"
 
 #define MAX_MSG 20
@@ -25,6 +26,8 @@ public:
   int pingOffsetSeed = 0;
   String networkName = "JV_";
   bool bEspnowEnabled = true;
+  void (*receiveMotorCommandsPtr)(const uint8_t *, const uint8_t *,
+                                  int) = nullptr;
 
   virtual void setup(String networkName) override {
     JFixture::setup(networkName);
@@ -173,8 +176,14 @@ public:
       memcpy(&b, data + 1 + (e->id * sizeof(float)), sizeof(float));
       e->setBrightness(b);
     } break;
-    default:
-      break;
+    case 0x35: {
+      if (e->receiveMotorCommandsPtr)
+        e->receiveMotorCommandsPtr(mac_addr, data, data_len);
+    } break;
+    default: {
+    }
+
+    break;
     }
   }
 

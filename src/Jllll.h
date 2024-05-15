@@ -27,18 +27,24 @@ public:
   // }
 
   void setup(JllllSettings settings) {
+    Serial.println("A");
     bEspnowEnabled = false;
     JEspnowDevice::setup(settings.networkName);
+    Serial.println("B");
+    receiveMotorCommandsPtr = &receiveMotorCommands;
+    Serial.println("C");
+    initMotor();
     // JMotorController::setup();
 
-    if (initEthernet(id, myAddr)) {
-      Serial.println("Ethernet is OK");
-    }
+    // if (initEthernet(id, myAddr)) {
+    // Serial.println("Ethernet is OK");
+    // }
     if (settings.pins) {
       JFixtureAddr::setup(settings.numChannels, settings.pins,
                           settings.numLedsPerString,
                           JAddressableMode::J_WS2816B, settings.numStrings);
     }
+    Serial.println("D");
     setLedBuiltin(settings.ledBuiltin);
     // horizontalPixelDistance = settings.horizontalPixelDistance;
     sendPing(true);
@@ -46,7 +52,7 @@ public:
 
   void update() override {
     JFixtureAddr::update();
-    JEthernetDevice::receiveUDP(receive);
+    // JEthernetDevice::receiveUDP(receive);
     JMotorController::updateMotor();
 
     // }

@@ -29,6 +29,7 @@ public:
   enum JAddressableMode { J_WS2812B, J_WS2816B };
   enum JDrawMode { TEST, TEST_PERLIN, LIVE };
   JDrawMode drawMode = LIVE;
+  // JDrawMode drawMode = TEST_PERLIN;
   JAddressableMode ledMode; // Type of LEDS
 
   void setup(char numColorChannels = 6, const uint8_t *pins = nullptr,
