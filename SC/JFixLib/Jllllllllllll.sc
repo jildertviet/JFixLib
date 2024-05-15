@@ -1,8 +1,10 @@
 Jllllllllllll : JFixtureAddr{
+  var motor;
   *new{
     |id, addr, serial|
     ^super.new(id, addr, serial);
   }
+  init{motor = JMotorController.new}
   // *initDefault{
   //   var j, a;
   //   var p = SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true);
@@ -27,5 +29,15 @@ Jllllllllllll : JFixtureAddr{
       });
     }
   }
+  respondsTo { |aSymbol|
+        ^(super.respondsTo(aSymbol) || motor.respondsTo(aSymbol));
+    }
+
+    doesNotUnderstand { |selector ... args|
+        if(motor.respondsTo(selector)) {
+	    ^motor.performList(selector, args);
+        };
+	^this.superPerformList(\doesNotUnderstand, selector, args);
+    }
 }
 

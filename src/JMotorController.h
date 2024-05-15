@@ -45,7 +45,7 @@ AccelStepper stepper = AccelStepper(stepper.DRIVER, STEP_PIN, DIR_PIN);
 
 bool bForward = 1;
 void Task1code(void *pvParameters) {
-  Serial.print("Task1 running on core ");
+  Serial.print("Motor update running on core ");
   Serial.println(xPortGetCoreID());
 
   for (;;) {
