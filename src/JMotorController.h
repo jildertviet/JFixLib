@@ -49,6 +49,8 @@ void Task1code(void *pvParameters) {
   Serial.println(xPortGetCoreID());
 
   for (;;) {
+    if (stepper.distanceToGo() == 0)
+      stepper.disableOutputs();
     stepper.run();
   }
 }
@@ -89,22 +91,25 @@ public:
 
   static void receiveMotorCommands(const uint8_t *mac_addr, const uint8_t *data,
                                    int data_len) {
-    switch (data[0]) {
+    switch (data[6 + 1]) {
     case 0x01: // Unaddressed
       Serial.println("TEST");
-      break;
-    }
-  }
-  void updateMotor() {
-    // Serial.println("Update motor");
-    // Always running
-    if (stepper.distanceToGo() == 0) {
-      stepper.disableOutputs();
-      delay(800);
-      int dir = bForward ? 1 : -1;
-      stepper.move(36 * steps_per_mm * dir); // Move 100mm
+      stepper.move(10 * steps_per_mm);
       stepper.enableOutputs();
-      bForward = !bForward;
+      break;
+    case 0x02:
+      stepper.move(10 * steps_per_mm * -1);
+      stepper.enableOutputs();
     }
   }
-};
+
+  // void updateMotor() {
+  // Serial.println("Update motor");
+  // Always running
+  // int dir = bForward ? 1 : -1;
+  // stepper.move(36 * steps_per_mm * dir); // Move 100mm
+  // stepper.enableOutputs();
+  // bForward = !bForward;
+}
+
+;

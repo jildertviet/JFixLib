@@ -177,8 +177,9 @@ public:
       e->setBrightness(b);
     } break;
     case 0x35: {
-      if (e->receiveMotorCommandsPtr)
+      if (e->receiveMotorCommandsPtr) {
         e->receiveMotorCommandsPtr(mac_addr, data, data_len);
+      }
     } break;
     default: {
     }

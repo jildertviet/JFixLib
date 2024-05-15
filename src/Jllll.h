@@ -27,14 +27,10 @@ public:
   // }
 
   void setup(JllllSettings settings) {
-    Serial.println("A");
-    bEspnowEnabled = false;
+    // bEspnowEnabled = false;
     JEspnowDevice::setup(settings.networkName);
-    Serial.println("B");
     receiveMotorCommandsPtr = &receiveMotorCommands;
-    Serial.println("C");
     initMotor();
-    // JMotorController::setup();
 
     // if (initEthernet(id, myAddr)) {
     // Serial.println("Ethernet is OK");
@@ -53,7 +49,7 @@ public:
   void update() override {
     JFixtureAddr::update();
     // JEthernetDevice::receiveUDP(receive);
-    JMotorController::updateMotor();
+    // JMotorController::updateMotor();
 
     // }
     // JFixture::update();
