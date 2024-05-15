@@ -287,4 +287,19 @@
  /home/jildert/JFixLib/src/JEthernetDevice.h \
  .pio/libdeps/esp32dev/Ethernet/src/Ethernet.h \
  .pio/libdeps/esp32dev/Ethernet/src/EthernetUdp.h \
- .pio/libdeps/esp32dev/Ethernet/src/Ethernet.h
+ .pio/libdeps/esp32dev/Ethernet/src/Ethernet.h \
+ /home/jildert/JFixLib/src/JMotorController.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/TMCStepper.h \
+ /home/jildert/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src/SPI.h \
+ /home/jildert/.platformio/packages/framework-arduinoespressif32/cores/esp32/esp32-hal-spi.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/SERIAL_SWITCH.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC_platforms.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/SW_SPI.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC2130_bitfields.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC2160_bitfields.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC5130_bitfields.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC5160_bitfields.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC2208_bitfields.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC2209_bitfields.h \
+ .pio/libdeps/esp32dev/TMCStepper/src/source/TMC2660_bitfields.h \
+ .pio/libdeps/esp32dev/AccelStepper/src/AccelStepper.h

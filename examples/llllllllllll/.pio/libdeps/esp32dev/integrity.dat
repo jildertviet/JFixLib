@@ -1,4 +1,6 @@
+TMCStepper
 SPI
-arduino-libraries/Ethernet@^2.0.2
-ArduinoJson
 FastLED
+ArduinoJson
+AccelStepper
+arduino-libraries/Ethernet@^2.0.2
