@@ -1,8 +1,10 @@
 p = NetAddr.new("localhost", 7997);
-p = NetAddr.new("192.168.1.255", 1111);
+p = NetAddr.new("192.168.1.255", 1111); // Ethernet
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
-t.children[0].writeID(1) // works
+
+t.children[0].motor.bBroadcast = true; // Confusing...
+t.children[0].move(-4.1);
 
 c = JTlFixComp.new(t)
 c.perlin

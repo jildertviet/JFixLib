@@ -72,7 +72,6 @@ JFixtureCollection {
           serialOrNetAddr = broadcaster;
         })
       });
-			// addr.postln;
 			addr = addr.collect({|e| e.split($x)[1].asHexIfPossible});
       switch(type, 
         0, {children.add(JJonisk.new(i, addr, serialOrNetAddr));},

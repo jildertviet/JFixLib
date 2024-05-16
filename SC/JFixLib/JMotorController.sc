@@ -2,20 +2,20 @@ JMotorController : JFixture {
   *new{
     |id, addr, serial|
   "Motor controller".postln;
-    ^super.new().init();
+    ^super.new(id, addr, serial);
   }
-  init{}
+  // init{}
 
   move{|relative=10|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x01] ++ relative.asBytes32 ++ "end");
+    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x01] ++ relative.asFloat.asBytes32 ++ "end");
   }
   moveTo{|absolute=10|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x01] ++ absolute.asBytes32 ++ "end");
+    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x02] ++ absolute.asFloat.asBytes32 ++ "end");
   }
-  setAccelleration{|accell=10|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x01] ++ accell.asBytes32 ++ "end");
+  setAcceleration{|accell=10|
+    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x03] ++ accell.asFloat.asBytes32 ++ "end");
   }
   setMaxSpeed{|speed=1.0|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x01] ++ speed.asBytes32 ++ "end");
+    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x04] ++ speed.asFloat.asBytes32 ++ "end");
   }
 }

@@ -67,7 +67,7 @@ public:
     driver.begin(); // Initiate pins and registeries
     driver.toff();
     driver.rms_current(
-        100); // Set stepper current to 600mA. The command is the
+        200); // Set stepper current to 600mA. The command is the
               // same as command TMC2130.setCurrent(600, 0.11, 0.5);
     // driver.en_pwm_mode(1); // Enable extremely quiet stepping
     driver.pwm_autoscale(1);
@@ -91,15 +91,24 @@ public:
 
   static void receiveMotorCommands(const uint8_t *mac_addr, const uint8_t *data,
                                    int data_len) {
+    float val;
+    memcpy(&val, data + 6 + 1 + 1, sizeof(float));
+
     switch (data[6 + 1]) {
-    case 0x01: // Unaddressed
-      Serial.println("TEST");
-      stepper.move(10 * steps_per_mm);
+    case 0x01: // move (rel)
+      stepper.move(val * steps_per_mm);
       stepper.enableOutputs();
       break;
-    case 0x02:
-      stepper.move(10 * steps_per_mm * -1);
+    case 0x02: // moveTo (abs)
+      stepper.moveTo(val * steps_per_mm);
       stepper.enableOutputs();
+      break;
+    case 0x03: // setAccell
+      stepper.setAcceleration(val * steps_per_mm);
+      break;
+    case 0x04: // setSpeed
+      stepper.setMaxSpeed(val * steps_per_mm);
+      break;
     }
   }
 
