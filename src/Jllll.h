@@ -10,7 +10,7 @@ public:
   JllllSettings(){};
   String networkName = "JV_";
   char numChannels = 3;
-  uint8_t numLedsPerString = 144;
+  uint8_t numLedsPerString = 234;
   char numStrings = 1;
   char ledBuiltin = 5;
   uint8_t *pins = nullptr;
@@ -32,9 +32,15 @@ public:
     receiveMotorCommandsPtr = &receiveMotorCommands;
     initMotor();
 
-    // if (initEthernet(id, myAddr)) {
-    // Serial.println("Ethernet is OK");
-    // }
+    pinMode(25, OUTPUT);
+    digitalWrite(25, LOW);
+    delayMicroseconds(600);
+    digitalWrite(25, HIGH);
+    delay(10);
+
+    if (initEthernet(id, myAddr, 21)) {
+      Serial.println("Ethernet is OK");
+    }
     if (settings.pins) {
       JFixtureAddr::setup(settings.numChannels, settings.pins,
                           settings.numLedsPerString,

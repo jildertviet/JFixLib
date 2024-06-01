@@ -10,14 +10,14 @@ public:
   char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; // buffer to hold incoming packet,
   EthernetUDP Udp;
 
-  bool initEthernet(char id, uint8_t *addr) {
+  bool initEthernet(char id, uint8_t *addr, int pin) {
     if (id == 255 || id == 0) {
       ip = IPAddress(192, 168, 1, 1);
     } else {
       ip = IPAddress(192, 168, 1, id);
     }
 
-    Ethernet.init(5);
+    Ethernet.init(pin);
     Ethernet.begin(addr, ip);
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
       Serial.println("Ethernet shield was not found.  Sorry, can't run without "

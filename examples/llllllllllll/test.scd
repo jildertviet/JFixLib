@@ -4,7 +4,21 @@ t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
 
 t.children[0].motor.bBroadcast = true; // Confusing...
-t.children[0].move(-4.1);
+t.children[0].move(20.0 * 1);
+t.children[0].move(20.0 * -1);
+
+t.children[0].moveTo(20.0);
+t.children[0].moveTo(0);
+
+(
+x.stop;
+x = {inf.do{|i| t.children[0].moveTo([0, 10, 20, 0, 20].wrapAt(i)); 0.8.wait;}}.fork;
+)
+
+t.children[0].setAcceleration(350.0);
+t.children[0].move(-10);
+
+t.children[0].setMaxSpeed(400.0);
 
 c = JTlFixComp.new(t)
 c.perlin
@@ -101,3 +115,6 @@ s.scope
 )
 
 t.children.do{|e| e.deepSleep(1.0)};
+
+
+
