@@ -43,10 +43,21 @@ public:
     Event *e = nullptr;
     switch (data[0]) {
     case 0x01: { // Perlin
+      for (int i = 0; i < data_len; i++) {
+        Serial.print((int)data[i]);
+        Serial.print(" ");
+      }
+      Serial.println();
       JEvent_Perlin *p = new JEvent_Perlin();
       memcpy(&(p->id), data + 1, sizeof(int) * 1);
       memcpy(&(p->loc), data + 1 + (sizeof(float) * 1), sizeof(float) * 2);
+      Serial.print(p->loc[0]);
+      Serial.print(",");
+      Serial.println(p->loc[1]);
       memcpy(&(p->size), data + 1 + (sizeof(float) * 3), sizeof(float) * 2);
+      Serial.print(p->size[0]);
+      Serial.print(",");
+      Serial.println(p->size[1]);
       memcpy(&(p->rgba), data + 1 + (sizeof(float) * 5), sizeof(float) * 4);
       memcpy(&p->bWaitForEnv, data + 1 + (sizeof(float) * 9), 1);
 

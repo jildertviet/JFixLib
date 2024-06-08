@@ -17,7 +17,8 @@ public:
   // int horizontalPixelDistance = 10; // Beams are 10 pixels from eachother
 
   void update() {
-    // checkLifetime();
+    updateEnvelopes();
+    checkLifeTime();
   }
 
   void draw(floatColor **leds, int numLedsPerString, char numStrings,

@@ -48,6 +48,9 @@ public:
              int numStrings = 1) {
     channels = new float[numColorChannels];
     ledMode = mode;
+#ifdef NEOPIXELBUS
+    numLedsPerString = NEOPIXELBUS_NUMLEDS;
+#endif
     this->numLedsPerString = numLedsPerString;
     this->numStrings = numStrings;
     if (mode == J_WS2812B) {
@@ -82,6 +85,7 @@ public:
     writeRGBPtr = &this->writeRGB;
     initCurve();
 #ifdef NEOPIXELBUS
+    Serial.println("Use NeoPixelBus");
     strip.Begin();
 #endif
     testLED();
@@ -216,7 +220,7 @@ public:
     // for (int j = 0; j < numStrings; j++) {
     // memcpy(ledsToWrite[j], leds[j], numLedsPerString * 2 * sizeof(CRGB));
     // }
-
+#ifndef NEOPIXELBUS
     for (int j = 0; j < numStrings; j++) {
       for (int i = 0; i < numLedsPerString; i++) {
         floatColor *c = &leds[j][i];
@@ -254,6 +258,7 @@ public:
         // ledsToWrite[j][i].b = pow(ledsToWrite[j][i].b, 2);
       }
     }
+#endif
 #ifdef ADAFRUIT_NEOPIXEL
     for (int j = 0; j < numStrings; j++) {
       for (int i = 0; i < numLedsPerString; i++) {
@@ -270,6 +275,7 @@ public:
                           Rgb48Color(leds[0][i].r * 65535, leds[0][i].g * 65535,
                                      leds[0][i].b * 65535));
     }
+    strip.Show();
 #else
     FastLED.show();
 #endif

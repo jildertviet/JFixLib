@@ -32,24 +32,24 @@ public:
     receiveMotorCommandsPtr = &receiveMotorCommands;
     initMotor();
 
-    // if (initEthernet(id, myAddr)) {
-    // Serial.println("Ethernet is OK");
-    // }
+    if (initEthernet(id, myAddr)) {
+      Serial.println("Ethernet is OK");
+    }
     if (settings.pins) {
       JFixtureAddr::setup(settings.numChannels, settings.pins,
                           settings.numLedsPerString,
                           JAddressableMode::J_WS2816B, settings.numStrings);
     }
-    Serial.println("D");
     setLedBuiltin(settings.ledBuiltin);
     // horizontalPixelDistance = settings.horizontalPixelDistance;
-    sendPing(true);
+
+    // sendPing(true);
   }
 
   void update() override {
     JFixtureAddr::update();
-    // JEthernetDevice::receiveUDP(receive);
-    // JMotorController::updateMotor();
+    JEthernetDevice::receiveUDP(receive);
+    // JMotorController::updateMotor(); // Happens in other core... ?
 
     // }
     // JFixture::update();

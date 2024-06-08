@@ -1,7 +1,7 @@
 #pragma once
 #include <TMCStepper.h>
 
-#define EN_PIN 18  // Enable
+#define EN_PIN 14  // Enable
 #define DIR_PIN 13 // Direction
 #define STEP_PIN 4 // Step
 
@@ -28,9 +28,9 @@
 // &SERIAL_PORT, R_SENSE,
 // 0b00); // Hardware Serial0 TMC2209Stepper driver = TMC2209Stepper(SW_RX,
 
-TMC2208Stepper driver =
-    TMC2208Stepper(&SERIAL_PORT, R_SENSE); // Hardware Serial0 TMC2209Stepper
-                                           // driver = TMC2209Stepper(SW_RX,
+// TMC2208Stepper driver =
+// TMC2208Stepper(&SERIAL_PORT, R_SENSE); // Hardware Serial0
+TMC2209Stepper driver = TMC2209Stepper(&SERIAL_PORT, R_SENSE, 0b00);
 // SW_TX, R_SENSE); // Software serial TMC2660Stepper driver =
 // SW_TX, R_SENSE); // Software serial TMC2660Stepper driver =
 // TMC2660Stepper(CS_PIN, R_SENSE); // Hardware SPI TMC2660Stepper driver =
@@ -49,8 +49,8 @@ void Task1code(void *pvParameters) {
   Serial.println(xPortGetCoreID());
 
   for (;;) {
-    if (stepper.distanceToGo() == 0)
-      stepper.disableOutputs();
+    // if (stepper.distanceToGo() == 0)
+    // stepper.disableOutputs();
     stepper.run();
   }
 }
@@ -62,8 +62,8 @@ public:
   TaskHandle_t Task1;
   void initMotor() {
     // SPI.begin();
-    // pinMode(CS_PIN, OUTPUT);
-    // digitalWrite(CS_PIN, HIGH);
+    pinMode(CS_PIN, OUTPUT);
+    digitalWrite(CS_PIN, HIGH);
     driver.begin(); // Initiate pins and registeries
     driver.toff();
     driver.rms_current(
@@ -94,9 +94,11 @@ public:
     float val;
     memcpy(&val, data + 6 + 1 + 1, sizeof(float));
 
+    Serial.println("Motor cmd");
     switch (data[6 + 1]) {
     case 0x01: // move (rel)
       stepper.move(val * steps_per_mm);
+      Serial.println("Move");
       stepper.enableOutputs();
       break;
     case 0x02: // moveTo (abs)
