@@ -2,24 +2,30 @@ p = NetAddr.new("localhost", 7997);
 p = NetAddr.new("192.168.1.255", 1111); // Ethernet
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
+j = t.children[1]
+j.bBroadcast = true;
+j.motor.bBroadcast = true; // Confusing...
+j.move([1,-1].choose*9);
+x = {inf.do{j.move([1,-1].choose*9);3.wait;}}.fork;
 
-t.children[0].motor.bBroadcast = true; // Confusing...
-t.children[0].move(20.0 * 1);
-t.children[0].move(20.0 * -1);
+j.setMaxSpeed(9.0)
 
-t.children[0].moveTo(20.0);
-t.children[0].moveTo(0);
+j.setBackground([0.1, 0.0, 0.1, 0.0] * 0);
+t.children.do{|j,i| j.writeID(i+1)};
+j.writeID(0x02);
+j.address
 
 (
-x.stop;
-x = {inf.do{|i| t.children[0].moveTo([0, 10, 20, 0, 20].wrapAt(i)); 0.8.wait;}}.fork;
+  var p = JFixEvent_Perlin.new(t.children[1])
+  .noiseTimeScale_(0.01)
+  .size_([2,4])
+  .rgba_(0.1!4)
+  .bWaitForEnv_(0)
+  .horizontalPixelOffset_(30 * 1)
+  .noiseScale_(0.01)
+  .noiseTimeScale_(0.0003);
+  t.children[1].addEvent(p);
 )
-
-t.children[0].setAcceleration(350.0);
-t.children[0].move(-10);
-
-t.children[0].setMaxSpeed(400.0);
-
 c = JTlFixComp.new(t)
 c.perlin
 c.stop
@@ -69,13 +75,13 @@ JTLFix.setViewportOffset(t.children, true);
 ~red = {
     var j = t.children;
 var b;
-j[0].start;
-b = JFixEvent_JRect.new(j[0]).size_([0.5, 1.0]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
-j[0].addEvent(b);
+j[1].start;
+b = JFixEvent_JRect.new(j[1]).size_([0.5, 1.0]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
+j[1].addEvent(b);
 b.doEnv('b', 1, 900, 50, bKill: 1);
 // b.doEnv('w', 500, 900, 400, 10); // seq on from L to R. 
 b.doEnv('w', 1, 1000, 400, 10);
-j[0].end;
+j[1].end;
 };
 ~red.();
 )

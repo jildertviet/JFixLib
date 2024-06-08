@@ -6,7 +6,18 @@
 #include <Adafruit_NeoPixel.h>
 Adafruit_NeoPixel pixels(ADAFRUIT_NUM_PIXELS, ADAFRUIT_DATA_PIN,
                          NEO_GRB + NEO_KHZ800);
+#elif NEOPIXELBUS
+#include <NeoPixelBus.h>
+#ifndef NEOPIXELBUS_PIN
+#define NEOPIXELBUS_PIN 22
+#endif
+#ifndef NEOPIXELBUS_NUMLEDS
+#define NEOPIXELBUS_NUMLEDS 234
+#endif
+NeoPixelBus<NeoGrb48Feature, NeoEsp32I2s1X8Ws2816Method>
+    strip(NEOPIXELBUS_NUMLEDS, NEOPIXELBUS_PIN);
 #else
+#define JFIX_FASTLED
 #include "FastLED.h"
 #include "FastLedContstants.h"
 #endif
@@ -37,6 +48,9 @@ public:
              int numStrings = 1) {
     channels = new float[numColorChannels];
     ledMode = mode;
+#ifdef NEOPIXELBUS
+    numLedsPerString = NEOPIXELBUS_NUMLEDS;
+#endif
     this->numLedsPerString = numLedsPerString;
     this->numStrings = numStrings;
     if (mode == J_WS2812B) {
@@ -45,7 +59,7 @@ public:
       for (int i = 0; i < numStrings; i++) {
         leds[i] = new floatColor[numLedsPerString];
         ledsToWrite[i] = new CRGB[numLedsPerString];
-#ifndef ADAFRUIT_NEOPIXEL
+#ifdef JFIX_FASTLED
         addLeds(pins[i], ledsToWrite[i], numLedsPerString);
 #endif
       }
@@ -60,7 +74,7 @@ public:
         // for(int j=0; j<numLedsPerString; j++){
         // ledsValues[i][j] = new float[3];
         // memset(ledsValues[i][j], 0x00, sizeof(float)*3)
-#ifndef ADAFRUIT_NEOPIXEL
+#ifdef JFIX_FASTLED
         // pixels = new Adafruit_NeoPixel(numLedsPerString, pins[0],
         // NEO_GRB + NEO_KHZ800);
         addLeds(pins[i], ledsToWrite[i], numLedsPerString * 2);
@@ -70,6 +84,10 @@ public:
     }
     writeRGBPtr = &this->writeRGB;
     initCurve();
+#ifdef NEOPIXELBUS
+    Serial.println("Use NeoPixelBus");
+    strip.Begin();
+#endif
     testLED();
     allBlack(true);
 
@@ -202,7 +220,7 @@ public:
     // for (int j = 0; j < numStrings; j++) {
     // memcpy(ledsToWrite[j], leds[j], numLedsPerString * 2 * sizeof(CRGB));
     // }
-
+#ifndef NEOPIXELBUS
     for (int j = 0; j < numStrings; j++) {
       for (int i = 0; i < numLedsPerString; i++) {
         floatColor *c = &leds[j][i];
@@ -240,6 +258,7 @@ public:
         // ledsToWrite[j][i].b = pow(ledsToWrite[j][i].b, 2);
       }
     }
+#endif
 #ifdef ADAFRUIT_NEOPIXEL
     for (int j = 0; j < numStrings; j++) {
       for (int i = 0; i < numLedsPerString; i++) {
@@ -250,6 +269,13 @@ public:
       pixels.show();
     }
 
+#elif NEOPIXELBUS
+    for (int i = 0; i < NEOPIXELBUS_NUMLEDS; i++) {
+      strip.SetPixelColor(i,
+                          Rgb48Color(leds[0][i].r * 65535, leds[0][i].g * 65535,
+                                     leds[0][i].b * 65535));
+    }
+    strip.Show();
 #else
     FastLED.show();
 #endif
