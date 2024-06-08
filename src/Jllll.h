@@ -10,7 +10,7 @@ public:
   JllllSettings(){};
   String networkName = "JV_";
   char numChannels = 3;
-  uint8_t numLedsPerString = 144;
+  uint8_t numLedsPerString = 234;
   char numStrings = 1;
   char ledBuiltin = 5;
   uint8_t *pins = nullptr;

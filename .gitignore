@@ -5,3 +5,4 @@ tags.temp
 **/libdeps/
 **/build/
 doxygen/*
+**/build/
