@@ -2,6 +2,7 @@
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 // #define UDP_TX_PACKET_MAX_SIZE 256
+// Modify file in .pio/build/libdeps/Ethernet/Ethernet.h
 
 //     Ethernet/examples/UDPSendReceiveString/UDPSendReceiveString.ino
 class JEthernetDevice {

@@ -43,7 +43,7 @@ public:
     setLedBuiltin(settings.ledBuiltin);
     // horizontalPixelDistance = settings.horizontalPixelDistance;
 
-    // sendPing(true);
+    sendPing(true); // To set macaddr?
   }
 
   void update() override {
