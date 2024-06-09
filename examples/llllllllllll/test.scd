@@ -4,13 +4,22 @@ t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
 j = t.children[1]
 j.bBroadcast = true;
+j.bBroadcast = false;
 j.motor.bBroadcast = true; // Confusing...
+j.motor.bBroadcast = false; // Confusing...
 j.move([1,-1].choose*9);
-x = {inf.do{j.move([1,-1].choose*9);3.wait;}}.fork;
+x = {inf.do{j.move([1,-1].choose*34);5.wait;}}.fork;
+x.stop
+x = {inf.do{t.children.do{|j| j.setMaxSpeed([5,10].choose);j.move([-1, 1].choose * rrand(10, 80))}; 5.wait; }}.fork;
+x.stop
 
-j.setMaxSpeed(9.0)
+j.setMaxSpeed(15.0)
+j.setAcceleration(30.0);
 
-j.setBackground([0.1, 0.0, 0.1, 0.0] * 0);
+j.setBackground([0.1, 0.0, 0.1, 0.0] * 4);
+t.children.do({|j| j.setBackground([[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.1, 0.0]].choose * 9)});
+t.children[0].setBackground([0.1, 0.0, 0.0, 0.0]);
+t.children[1].move(-10);
 t.children.do{|j,i| j.writeID(i+1)};
 j.writeID(0x02);
 j.address
@@ -19,7 +28,7 @@ j.address
   var p = JFixEvent_Perlin.new(t.children[1])
   .noiseTimeScale_(0.01)
   .size_([2,4])
-  .rgba_(0.1!4)
+  .rgba_(0.2!4)
   .bWaitForEnv_(0)
   .horizontalPixelOffset_(30 * 1)
   .noiseScale_(0.01)
@@ -75,13 +84,13 @@ JTLFix.setViewportOffset(t.children, true);
 ~red = {
     var j = t.children;
 var b;
-j[1].start;
+// j[1].start;
 b = JFixEvent_JRect.new(j[1]).size_([0.5, 1.0]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
-j[1].addEvent(b);
-b.doEnv('b', 1, 900, 50, bKill: 1);
+// j[1].addEvent(b);
+// b.doEnv('b', 1, 900, 50, bKill: 1);
 // b.doEnv('w', 500, 900, 400, 10); // seq on from L to R. 
-b.doEnv('w', 1, 1000, 400, 10);
-j[1].end;
+// b.doEnv('w', 1, 1000, 400, 10);
+// j[1].end;
 };
 ~red.();
 )

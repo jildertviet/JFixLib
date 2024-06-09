@@ -46,7 +46,7 @@ public:
 
   void receiveUDP(void (*ptr)(const uint8_t *, const uint8_t *, int)) {
     int packetSize = Udp.parsePacket();
-    if (packetSize) {
+    if (packetSize && packetSize < UDP_TX_PACKET_MAX_SIZE) {
       Serial.println(packetSize);
       // read the packet into packetBuffer
       Udp.read(packetBuffer,
