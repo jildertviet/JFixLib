@@ -91,6 +91,7 @@ JFixture : JFixtureSynthController{
         espnowBridge.sendMsg("/espnow", Int8Array.newFrom(msg));
       },{
         if(broadcaster != nil, {
+          msg = msg.collect({|e| if(e.isInteger, {e}, {e.ascii})});
           broadcaster.sendRaw(Int8Array.newFrom(msg));
         })
       });

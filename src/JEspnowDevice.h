@@ -26,6 +26,7 @@ public:
   int pingOffsetSeed = 0;
   String networkName = "JV_";
   bool bEspnowEnabled = true;
+  bool bEspnowPingEnabled = true;
   void (*receiveMotorCommandsPtr)(const uint8_t *, const uint8_t *,
                                   int) = nullptr;
 
@@ -345,6 +346,8 @@ public:
     if (otaMode != IDLE)
       return;
     if (!bEspnowEnabled)
+      return;
+    if (!bEspnowPingEnabled)
       return;
 
     // Only send when no msg is received for x seconds

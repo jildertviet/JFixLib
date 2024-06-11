@@ -10,31 +10,45 @@ j.motor.bBroadcast = false; // Confusing...
 j.move([1,-1].choose*9);
 x = {inf.do{j.move([1,-1].choose*34);5.wait;}}.fork;
 x.stop
-x = {inf.do{t.children.do{|j| j.setMaxSpeed([5,10].choose);j.move([-1, 1].choose * rrand(10, 80))}; 5.wait; }}.fork;
+x = {inf.do{t.children.do{|j| j.setMaxSpeed([10].choose);j.move([-1, 1].choose * rrand(10, 80))}; 9.wait; }}.fork;
+x = {inf.do{|i| t.children.do{|j, h| j.move([-1, 1].wrapAt(i + h) * 60)}; 9.wait; }}.fork;
 x.stop
+t.children.do{|j| j.moveTo(30)}
 
-j.setMaxSpeed(15.0)
-j.setAcceleration(30.0);
+j.setMaxSpeed(10.0)
+j.setAcceleration(2.0);
 
-j.setBackground([0.1, 0.0, 0.1, 0.0] * 4);
+j.setBackground([0.1, 0.0, 0.1, 0.0] * 0);
 t.children.do({|j| j.setBackground([[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.1, 0.0]].choose * 9)});
 t.children[0].setBackground([0.1, 0.0, 0.0, 0.0]);
 t.children[1].move(-10);
 t.children.do{|j,i| j.writeID(i+1)};
 j.writeID(0x02);
 j.address
-
+t.children.do{|j, i|j.bBroadcast = false; j.setViewportOffset([i * 1.0, 0])};
 (
-  var p = JFixEvent_Perlin.new(t.children[1])
-  .noiseTimeScale_(0.01)
-  .size_([2,4])
-  .rgba_(0.2!4)
+t.children.do{|j, i|
+  var p;
+  j.bBroadcast = false;
+  p = JFixEvent_Perlin.new(j)
+  // .noiseTimeScale_(0.01)
+  .size_([1,1])
+  // .rgba_(0.4!4)
+  .rgba_([0.1, 0.005, 0.1, 0.0] * 8)
   .bWaitForEnv_(0)
-  .horizontalPixelOffset_(30 * 1)
-  .noiseScale_(0.01)
+  .horizontalPixelOffset_(30 * i)
+  .noiseScale_(0.005)
   .noiseTimeScale_(0.0003);
-  t.children[1].addEvent(p);
+  j.addEvent(p);
+  {p.sync}.defer(1);
+};
 )
+(
+var p = JFixEvent_JOsc.new(t.children[1]).freq_(0.15).rgba_([0.1, 0.0, 0.0, 0.0] * 4);
+// var p = JFixEvent_JOsc.new(t.children[1]).freq_(0.1).rgba_([0.0, 0.0, 0.1, 0.0] * 4);
+t.children[1].addEvent(p);
+)
+j.bBroadcast = true;j.deleteEvents
 c = JTlFixComp.new(t)
 c.perlin
 c.stop
@@ -48,7 +62,13 @@ a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
 j = a.collect({|e, i| JTLFix.new(i, e, p)});
 
 t.gui
+("{}".asArray ++ [0x00]).asArray[2]
+[0x00] ++ "End"
+"End" ++ [0x00]
 ~f = t.children
+e = t.children[1];
+e.setOTAServer("Klank", ~pw, "https://192.168.10.249/.pio/build/esp32dev/firmware.bin");
+e.address ++ Int8Array.newFrom([0x00]);
 (
 {
 t.children.at([0]).do{|e|
@@ -74,9 +94,9 @@ x = {
 )
 
 // t.children.at([0]).do{|e| e.setBackground([1.0, 1.0, 1.0, 0.0] * 0.1);};
-t.children.do{|e| e.setBackground([1.0, 1.0, 1,0, 0.0] * 0.0);};
+t.children.do{|e| e.setBackground([1.0, 1.0, 1,0, 0.0] * 0.1);};
 
-t.children[0].deleteEvents
+t.children[1].deleteEvents
 t.children[0].bBroadcast = true
 JTLFix.setViewportOffset(t.children, true);
 
@@ -86,8 +106,8 @@ JTLFix.setViewportOffset(t.children, true);
 var b;
 // j[1].start;
 b = JFixEvent_JRect.new(j[1]).size_([0.5, 1.0]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
-// j[1].addEvent(b);
-// b.doEnv('b', 1, 900, 50, bKill: 1);
+j[1].addEvent(b);
+b.doEnv('b', 1, 900, 50, bKill: 1);
 // b.doEnv('w', 500, 900, 400, 10); // seq on from L to R. 
 // b.doEnv('w', 1, 1000, 400, 10);
 // j[1].end;
