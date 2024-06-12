@@ -8,3 +8,8 @@ Library for light-fixtures.
     1m and 2m versions
 - pontLights
 - LCD (TODO)
+- ||||||||||||
+
+# Dependancies
+Quark json
+Quark wslib
