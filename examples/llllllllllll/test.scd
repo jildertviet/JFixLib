@@ -11,11 +11,11 @@ j.move([1,-1].choose*9);
 x = {inf.do{j.move([1,-1].choose*34);5.wait;}}.fork;
 x.stop
 x = {inf.do{t.children.do{|j| j.setMaxSpeed([10].choose);j.move([-1, 1].choose * rrand(10, 80))}; 9.wait; }}.fork;
-x = {inf.do{|i| t.children.do{|j, h| j.move([-1, 1].wrapAt(i + h) * 60)}; 9.wait; }}.fork;
+x = {inf.do{|i| t.children.do{|j, h| j.move([-1, 1].wrapAt(i + h) * 30)}; 7.wait; }}.fork;
 x.stop
-t.children.do{|j| j.moveTo(30)}
+t.children.do{|j| j.moveTo(0)}
 
-j.setMaxSpeed(10.0)
+j.setMaxSpeed(15.0)
 j.setAcceleration(2.0);
 
 j.setBackground([0.1, 0.0, 0.1, 0.0] * 0);
