@@ -387,7 +387,7 @@ JFixtureCollection {
         guiItems.add([e.address, batteryField, fwVersion]);
 				HLayout(
 					[StaticText.new().string_(e.id).background_(Color.black.alpha_(0.1)), s: 5],
-					[StaticText.new().string_(e.getAddressHexString.asCompileString.replace("\"", "").replace("]", "").replace("[", "")).background_(Color.black.alpha_(0.1)), s: 60],
+					// [StaticText.new().string_(e.getAddressHexString.asCompileString.replace("\"", "").replace("]", "").replace("[", "")).background_(Color.black.alpha_(0.1)), s: 60], // Currently disabled (13-06-2024, to compile on Ubuntu, SC 3.10)
           [batteryField, s: 10],          
           [fwVersion, s: 10],
 					[guiButtonView, s: 10],
