@@ -13,3 +13,4 @@ Library for light-fixtures.
 # Dependancies
 Quark json
 Quark wslib
+J_Pseudo (other repo)
