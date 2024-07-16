@@ -16,10 +16,11 @@ x = {inf.do{|i| t.children.do{|j, h| j.move([-1, 1].wrapAt(i + h) * 30)}; 7.wait
 x.stop
 t.children.do{|j| j.moveTo(0)}
 
-j.setMaxSpeed(10.0)
+j.setMaxSpeed(5.0)
 j.setAcceleration(2.0);
 
-j.setBackground([0.1, 0.0, 0.1, 0.0] * 1);
+j.setBackground([0.1, 0.005, 0.1, 0.0] * 4); // Pink
+j.setBackground([0.0, 0.0, 0.1, 0.0] * 4); // Blue
 t.children.do({|j| j.setBackground([[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.1, 0.0]].choose * 9)}); // Blue or red
 
 (

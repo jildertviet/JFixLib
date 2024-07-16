@@ -71,6 +71,7 @@ public:
       Serial.println(p->noiseTimeScale);
       Serial.println(p->horizontalPixelOffset);
       e = (Event *)p;
+      e->brightness = e->rgba[3];
     } break;
     case 0x02: { // JRect
       Serial.println("R");

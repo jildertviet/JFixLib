@@ -52,6 +52,7 @@ public:
     numLedsPerString = NEOPIXELBUS_NUMLEDS;
 #endif
     this->numLedsPerString = numLedsPerString;
+    this->viewport[1] = numLedsPerString;
     this->numStrings = numStrings;
     if (mode == J_WS2812B) {
       leds = new floatColor *[numStrings];

@@ -1,3 +1,5 @@
+#ifdef ENABLE_ETHERNET
+#ifdef ENABLE_MOTOR
 #include "JFixture.h"
 // #include "JEspnowDevice.h"
 // #include "JFixtureDimmer.h"
@@ -58,3 +60,6 @@ public:
   void blink(char num = 1, short dur = 100, short delayTime = 100,
              char channel = 0) override {}
 };
+
+#endif // ethernet
+#endif // motor

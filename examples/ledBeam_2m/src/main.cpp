@@ -12,6 +12,8 @@ void setup() {
   settings.networkName = "JV_";
   settings.pins = new uint8_t[1]{4}; // Test on pin3
   b.setup(settings);
+  b.bAliveBlink = false;
+  digitalWrite(5, LOW);
 }
 
 void loop() { b.update(); }

@@ -181,11 +181,27 @@ public:
         e->receiveMotorCommandsPtr(mac_addr, data, data_len);
       }
     } break;
+    case 0x36:
+      e->setBootMode((char *)data + 1);
+      break;
     default: {
     }
 
     break;
     }
+  }
+
+  void setBootMode(char *data) {
+    Serial.println("Write as static light");
+    char m;
+    float rgba[4];
+    memcpy(&m, data + 1, 1);
+    memcpy(&rgba, data + 2, sizeof(float) * 4);
+    EEPROM.write(1, m);
+    for (int i = 0; i < 4; i++)
+      EEPROM.put(2 + (i * sizeof(float)), rgba[i]);
+    EEPROM.commit();
+    ESP.restart();
   }
 
   void saveMsg(const uint8_t *data, const uint8_t data_len) {

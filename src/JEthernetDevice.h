@@ -1,3 +1,4 @@
+#ifdef ENABLE_ETHERNET
 // #define UDP_TX_PACKET_MAX_SIZE 256
 #include <Ethernet.h>
 #include <EthernetUdp.h>
@@ -56,3 +57,4 @@ public:
     }
   }
 };
+#endif

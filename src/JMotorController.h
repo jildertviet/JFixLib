@@ -1,4 +1,5 @@
 #pragma once
+#ifdef ENABLE_MOTOR
 #include <TMCStepper.h>
 
 #define EN_PIN 14  // Enable
@@ -121,6 +122,5 @@ public:
   // stepper.move(36 * steps_per_mm * dir); // Move 100mm
   // stepper.enableOutputs();
   // bForward = !bForward;
-}
-
-;
+};
+#endif

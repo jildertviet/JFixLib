@@ -66,6 +66,7 @@ public:
   virtual void deleteEvents(){};
   float rgbaBackground[4] = {0.0};
   // bool bDraw = false;
+  bool bAliveBlink = true;
 
   // float rgbw[4] = {1.0, 1.0, 1.0, 1.0};
 
@@ -97,6 +98,8 @@ public:
   }
 
   void aliveBlink(bool bOverride = false) { // GPIO_5
+    if (bAliveBlink == false)
+      return;
     if (millis() > lastBlinked + blinkInterval[blinkIndex] || bOverride) {
       lastBlinked = millis();
       // digitalWriteBuiltinLed(ledBuiltin, blinkIndex);
@@ -147,6 +150,15 @@ public:
       id = EEPROM.read(0);
       Serial.print("My ID: ");
       Serial.println((int)id);
+      if (EEPROM.read(1) == 1) {
+        Serial.println("Start as static light");
+        float rgba[4];
+        for (int i = 0; i < 4; i++) {
+          EEPROM.get(2 + (i * sizeof(float)), rgba[i]);
+          Serial.println(rgba[i]);
+        }
+        Serial.println();
+      }
     } else {
       Serial.println("failed to initialise EEPROM, id not read. Default to 0");
     }
