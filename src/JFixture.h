@@ -67,6 +67,7 @@ public:
   float rgbaBackground[4] = {0.0};
   // bool bDraw = false;
   bool bAliveBlink = true;
+  bool bStatic = false;
 
   // float rgbw[4] = {1.0, 1.0, 1.0, 1.0};
 
@@ -152,11 +153,16 @@ public:
       Serial.println((int)id);
       if (EEPROM.read(1) == 1) {
         Serial.println("Start as static light");
+        bStatic = true;
         float rgba[4];
         for (int i = 0; i < 4; i++) {
           EEPROM.get(2 + (i * sizeof(float)), rgba[i]);
           Serial.println(rgba[i]);
         }
+        rgbaBackground[0] = rgba[0];
+        rgbaBackground[1] = rgba[1];
+        rgbaBackground[2] = rgba[2];
+        brightness = rgba[3];
         Serial.println();
       }
     } else {

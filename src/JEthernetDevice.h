@@ -16,11 +16,11 @@ public:
 
   bool initEthernet(char id, uint8_t *addr) {
     // RESET
-    // pinMode(25, OUTPUT);
-    // digitalWrite(25, LOW);
-    // delay(1);
-    // digitalWrite(25, HIGH);
-    // delay(1);
+    pinMode(25, OUTPUT);
+    digitalWrite(25, LOW);
+    delay(1);
+    digitalWrite(25, HIGH);
+    delay(1);
 
     if (id == 255 || id == 0) {
       ip = IPAddress(192, 168, 1, 1);

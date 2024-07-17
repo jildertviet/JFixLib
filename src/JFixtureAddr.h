@@ -285,6 +285,17 @@ public:
   int ledIndex = 0;
   void update() override {
     JFixture::update();
+    if (bStatic) {
+      for (int j = 0; j < numStrings; j++) {
+        for (int i = 0; i < numLedsPerString; i++) {
+          writeRGBHard(i, channels[0] * getBrightness(),
+                       channels[1] * getBrightness(),
+                       channels[2] * getBrightness(), j, leds);
+        }
+      }
+      writeLeds();
+      return;
+    }
     switch (drawMode) {
     case TEST: {
       allBlack(false);

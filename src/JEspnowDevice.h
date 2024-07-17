@@ -195,12 +195,16 @@ public:
     Serial.println("Write as static light");
     char m;
     float rgba[4];
-    memcpy(&m, data + 1, 1);
-    memcpy(&rgba, data + 2, sizeof(float) * 4);
+    memcpy(&m, data, 1);
+    // Serial.print("Mode to write: ");
+    // Serial.println((int)m);
+    memcpy(&rgba, data + 1, sizeof(float) * 4);
     EEPROM.write(1, m);
-    for (int i = 0; i < 4; i++)
-      EEPROM.put(2 + (i * sizeof(float)), rgba[i]);
+    // for (int i = 0; i < 4; i++)
+    // EEPROM.put(2 + (i * sizeof(float)), rgba[i]);
+    EEPROM.put(2, rgba);
     EEPROM.commit();
+    Serial.println("Written to EEPROM");
     ESP.restart();
   }
 

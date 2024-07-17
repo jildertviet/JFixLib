@@ -6,6 +6,9 @@ c.perlin
 c.stop
 // Define red function
 
+t.children[0].send(0xFF!6 ++ [0x36, 0x01] ++ [1.0, 0.5, 1.0, 1.0].asBytes32F ++ "end"); // Set as static light
+t.children[3].send(0xFF!6 ++ [0x36, 0x01] ++ [1.0, 0.7, 0.7, 1.0].asBytes32F ++ "end"); // Alpha is not working
+t.children[0].send(0xFF!6 ++ [0x15] ++ "end");
 SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
 a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
 j = a.collect({|e, i| JTLFix.new(i, e, p)});
@@ -14,8 +17,8 @@ t.gui
 ~f = t.children
 (
 {
-t.children.at([0]).do{|e|
-    e.setOTAServer("Klank", ~pw, "https://192.168.10.55/.pio/build/esp32dev/firmware.bin");
+t.children.at([3]).do{|e|
+    e.setOTAServer("Klank", ~pw, "https://192.168.10.104/.pio/build/esp32dev/firmware.bin");
     35.wait;
   };
   "Done".postln;
