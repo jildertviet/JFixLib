@@ -52,6 +52,7 @@ public:
   void addEnv(char varName, float *dest, unsigned short a, unsigned short s,
               unsigned short r, float b, float bias, bool bKill = false);
   virtual void setVal(char type, float val);
+  void setBusses(float *busses, int num);
   bool bWaitForEnv = false;
   int id = -1;
   float *busses[NUM_CUSTOM_ARGS];

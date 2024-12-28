@@ -13,6 +13,7 @@ public:
   unsigned int localPort = 1111;
   char packetBuffer[UDP_TX_PACKET_MAX_SIZE]; // buffer to hold incoming packet,
   EthernetUDP Udp;
+  bool bConnected = false;
 
   bool initEthernet(char id, uint8_t *addr) {
     // RESET
@@ -20,7 +21,7 @@ public:
     digitalWrite(25, LOW);
     delay(1);
     digitalWrite(25, HIGH);
-    delay(1);
+    delay(2000);
 
     if (id == 255 || id == 0) {
       ip = IPAddress(192, 168, 1, 1);
@@ -41,11 +42,15 @@ public:
     }
 
     // start UDP
-    Udp.begin(localPort);
+    if (Udp.begin(localPort))
+      bConnected = true;
+
     return true;
   }
 
   void receiveUDP(void (*ptr)(const uint8_t *, const uint8_t *, int)) {
+    if (!bConnected)
+      return;
     int packetSize = Udp.parsePacket();
     if (packetSize && packetSize < UDP_TX_PACKET_MAX_SIZE) {
       Serial.println(packetSize);

@@ -54,7 +54,7 @@ public:
       Serial.print("Firmware Upgrade Fail ");
       Serial.println(numTries++);
       if (numTries > 30) {
-        ESP.restart();
+        // ESP.restart();
       }
       return false;
     }
@@ -117,7 +117,7 @@ public:
   void handleOtaServer() {
     switch (otaMode) {
     case JOtaServer::START_OTA_SERVER: {
-      if (startOtaServer()) {
+      if (startOtaServer()) { // Will return false if WiFi fails to connect
         // blinkLed(1, 250, 3);
         // setLED(1, 50);
         showSucces();

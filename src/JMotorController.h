@@ -68,7 +68,7 @@ public:
     driver.begin(); // Initiate pins and registeries
     driver.toff();
     driver.rms_current(
-        200); // Set stepper current to 600mA. The command is the
+        300); // Set stepper current to 600mA. The command is the
               // same as command TMC2130.setCurrent(600, 0.11, 0.5);
     // driver.en_pwm_mode(1); // Enable extremely quiet stepping
     driver.pwm_autoscale(1);

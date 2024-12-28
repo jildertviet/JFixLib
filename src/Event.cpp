@@ -100,3 +100,12 @@ void Event::setCustomArg(char id, float val) {
   if (busses[id])
     *busses[id] = val;
 }
+
+void Event::setBusses(float *b, int num) {
+  if (num < 9)
+    return;
+  memcpy(loc, b[0], sizeof(float) * 2);
+  memcpy(size, b[2], sizeof(float) * 2);
+  memcpy(b, b[4], sizeof(float) * 1);
+  memcpy(rgba, b[5], sizeof(float) * 4);
+}

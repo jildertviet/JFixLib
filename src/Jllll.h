@@ -34,6 +34,7 @@ public:
     receiveMotorCommandsPtr = &receiveMotorCommands;
     initMotor();
 
+    delay(1000);
     if (initEthernet(id, myAddr)) {
       Serial.println("Ethernet is OK");
     }
