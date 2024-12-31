@@ -63,8 +63,8 @@ JFixture : JFixtureSynthController{
   }
   send{
 		|msg, bMute = false|
-    if(bMute == false, {msg.postln});
-    broadcaster.postln;
+    // if(bMute == false, {msg.postln});
+    // ("Broadcaster: " ++ broadcaster).postln;
 		if((serial != nil).or(espnowBridge != nil).or(broadcaster != nil), {
       if(bCollectMsgs, {
         // "Save msg".postln;
@@ -85,7 +85,7 @@ JFixture : JFixtureSynthController{
     },{
       6.do{msg.removeAt(0);}; // Remove 0xFF (Used in espnowSender (dongle))
       3.do{msg.removeAt(msg.size-1);}; // Remove "end"-bytes
-      msg.postln;
+      // msg.postln;
       if(espnowBridge != nil, {
         msg = msg.collect({|e| if(e.isInteger, {e}, {e.ascii})});
         espnowBridge.sendMsg("/espnow", Int8Array.newFrom(msg));

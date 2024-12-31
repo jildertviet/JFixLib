@@ -93,6 +93,16 @@ void Event::setVal(char type, float value) {
   case 'h':
     size[1] = value;
     break;
+
+  case 'r':
+    rgba[0] = value;
+    break;
+  case 'g':
+    rgba[1] = value;
+    break;
+  case 'B':
+    rgba[2] = value;
+    break;
   }
 }
 
@@ -102,10 +112,10 @@ void Event::setCustomArg(char id, float val) {
 }
 
 void Event::setBusses(float *b, int num) {
-  if (num < 9)
-    return;
-  memcpy(loc, b[0], sizeof(float) * 2);
-  memcpy(size, b[2], sizeof(float) * 2);
-  memcpy(b, b[4], sizeof(float) * 1);
-  memcpy(rgba, b[5], sizeof(float) * 4);
+  // if (num < 9)
+  //   return;
+  // memcpy(loc, b[0], sizeof(float) * 2);
+  // memcpy(size, b[2], sizeof(float) * 2);
+  // memcpy(b, b[4], sizeof(float) * 1);
+  // memcpy(rgba, b[5], sizeof(float) * 4);
 }

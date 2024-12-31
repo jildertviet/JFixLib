@@ -3,6 +3,7 @@ p = NetAddr.new("192.168.1.255", 1111); // Ethernet
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
 j = t.children[1]
+j = t.children[6]
 
 j.bBroadcast = true;
 j.bBroadcast = false;
@@ -10,16 +11,20 @@ j.motor.bBroadcast = true; // Confusing...
 j.motor.bBroadcast = false; // Confusing...
 
 j.move([1,-1].choose*9);
+
+j.setOTAServer("Klank", ~pw, "https://192.168.1.100/.pio/build/esp32dev/firmware.bin");
+j.setOTAServer("Klank", ~pw, "https://192.168.10.127/.pio/build/esp32dev/firmware.bin");
+
 x = {inf.do{j.move([1,-1].choose*34);5.wait;}}.fork;
 x = {inf.do{t.children.do{|j| j.setMaxSpeed([10].choose);j.move([-1, 1].choose * rrand(10, 80))}; 9.wait; }}.fork;
 x = {inf.do{|i| t.children.do{|j, h| j.move([-1, 1].wrapAt(i + h) * 30)}; 7.wait; }}.fork;
 x.stop
 t.children.do{|j| j.moveTo(0)}
 
-j.setMaxSpeed(5.0)
-j.setAcceleration(2.0);
+j.setMaxSpeed(8.0)
+j.setAcceleration(3.0);
 
-j.setBackground([0.1, 0.005, 0.1, 0.0] * 4); // Pink
+j.setBackground([0.1, 0.005, 0.1, 0.0] * 0.5); // Pink
 j.setBackground([0.0, 0.0, 0.1, 0.0] * 4); // Blue
 t.children.do({|j| j.setBackground([[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.1, 0.0]].choose * 9)}); // Blue or red
 

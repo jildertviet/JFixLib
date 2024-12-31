@@ -6,4 +6,5 @@
 #endif
 
 #include "JTlFix.h"
+#include "JTlFixEthernet.h"
 #include "Jllll.h"

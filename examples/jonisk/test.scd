@@ -1,5 +1,5 @@
 p = SerialPort.new("/dev/ttyUSB0", 230400, crtscts: true)
-a = [[0x3C,0x71,0xBF,0x10,0x80,0x5D]]; // Green perf board
+
 (
 a = [[0x34,0x86,0x5d,0x79,0x6f,0xf9]]; // Jonisk 17
 j = a.collect({|e, i| JJonisk.new(i, e, p)});
@@ -9,7 +9,23 @@ p = NetAddr("127.0.0.1", 7997);
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/of_v0.11.2_linux64gcc6_release/apps/TIYCS/jonisk.config", 0);
 t.gui
+t.children[0].address
+
 ~ids = [ 4, 6, 7, 11, 13, 14, 15, 16, 17, 19, 22, 23 ];
+t.children[23].trigger();
+(
+x.stop;
+x = {
+
+inf.do{
+  [15, 20, 6, 22, 11, 23, 17].do{
+    |i|
+    t.children[i].trigger();
+  };
+  2.wait;
+};
+}.fork;
+)
 
 t.globalGuiDict['rgbaColors'].children[0].
 
@@ -19,7 +35,7 @@ t.globalGuiDict[\rgbaColors]
 t.guiItems
 t.children[0].guiDict[\synthBrightness].value_(0.88)
 t.children[0].synth.set(\rgbw, [0.0, 0.5, 1.0, 1.0]);
-.children[8].setLag(60.reciprocal)
+t.children[8].setLag(60.reciprocal)
 t.children[8].synth.set(\noiseMul, 0)
 1/30
 if((1==1).or(2==1), {2})

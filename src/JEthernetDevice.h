@@ -4,6 +4,9 @@
 #include <EthernetUdp.h>
 // #define UDP_TX_PACKET_MAX_SIZE 256
 // Modify file in .pio/build/libdeps/Ethernet/Ethernet.h
+#ifndef ETH_RST
+#define ETH_REST 25
+#endif
 
 //     Ethernet/examples/UDPSendReceiveString/UDPSendReceiveString.ino
 class JEthernetDevice {
@@ -17,10 +20,10 @@ public:
 
   bool initEthernet(char id, uint8_t *addr) {
     // RESET
-    pinMode(25, OUTPUT);
-    digitalWrite(25, LOW);
+    pinMode(ETH_RST, OUTPUT);
+    digitalWrite(ETH_RST, LOW);
     delay(1);
-    digitalWrite(25, HIGH);
+    digitalWrite(ETH_RST, HIGH);
     delay(2000);
 
     if (id == 255 || id == 0) {

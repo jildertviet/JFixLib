@@ -51,7 +51,7 @@ JTlFixComp {
     JTLFix.setViewportOffset(f);
     f[0].bBroadcast = true;
     ~f = f; // Make global?
-    pattern = "/home/jildert/Music/supercollider/tlFixKickStart_v1.sc".load;
+    pattern = "/home/jildert/Music/supercollider/tlFixKickStart_v1.scd".load;
     patterns.add(pattern);
     stopFunc = {
       ~compressor.free; 

@@ -57,7 +57,7 @@ JFixtureCollection {
 		|path, type="0: JJonisk, 1: JTlFixture, 2: llllllllllll"|
 		var file = JSONFileReader.read(path);
     children.clear();
-		file[0]["active"].do{
+		file["active"].do{
 			|j, i|
       var serialOrNetAddr;
 			var addr;//  = j[0];
