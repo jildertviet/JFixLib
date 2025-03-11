@@ -249,6 +249,19 @@ public:
     }
   }
 
+  void linkBus(const uint8_t *data, int data_len, float *b) override {
+    int eventID;
+    char type;
+    char busIndex;
+    memcpy(&eventID, data, sizeof(int));
+    memcpy(&type, data + sizeof(int), 1);
+    memcpy(&busIndex, data + sizeof(int) + 1, 1);
+    Event *e = getEventByID(eventID);
+    if (e) {
+      e->linkBus(type, busIndex, b);
+    }
+  }
+
   Event *getEventByID(int id) {
     for (int i = MAX_EVENTS - 1; i >= 0; i--) { // Reverse lookup
       if (events[i]) {

@@ -49,6 +49,7 @@ void JRect::draw(floatColor **leds, int numLedsPerString, char numStrings,
 }
 
 void JRect::update() {
+  Event::update();
   updateEnvelopes();
   if (checkLifeTime()) {
     //

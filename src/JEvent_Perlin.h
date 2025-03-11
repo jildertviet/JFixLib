@@ -17,6 +17,7 @@ public:
   // int horizontalPixelDistance = 10; // Beams are 10 pixels from eachother
 
   void update() {
+    Event::update(); // check parameterMappers
     updateEnvelopes();
     checkLifeTime();
   }

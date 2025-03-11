@@ -27,6 +27,7 @@
 
 using namespace std;
 #define NUM_BUSSES 12
+#define NUM_PARAMETER_BUSSES 64
 #define NUM_LAGGERS 4
 
 enum Channel { RED, GREEN, BLUE, WHITE };
@@ -39,10 +40,14 @@ public:
     memset(busses, 0x00, NUM_BUSSES * sizeof(float));
     laggers[0].link(&brightness);
     brightnessLag = &laggers[0];
+    for (int i = 0; i < NUM_PARAMETER_BUSSES; i++) {
+      parameterBusses[i] = 0.5;
+    }
     // channels = new float[numChannels]; // Do in specific classes
   }
   int id = -1;
-  float busses[NUM_BUSSES];
+  float busses[NUM_BUSSES]; // What is this used for...
+  float parameterBusses[NUM_PARAMETER_BUSSES];
   float *channels = nullptr; // Colors
   char numChannels = 4;
   virtual int measureBattery() { return 0; };
@@ -61,6 +66,7 @@ public:
   virtual void addEnv(const uint8_t *data, int data_len){};
   virtual void setVal(const uint8_t *data, int data_len){};
   virtual void setValN(const uint8_t *data, int data_len){};
+  virtual void linkBus(const uint8_t *data, int data_len, float *busses){};
   virtual void setCustomArg(const uint8_t *data, int data_len){};
   virtual void sync(int eventID){};
   virtual void deleteEvents(){};
@@ -180,6 +186,34 @@ public:
     }
   }
   float getBrightness() { return brightness; };
+
+  void setParameterBus(const uint8_t *data, int data_len) {
+    char busIndex = 0;
+    float value = 0.0;
+    memcpy(&busIndex, data, sizeof(char));
+    memcpy(&value, data + sizeof(char), sizeof(float));
+    if (busIndex < NUM_PARAMETER_BUSSES) {
+      parameterBusses[busIndex] = value;
+    }
+  }
+
+  void setParameterBusN(const uint8_t *data, int data_len) {
+    char busIndex = 0; // StartIndex
+    memcpy(&busIndex, data, sizeof(char));
+    char numValues = (data_len - sizeof(char)) / sizeof(float);
+
+    // Serial.println("Set bus N, numValues: ");
+    // Serial.println((int)numValues);
+    if (busIndex < NUM_PARAMETER_BUSSES &&
+        (busIndex + numValues - 1) < NUM_PARAMETER_BUSSES) {
+      for (char i = 0; i < numValues; i++) {
+        memcpy(parameterBusses +
+                   (busIndex + i), // (int)(busIndex), removed (int))
+               data + sizeof(char) + (sizeof(int) * i),
+               sizeof(float)); // 4, start of values array
+      }
+    }
+  }
 
 private:
   float brightness = 0.1; // Use lagger[0]

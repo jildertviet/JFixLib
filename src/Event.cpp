@@ -6,6 +6,32 @@ Event::Event() {
   for (int i = 0; i < NUM_CUSTOM_ARGS; i++) {
     busses[i] = nullptr;
   }
+  String names = "xywhrgBb";
+  float **pointers;
+  pointers = new float *[NUM_PARAMETER_CONFIGS];
+  pointers[0] = &loc[0];
+  pointers[1] = &loc[1];
+  pointers[2] = &size[2];
+  pointers[3] = &size[3];
+  pointers[4] = &rgba[0];
+  pointers[5] = &rgba[1];
+  pointers[6] = &rgba[2];
+  pointers[7] = &brightness;
+
+  for (int i = 0; i < NUM_PARAMETER_CONFIGS; i++) {
+    parameterConfigs[i].init(nullptr, pointers[i],
+                             names[i]); // Remove first arg?
+  }
+  delete pointers;
+}
+void Event::linkBus(char name, char busIndex, float *b) {
+  for (int i = 0; i < NUM_PARAMETER_CONFIGS; i++) {
+    if (parameterConfigs[i].name == name) {
+      parameterConfigs[i].busses = b;
+      parameterConfigs[i].id = busIndex;
+      parameterConfigs[i].bActive = true;
+    }
+  }
 }
 
 void Event::testFunc(){
@@ -45,6 +71,13 @@ void Event::updateEnvelopes() {
 
   if (brightnessEnv.state != IDLE)
     brightness = brightnessEnv.update();
+}
+
+void Event::update() {
+  for (int i = 0; i < NUM_PARAMETER_CONFIGS; i++) {
+    parameterConfigs[i].update();
+  }
+  checkLifeTime();
 }
 
 void Event::triggerBrightnessEnv(unsigned short a, unsigned short s,

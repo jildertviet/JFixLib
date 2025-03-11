@@ -18,8 +18,8 @@ t.gui
 ~f = t.children
 (
 {
-t.children.at([2,4]).do{|e|
-    e.setOTAServer("Klank", ~pw, "https://192.168.10.104/.pio/build/esp32dev/firmware.bin");
+t.children.at([2,3]).do{|e|
+    e.setOTAServer("Klank", ~pw, "https://192.168.10.131/.pio/build/esp32dev/firmware.bin");
     35.wait;
   };
   "Done".postln;

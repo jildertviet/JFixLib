@@ -151,4 +151,15 @@ JFixture : JFixtureSynthController{
     var msg = 0xFF!6 ++ [0x22] ++ this.getAddress() ++ [lagID] ++ val.asFloat.asBytes32 ++ "end";
     this.send(msg);
   }
+  setParameterBus{
+    |busIndex=0, value=1.0|
+    var msg = 0xFF!6 ++ [0x38] ++ this.getAddress() ++ [busIndex] ++ value.asFloat.asBytes32 ++ "end";
+    this.send(msg);
+  }
+  setParameterBusN{
+    |busIndex=0, values=#[0,0]|
+    var msg = 0xFF!6 ++ [0x39] ++ this.getAddress() ++ [busIndex] ++ values.asFloat.asBytes32F ++ "end";
+    this.send(msg);
+  }
+
 }

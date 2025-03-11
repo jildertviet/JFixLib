@@ -5,7 +5,7 @@
 #include "esp_private/wifi.h"
 
 #define MAX_MSG 20
-#define MAX_MSG_LEN 250
+#define MAX_MSG_LEN 512
 
 class JEspnowDevice;
 JEspnowDevice *e = nullptr;
@@ -151,7 +151,10 @@ public:
     case 0x28:   // setVal
     case 0x29:   // setValN
     case 0x30:   // multiple / grouped
-    case 0x31: { // customArg
+    case 0x31:   // customArg
+    case 0x37:   // linkBus
+    case 0x38:   // setParameterBus
+    case 0x39: { // setParameterBusN
       if (e->checkAddressed(data)) {
         e->saveMsg(data, data_len);
       }
@@ -184,6 +187,8 @@ public:
     case 0x36:
       e->setBootMode((char *)data + 1);
       break;
+    // case 0x37:
+    // break; // See 0x30
     default: {
     }
 
@@ -263,7 +268,20 @@ public:
         case 0x31:
           setCustomArg((msgBuffer[i].data) + 6 + 1, msgBuffer[i].len - 6 - 1);
           break;
+        case 0x37:
+          linkBus((msgBuffer[i].data) + 6 + 1, msgBuffer[i].len - 6 - 1,
+                  (float *)e->parameterBusses);
+          break;
+        case 0x38:
+          setParameterBus((msgBuffer[i].data) + 6 + 1,
+                          msgBuffer[i].len - 6 - 1);
+          break;
+        case 0x39:
+          setParameterBusN((msgBuffer[i].data) + 6 + 1,
+                           msgBuffer[i].len - 6 - 1);
+          break;
         }
+
         msgBuffer[i].len = 0;
       }
     }

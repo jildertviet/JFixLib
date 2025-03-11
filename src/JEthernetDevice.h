@@ -1,11 +1,18 @@
+#pragma once
 #ifdef ENABLE_ETHERNET
 // #define UDP_TX_PACKET_MAX_SIZE 256
 #include <Ethernet.h>
 #include <EthernetUdp.h>
 // #define UDP_TX_PACKET_MAX_SIZE 256
-// Modify file in .pio/build/libdeps/Ethernet/Ethernet.h
+//
+// Modify file in .pio/build/libdeps/Ethernet/Ethernet.h > Now @ 128
+//
 #ifndef ETH_RST
-#define ETH_REST 25
+#define ETH_RST 25
+#endif
+
+#ifndef ETH_CS
+#define ETH_CS 21
 #endif
 
 //     Ethernet/examples/UDPSendReceiveString/UDPSendReceiveString.ino
@@ -32,7 +39,7 @@ public:
       ip = IPAddress(192, 168, 1, id);
     }
 
-    Ethernet.init(21);
+    Ethernet.init(ETH_CS);
     Ethernet.begin(addr, ip);
     if (Ethernet.hardwareStatus() == EthernetNoHardware) {
       Serial.println("Ethernet shield was not found.  Sorry, can't run without "
@@ -55,12 +62,14 @@ public:
     if (!bConnected)
       return;
     int packetSize = Udp.parsePacket();
+    // if (packetSize)
+    //   Serial.println("msg ? ...");
     if (packetSize && packetSize < UDP_TX_PACKET_MAX_SIZE) {
-      Serial.println(packetSize);
+      // Serial.println(packetSize);
       // read the packet into packetBuffer
       Udp.read(packetBuffer,
                packetSize); // Write to char[]
-      Serial.println("Msg received");
+      // Serial.println("Msg received");
       ptr(nullptr, (const uint8_t *)packetBuffer, packetSize);
     }
   }

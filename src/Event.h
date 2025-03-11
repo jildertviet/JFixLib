@@ -7,13 +7,49 @@
 
 #define MAX_ENV 6
 #define NUM_CUSTOM_ARGS 12
+#define NUM_PARAMETER_CONFIGS 8
 
 enum boundariesMode { MODE_BOUNCE, MODE_RESET };
+
+class ParameterConfig {
+  // ParameterConfig(float *busses) { this->busses = busses; }
+public:
+  ParameterConfig(){};
+  void init(float *b, float *ptr, char name) {
+    this->ptr = ptr;
+    this->name = name;
+    Serial.println("Made ParameterConfig");
+    Serial.print(name);
+    Serial.print(" ");
+    // Serial.print(busses);
+    // Serial.print(" ");
+    // Serial.print(ptr);
+    // Serial.print(" ");
+  }
+  void update() {
+    if (bActive && busses) {
+      *ptr = busses[id];
+      // Serial.print("Set parameter ");
+      // Serial.print(name);
+      // Serial.print(" to: ");
+      // Serial.println(busses[id]);
+    }
+  }
+  char name = '1'; // xywhrgBb
+  float *busses = nullptr;
+  char id;
+  float *ptr;
+  bool bActive = false;
+  void setFromBus() { *ptr = busses[id]; }
+};
 
 class Event {
 public:
   Event();
   ~Event();
+  ParameterConfig parameterConfigs[NUM_PARAMETER_CONFIGS];
+  void linkBus(char name, char busIndex, float *busses);
+  void initParameterConfigs();
   void testFunc();
   bool bActive = false;
   float bInvertHeight = false;
@@ -31,7 +67,7 @@ public:
                     int horizontalPixelDistance){};
   void (*writeRGB)(int, float, float, float, char, floatColor **) = nullptr;
 
-  virtual void update() { checkLifeTime(); };
+  virtual void update();
 
   JEnv brightnessEnv;
   JEnv *envelopes[MAX_ENV] = {nullptr};

@@ -7,7 +7,7 @@ JTlFixEthernet jTl;
 void setup() {
   JTlFixSettings settings;
   settings.networkName = "JV_";
-  settings.pins = new uint8_t[2]{22, 23}; // Test on pin3
+  settings.pins = new uint8_t[2]{22, 27}; // Test on pin3
   jTl.setup(settings);
 }
 

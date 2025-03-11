@@ -50,6 +50,10 @@ JFixEvent{
     |type='b', values=#[0]|
     parent.send(0xFF!6 ++ [0x29] ++ parent.getAddress() ++ id.asBytes32 ++ type.ascii[0] ++ values.asBytes32F ++ "end");
   }
+  linkBus{
+    |type='b', busIndex=0|
+    parent.send(0xFF!6 ++ [0x37] ++ parent.getAddress() ++ id.asBytes32 ++ type.ascii[0] ++ busIndex ++ "end");
+  }
   setCustomArg{
     |argID_, val_|
     parent.send(0xFF!6 ++ [0x31] ++ parent.getAddress() ++ id.asBytes32 ++ [argID_, val_].asBytes32F ++ "end"); // Dummy 0x00's, why!?
