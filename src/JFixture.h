@@ -27,7 +27,7 @@
 
 using namespace std;
 #define NUM_BUSSES 12
-#define NUM_PARAMETER_BUSSES 64
+#define NUM_PARAMETER_BUSSES 128
 #define NUM_LAGGERS 4
 
 enum Channel { RED, GREEN, BLUE, WHITE };
