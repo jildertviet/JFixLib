@@ -198,15 +198,15 @@ public:
   }
 
   void setParameterBusN(const uint8_t *data, int data_len) {
-    char busIndex = 0; // StartIndex
+    short busIndex = 0; // StartIndex
     memcpy(&busIndex, data, sizeof(char));
-    char numValues = (data_len - sizeof(char)) / sizeof(float);
+    short numValues = (data_len - sizeof(char)) / sizeof(float);
 
-    // Serial.println("Set bus N, numValues: ");
+    // Serial.print("Set bus N, numValues: ");
     // Serial.println((int)numValues);
     if (busIndex < NUM_PARAMETER_BUSSES &&
         (busIndex + numValues - 1) < NUM_PARAMETER_BUSSES) {
-      for (char i = 0; i < numValues; i++) {
+      for (short i = 0; i < numValues; i++) {
         memcpy(parameterBusses +
                    (busIndex + i), // (int)(busIndex), removed (int))
                data + sizeof(char) + (sizeof(int) * i),

@@ -4,7 +4,7 @@
 #include "JMotorController.h"
 #include "esp_private/wifi.h"
 
-#define MAX_MSG 20
+#define MAX_MSG 128
 #define MAX_MSG_LEN 512
 
 class JEspnowDevice;
@@ -14,7 +14,7 @@ class JEspnowMsg {
 public:
   JEspnowMsg(){};
   uint8_t data[MAX_MSG_LEN];
-  uint8_t len = 0;
+  short len = 0;
 };
 
 class JEspnowDevice : public JFixture {
@@ -213,7 +213,7 @@ public:
     ESP.restart();
   }
 
-  void saveMsg(const uint8_t *data, const uint8_t data_len) {
+  void saveMsg(const uint8_t *data, const short data_len) {
     // for (int i = 0; i < data_len; i++) {
     // Serial.print((int)data[i]);
     // Serial.print(" ");

@@ -37,7 +37,7 @@ public:
   }
   char name = '1'; // xywhrgBb
   float *busses = nullptr;
-  char id;
+  short id;
   float *ptr;
   bool bActive = false;
   void setFromBus() { *ptr = busses[id]; }

@@ -1,15 +1,17 @@
 ( // 1/4
+  ServerOptions
 p = NetAddr.new("192.168.1.255", 1111);
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
 t.children.do{|e| e.bSyncServer = false};
-t.children.do{|e, i| e.bBroadcast = false; e.setViewportOffset([1.0 * i, 0.0]);};
+// t.children.do{|e, i| e.bBroadcast = false; e.setViewportOffset([1.0 * i, 0.0]);};
 
 ~num = 12;
 ~r = 0!(t.children.size * 0 + ~num);
 // ~perlins = 0!(t.children.size);
 
-~busses = Bus.alloc(\control, s, ~num * 5).set(0.0);
+~numBussesPerEvent = 6;
+~busses = Bus.alloc(\control, s, ~num * ~numBussesPerEvent).set(0.0);
 // ~brightnessPerlin = Bus.alloc(\control, s, 3).set(0.5);
 
 ~sineMax = Bus.alloc(\control, s, 1).set(0.5);
@@ -34,7 +36,7 @@ t.children[3].bBroadcast = false; t.children[3].deleteEvents
 
 ( // 2/4
 ~init = {
-  var j = t.children.at((0..~num-1));
+  var j = t.children;
   j.do{
     |e, i|
     var r, p;
@@ -53,22 +55,24 @@ t.children[3].bBroadcast = false; t.children[3].deleteEvents
         // .rgba_([1.0, 0.571, 0.0, 1.0]) // Normalized?
         // .rgba_(color * 1.0)
         // .rgba_([Color.red, Color.blue, Color.green, Color.white, Color.red, Color.yellow].at(index).toJV / 255.0)
-        .bWaitForEnv_(0).loc_([0.0 * index, 0.0]);
+        .bWaitForEnv_(0).loc_([0.0, 0.0]);
                 // e.bBroadcast = true;
         e.addEvent(r);
-        r.linkBus('b', index * 5); // 0, 1, 2 >> 0, 4, 8, [1,2,3] for R, G, B
-        r.linkBus('r', 1 + (index * 5)); 
-        r.linkBus('g', 2 + (index * 5)); 
-        r.linkBus('B', 3 + (index * 5)); 
-        r.linkBus('y', 0 + (index * 5)); 
+        r.linkBus('b', index * 6); // 0, 1, 2 >> 0, 4, 8, [1,2,3] for R, G, B
+        r.linkBus('r', 1 + (index * 6)); 
+        r.linkBus('g', 2 + (index * 6)); 
+        r.linkBus('B', 3 + (index * 6)); 
+        r.linkBus('r', 1 + (index * 6)); 
+        r.linkBus('g', 2 + (index * 6)); 
+        // r.linkBus('y', 0 + (index * 6)); 
         // r.linkBus('h', 0 + (index * 6)); 
         ~r[index] = [r, [
-          Bus.newFrom(~busses, (index * 5) + 0, 1),
-          Bus.newFrom(~busses, (index * 5) + 1, 1),
-          Bus.newFrom(~busses, (index * 5) + 2, 1),
-          Bus.newFrom(~busses, (index * 5) + 3, 1),
-          Bus.newFrom(~busses, (index * 5) + 4, 1)
-          // Bus.newFrom(~busses, (index * 6) + 5, 1)
+          Bus.newFrom(~busses, (index * 6) + 0, 1),
+          Bus.newFrom(~busses, (index * 6) + 1, 1),
+          Bus.newFrom(~busses, (index * 6) + 2, 1),
+          Bus.newFrom(~busses, (index * 6) + 3, 1),
+          Bus.newFrom(~busses, (index * 6) + 4, 1),
+          Bus.newFrom(~busses, (index * 6) + 5, 1)
         ]];
       };
     //   e.bBroadcast = false;
@@ -142,7 +146,6 @@ g = {
     |i|
     if(i%30==0, {"Running".postln});
     ~busses.get({|v|
-      // v.postln;
       sender.setParameterBusN(0, v.min(1.0)); 
       // sender.setParameterBusN(0, 0.0!(12*5)); 
     };);

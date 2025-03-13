@@ -11,8 +11,8 @@ Event::Event() {
   pointers = new float *[NUM_PARAMETER_CONFIGS];
   pointers[0] = &loc[0];
   pointers[1] = &loc[1];
-  pointers[2] = &size[2];
-  pointers[3] = &size[3];
+  pointers[2] = &size[0];
+  pointers[3] = &size[1];
   pointers[4] = &rgba[0];
   pointers[5] = &rgba[1];
   pointers[6] = &rgba[2];
