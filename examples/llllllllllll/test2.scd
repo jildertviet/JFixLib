@@ -1,5 +1,4 @@
 ( // 1/4
-  ServerOptions
 p = NetAddr.new("192.168.1.255", 1111);
 t = JFixtureCollection.new(p);
 t.readConfigFile("/home/jildert/JFixLib/examples/llllllllllll/llllllllllll.config", 2);
@@ -58,21 +57,23 @@ t.children[3].bBroadcast = false; t.children[3].deleteEvents
         .bWaitForEnv_(0).loc_([0.0, 0.0]);
                 // e.bBroadcast = true;
         e.addEvent(r);
-        r.linkBus('b', index * 6); // 0, 1, 2 >> 0, 4, 8, [1,2,3] for R, G, B
-        r.linkBus('r', 1 + (index * 6)); 
-        r.linkBus('g', 2 + (index * 6)); 
-        r.linkBus('B', 3 + (index * 6)); 
-        r.linkBus('r', 1 + (index * 6)); 
-        r.linkBus('g', 2 + (index * 6)); 
-        // r.linkBus('y', 0 + (index * 6)); 
-        // r.linkBus('h', 0 + (index * 6)); 
+        e.start;
+        r.linkBus('b', index * ~numBussesPerEvent); // 0, 1, 2 >> 0, 4, 8, [1,2,3] for R, G, B
+        r.linkBus('r', 1 + (index * ~numBussesPerEvent)); 
+        r.linkBus('g', 2 + (index * ~numBussesPerEvent)); 
+        r.linkBus('B', 3 + (index * ~numBussesPerEvent)); 
+        r.linkBus('h', 0 + (index * ~numBussesPerEvent)); 
+        // r.linkBus('g', 2 + (index * ~numBussesPerEvent)); 
+        e.end;
+        // r.linkBus('y', 0 + (index * numBussesPerEvent)); 
+        // r.linkBus('h', 0 + (index * numBussesPerEvent)); 
         ~r[index] = [r, [
-          Bus.newFrom(~busses, (index * 6) + 0, 1),
-          Bus.newFrom(~busses, (index * 6) + 1, 1),
-          Bus.newFrom(~busses, (index * 6) + 2, 1),
-          Bus.newFrom(~busses, (index * 6) + 3, 1),
-          Bus.newFrom(~busses, (index * 6) + 4, 1),
-          Bus.newFrom(~busses, (index * 6) + 5, 1)
+          Bus.newFrom(~busses, (index * ~numBussesPerEvent) + 0, 1),
+          Bus.newFrom(~busses, (index * ~numBussesPerEvent) + 1, 1),
+          Bus.newFrom(~busses, (index * ~numBussesPerEvent) + 2, 1),
+          Bus.newFrom(~busses, (index * ~numBussesPerEvent) + 3, 1),
+          Bus.newFrom(~busses, (index * ~numBussesPerEvent) + 4, 1),
+          Bus.newFrom(~busses, (index * ~numBussesPerEvent) + 5, 1)
         ]];
       };
     //   e.bBroadcast = false;
@@ -131,7 +132,7 @@ t.children[3].bBroadcast = false; t.children[3].deleteEvents
     |r,i|
     // var out = SinOsc.kr(In.kr(~sineFreq).lag(0.2) * mul[i], phases[i]).pow(2).range(0.1, In.kr(~sineMax).lag(0.5));
     // out = Mix.kr([out, In.kr(~sineAdd).lag(0.1)]);
-    var out = SinOsc.ar(0.5).range(0, 1.0);
+    var out = SinOsc.ar(0.5).range(0.1, 1.0);
     Out.kr(r[1][0], out);
   };
 }.play;

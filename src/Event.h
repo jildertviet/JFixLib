@@ -18,9 +18,10 @@ public:
   void init(float *b, float *ptr, char name) {
     this->ptr = ptr;
     this->name = name;
-    Serial.println("Made ParameterConfig");
-    Serial.print(name);
-    Serial.print(" ");
+    // Serial.println("Made ParameterConfig");
+    // Serial.print(name);
+    // Serial.print(" ");
+
     // Serial.print(busses);
     // Serial.print(" ");
     // Serial.print(ptr);

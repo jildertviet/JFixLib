@@ -27,7 +27,7 @@ public:
   String networkName = "JV_";
   bool bEspnowEnabled = true;
   bool bEspnowPingEnabled = true;
-  void (*receiveMotorCommandsPtr)(const uint8_t *, const uint8_t *,
+  void (*receiveMotorCommandsPtr)(const uint8_t *, const uint8_t *, int,
                                   int) = nullptr;
 
   virtual void setup(String networkName) override {
@@ -181,7 +181,7 @@ public:
     } break;
     case 0x35: {
       if (e->checkAddressed(data) && e->receiveMotorCommandsPtr) {
-        e->receiveMotorCommandsPtr(mac_addr, data, data_len);
+        e->receiveMotorCommandsPtr(mac_addr, data, data_len, e->id);
       }
     } break;
     case 0x36:
