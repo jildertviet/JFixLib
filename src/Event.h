@@ -29,7 +29,11 @@ public:
   }
   void update() {
     if (bActive && busses) {
+      // if (id < NUM_PARAMETER_BUSSES) {
       *ptr = busses[id];
+      // } else {
+      // Serial.println("id is out of NUM_PARAMETER_BUSSES range");
+      // }
       // Serial.print("Set parameter ");
       // Serial.print(name);
       // Serial.print(" to: ");

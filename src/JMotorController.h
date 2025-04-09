@@ -60,7 +60,9 @@ void Task1code(void *pvParameters) {
     //   stepper.enableOutputs();
     //   steps = 0;
     // }
-    vTaskDelay(1);
+    // vTaskDelay(1);
+    // vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(pdMS_TO_TICKS(1)); // Delay for 1000 milliseconds
   }
 }
 

@@ -35,6 +35,7 @@ public:
   int numLedsPerString = 1;
   char numStrings = 1;
   int horizontalPixelDistance = 10; // Beams are 10 pixels from eachother
+  unsigned long lastUpdatedLive = 0;
 
   JFixtureAddr(){};
   enum JAddressableMode { J_WS2812B, J_WS2816B };
@@ -236,16 +237,30 @@ public:
           ledsToWrite[j][i] = CRGB(rgb[0], rgb[1], rgb[2]);
         } break;
         case J_WS2816B: {
-          rgb[0] = pow(c->r, 2.0) * 65535;
+          // rgb[0] = pow(c->r, 2.0) * 65535;
           // rgb[0] = c->r * 65535;
-          rgb[1] = pow(c->g, 2.0) * 65535;
-          rgb[2] = pow(c->b, 2.0) * 65535;
+          // rgb[1] = pow(c->g, 2.0) * 65535;
+          // rgb[2] = pow(c->b, 2.0) * 65535;
+
+          rgb[0] = (c->r * c->r * 65535); // Square and scale to 65535
+          rgb[1] = (c->g * c->g * 65535);
+          rgb[2] = (c->b * c->b * 65535);
 
           char split[3][2];
-          for (int i = 0; i < 3; i++) {
-            memcpy(split[i], &rgb[i], 2);
-          }
+          // for (int i = 0; i < 3; i++) {
+          // memcpy(split[i], &rgb[i], 2);
+          // }
 
+          // Directly assign values to split, no need for memcpy
+          split[0][0] = (rgb[0] >> 8) & 0xFF; // High byte
+          split[0][1] = rgb[0] & 0xFF;        // Low byte
+
+          split[1][0] = (rgb[1] >> 8) & 0xFF; // High byte
+          split[1][1] = rgb[1] & 0xFF;        // Low byte
+
+          split[2][0] = (rgb[2] >> 8) & 0xFF; // High byte
+          split[2][1] = rgb[2] & 0xFF;        // Low byte
+                                              //
           ledsToWrite[j][(i * 2) + 0] =
               CRGB(split[1][0], split[1][1], split[0][1]);
           ledsToWrite[j][(i * 2) + 1] =
@@ -336,6 +351,9 @@ public:
       // checkLifeTime() of JEvent. Not very intuitive... canvas.clear();
       // }
       parseMsgs();
+      if (millis() - lastUpdatedLive < 1) { // Delay 1 ms? ...
+        return;
+      }
       allBlack();
       bool bEventUpdate = false;
       for (char i = 0; i < MAX_EVENTS; i++) {
@@ -355,12 +373,14 @@ public:
         }
       }
       writeLeds();
-      if (bEventUpdate) {
-        delayMicroseconds(1500); // Or even 0?
-      } else {
-        delay(2);
-      }
+      // if (bEventUpdate) {
+      //   delayMicroseconds(1500); // Or even 0?
+      // } else {
+      //   delay(2);
+      // }
+      lastUpdatedLive = millis();
       // if(bUseCanvas){
+      //
       // canvas.waitCompletion();
       // canvasToLeds();
       // }

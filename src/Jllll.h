@@ -48,6 +48,7 @@ public:
 
     // sendPing(true); // To set macaddr?
     bEspnowPingEnabled = false;
+    WiFi.mode(WIFI_OFF);
   }
 
   void update() override {

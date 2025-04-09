@@ -24,7 +24,7 @@ public:
 
   void draw(floatColor **leds, int numLedsPerString, char numStrings,
             int horizontalPixelDistance) override {
-    if (leds) {
+    if (leds && brightness) {
       unsigned long t = millis() - syncTime;
       for (float j = 0; j < numStrings; j++) {
         for (float i = 0; i < numLedsPerString; i++) {
@@ -33,8 +33,9 @@ public:
                       ((j * horizontalPixelDistance) + horizontalPixelOffset) *
                           noiseScale,
                       t * noiseTimeScale);
-          val = pow(
-              val, 2.0); // Already @ writeRGB. Edit; do it anyway, looks better
+          // val = pow(
+          // val, 2.0); // Already @ writeRGB. Edit; do it anyway, looks better
+          val = val * val;
           // if (val < 0.005) // Do this with a background
           // val = 0.005;
           if (writeRGB)
