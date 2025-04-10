@@ -8,7 +8,7 @@ JRect::JRect(unsigned short lifeTime) {
 
 void JRect::draw(floatColor **leds, int numLedsPerString, char numStrings,
                  int horizontalPixelSpacing) {
-  if (bWaitForEnv)
+  if (bWaitForEnv || brightness == 0)
     return;
   float x =
       loc[0] * viewport[0] - (viewportOffset[0] * viewport[0]); // in Pixels
