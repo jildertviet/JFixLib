@@ -38,8 +38,8 @@ public:
   JLag *brightnessLag;
   JFixture();
   int id = -1;
-  float busses[NUM_BUSSES]; // What is this used for...
-  float parameterBusses[NUM_PARAMETER_BUSSES];
+  float busses[NUM_BUSSES] = {0}; // What is this used for...
+  float parameterBusses[NUM_PARAMETER_BUSSES] = {0.5};
   float *channels = nullptr; // Colors
   char numChannels = 4;
   virtual int measureBattery() { return 0; };

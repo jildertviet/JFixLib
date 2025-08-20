@@ -1,12 +1,8 @@
 #include "JFixture.h"
 
 JFixture::JFixture() {
-  memset(busses, 0x00, NUM_BUSSES * sizeof(float));
   laggers[0].link(&brightness);
   brightnessLag = &laggers[0];
-  for (int i = 0; i < NUM_PARAMETER_BUSSES; i++) {
-    parameterBusses[i] = 0.5;
-  }
   // channels = new float[numChannels]; // Do in specific classes
 }
 
@@ -54,66 +50,68 @@ void JFixture::checkOneShots() {
   // JOtaServer::checkOneShots();
   std::map<OneShot, JMsgArguments>::iterator it;
   for (it = oneShots.begin(); it != oneShots.end(); it++) {
-    if (it->second.bActive == true) {
-      Serial.println("OneShot triggered");
-      switch (it->first) {
-      case OneShot::START_DEEPSLEEP: {
-        // How to get the duration? w/ Busses?
-        Serial.println((float)it->second.arguments[0]);
-        float *minutesToSleep = &(it->second.arguments[0]); // For readability
-        if (*minutesToSleep > 0) { // busses[0] = minutes
-          blink(Channel::RED, 1);  // Do one blink
-          // esp_sleep_enable_ext0_wakeup(GPIO_NUM_14,1);
-          Serial.println("Go to sleep");
-          esp_sleep_enable_timer_wakeup(*minutesToSleep * 60 * 1000000ULL);
-          esp_deep_sleep_start();
-        }
-      } break;
-      case OneShot::SET_CHANNELS: {
-        for (int i = 0; i < numChannels; i++) {
-          setChannel(i, it->second.arguments[i]);
-        }
-      } break;
-      case OneShot::SET_BRIGHTNESS: {
-        this->setBrightness(it->second.arguments[0]);
-      } break;
+    if (!it->second.bActive == true)
+      continue;
+    Serial.println("OneShot triggered");
+    switch (it->first) {
+    case OneShot::START_DEEPSLEEP: {
+      // How to get the duration? w/ Busses?
+      Serial.println((float)it->second.arguments[0]);
+      float *minutesToSleep = &(it->second.arguments[0]); // For readability
+      if (*minutesToSleep > 0) {                          // busses[0] = minutes
+        blink(Channel::RED, 1);                           // Do one blink
+        // esp_sleep_enable_ext0_wakeup(GPIO_NUM_14,1);
+        Serial.println("Go to sleep");
+        esp_sleep_enable_timer_wakeup(*minutesToSleep * 60 * 1000000ULL);
+        esp_deep_sleep_start();
       }
-      it->second.bActive = false;
+    } break;
+    case OneShot::SET_CHANNELS: {
+      for (int i = 0; i < numChannels; i++) {
+        setChannel(i, it->second.arguments[i]);
+      }
+    } break;
+    case OneShot::SET_BRIGHTNESS: {
+      this->setBrightness(it->second.arguments[0]);
+    } break;
     }
+    it->second.bActive = false;
   }
 }
 
 void JFixture::readEEPROM() {
-  if (EEPROM.begin(64)) {
-    id = EEPROM.read(0);
-    Serial.print("My ID: ");
-    Serial.println((int)id);
-    if (EEPROM.read(1) == 1) {
-      Serial.println("Start as static light");
-      bStatic = true;
-      float rgba[4];
-      for (int i = 0; i < 4; i++) {
-        EEPROM.get(2 + (i * sizeof(float)), rgba[i]);
-        Serial.println(rgba[i]);
-      }
-      rgbaBackground[0] = rgba[0];
-      rgbaBackground[1] = rgba[1];
-      rgbaBackground[2] = rgba[2];
-      brightness = rgba[3];
-      Serial.println();
-    }
-  } else {
+  if (!EEPROM.begin(64)) {
     Serial.println("failed to initialise EEPROM, id not read. Default to 0");
+    return;
+  }
+
+  id = EEPROM.read(0);
+  Serial.print("My ID: ");
+  Serial.println((int)id);
+  if (EEPROM.read(1) == 1) {
+    Serial.println("Start as static light");
+    bStatic = true;
+    float rgba[4];
+    for (int i = 0; i < 4; i++) {
+      EEPROM.get(2 + (i * sizeof(float)), rgba[i]);
+      Serial.println(rgba[i]);
+    }
+    memcpy(rgbaBackground, rgba, sizeof(float) * 3);
+    brightness = rgba[3];
+    Serial.println();
   }
 }
 
 void JFixture::setBrightness(float b) { brightnessLag->set(b); }
+
 void JFixture::updateLaggers() {
   for (int i = 0; i < NUM_LAGGERS; i++) {
     laggers[i].update();
   }
 }
+
 float JFixture::getBrightness() { return brightness; }
+
 void JFixture::setParameterBus(const uint8_t *data, int data_len) {
   char busIndex = 0;
   float value = 0.0;
@@ -123,6 +121,7 @@ void JFixture::setParameterBus(const uint8_t *data, int data_len) {
     parameterBusses[busIndex] = value;
   }
 }
+
 void JFixture::setParameterBusN(const uint8_t *data, int data_len) {
   short busIndex = 0; // StartIndex
   memcpy(&busIndex, data, sizeof(char));
