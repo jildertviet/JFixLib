@@ -77,7 +77,7 @@ void JFixtureAddr::initCurve() { // 0.0 -- 1.0
   }
 }
 
-void JFixtureAddr::writeRGB(int id, float r, float g, float b, char channel,
+void JFixtureAddr::writeRGB(int id, float r, float g, float b, uint8_t channel,
                             floatColor **leds) {
   if (!leds)
     return;
@@ -115,7 +115,7 @@ void JFixtureAddr::writeRGB(int id, float r, float g, float b, char channel,
 }
 
 void JFixtureAddr::writeRGBHard(
-    int id, float r, float g, float b, char channel,
+    int id, float r, float g, float b, uint8_t channel,
     floatColor **leds) { // Doesn't check previous values, but
                          // does not  backgroundColor
   if (!leds)
@@ -158,7 +158,7 @@ void JFixtureAddr::testLED() {
   }
 }
 
-void JFixtureAddr::setChannel(char i, float v) {
+void JFixtureAddr::setChannel(uint8_t i, float v) {
   for (int i = 0; i < numChannels; i++) {
     channels[i] = v;
   }
@@ -311,7 +311,7 @@ void JFixtureAddr::update() {
     }
     allBlack();
     bool bEventUpdate = false;
-    for (char i = 0; i < MAX_EVENTS; i++) {
+    for (uint8_t i = 0; i < MAX_EVENTS; i++) {
       if (events[i]) {
         events[i]->update();
         if (events[i]->bActive) {
@@ -343,7 +343,8 @@ void JFixtureAddr::update() {
   // delayMicroseconds(500);
 }
 
-void JFixtureAddr::blink(char num, short dur, short delayTime, char channel) {
+void JFixtureAddr::blink(uint8_t num, short dur, short delayTime,
+                         uint8_t channel) {
   float values[3] = {0};
   values[channel] = 1.0;
   writeRGB(1, values[0], values[1], values[2], 0, leds);

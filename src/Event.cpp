@@ -48,7 +48,7 @@ Event::~Event() {
 }
 
 bool Event::checkLifeTime() {
-  if (endTime && millis() > endTime || brightnessEnv.state == DONE) {
+  if ((endTime && millis() > endTime) || brightnessEnv.state == DONE) {
     bActive = false;
     return false;
   } else {
@@ -139,7 +139,7 @@ void Event::setVal(char type, float value) {
   }
 }
 
-void Event::setCustomArg(char id, float val) {
+void Event::setCustomArg(uint8_t id, float val) {
   if (busses[id])
     *busses[id] = val;
 }

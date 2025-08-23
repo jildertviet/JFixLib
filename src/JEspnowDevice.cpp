@@ -352,7 +352,7 @@ void JEspnowDevice::sendPing(bool bOverride) {
     return;
 
   // Only send when no msg is received for x seconds
-  if (millis() > lastReceived + (60000 + pingOffsetSeed) && millis() > 100 ||
+  if ((millis() > lastReceived + (60000 + pingOffsetSeed) && millis() > 100) ||
       bOverride) {
     WiFi.mode(WIFI_OFF);
     WiFi.mode(WIFI_STA);

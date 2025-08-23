@@ -51,7 +51,7 @@ public:
 class Event {
 public:
   Event();
-  ~Event();
+  virtual ~Event();
   ParameterConfig parameterConfigs[NUM_PARAMETER_CONFIGS];
   void linkBus(char name, char busIndex, float *busses);
   void initParameterConfigs();
@@ -70,7 +70,7 @@ public:
   virtual void draw(){};
   virtual void draw(floatColor **leds, int numLedsPerString, char numStrings,
                     int horizontalPixelDistance){};
-  void (*writeRGB)(int, float, float, float, char, floatColor **) = nullptr;
+  void (*writeRGB)(int, float, float, float, uint8_t, floatColor **) = nullptr;
 
   virtual void update();
 
@@ -97,6 +97,6 @@ public:
   bool bWaitForEnv = false;
   int id = -1;
   float *busses[NUM_CUSTOM_ARGS];
-  void setCustomArg(char id, float val);
+  void setCustomArg(uint8_t id, float val);
 };
 #endif // JEVENT

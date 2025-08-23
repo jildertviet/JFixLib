@@ -73,8 +73,8 @@ public:
 
   virtual void update();
   virtual void sendPing(bool b = false){};
-  virtual void blink(char num = 1, short dur = 100, short delayTime = 100,
-                     char channel = 0){};
+  virtual void blink(uint8_t num = 1, short dur = 100, short delayTime = 100,
+                     uint8_t channel = 0){};
 
   void setLedBuiltin(char pin = 5);
 
@@ -86,7 +86,7 @@ public:
   void readEEPROM();
   // virtual void setRGBW(float r, float g, float b, float w, bool bShow =
   // true){};
-  virtual void setChannel(char i, float v){};
+  virtual void setChannel(uint8_t i, float v){};
   virtual void setBrightness(float b);
   virtual void show(){};
   void updateLaggers();

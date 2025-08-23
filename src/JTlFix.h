@@ -38,6 +38,6 @@ public:
     JFixtureAddr::update();
     // JFixture::update();
   }
-  void blink(char num = 1, short dur = 100, short delayTime = 100,
-             char channel = 0) override {}
+  void blink(uint8_t num = 1, short dur = 100, short delayTime = 100,
+             uint8_t channel = 0) override {}
 };

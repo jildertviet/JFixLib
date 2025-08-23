@@ -18,7 +18,7 @@ public:
   JWavetable *w;
   int lastIDAdded = -1;
 
-  void (*writeRGBPtr)(int, float, float, float, char, floatColor **) =
+  void (*writeRGBPtr)(int, float, float, float, uint8_t, floatColor **) =
       nullptr; // Will point to function of inherited class (JFixtureAddr)
 
   // void update() override{
@@ -119,7 +119,7 @@ public:
   void addEvent(Event *e) {
     if (checkDuplicateID(e))
       return;
-    for (char i = 0; i < MAX_EVENTS; i++) {
+    for (uint8_t i = 0; i < MAX_EVENTS; i++) {
       if (events[i] == nullptr) {
         e->bActive = true;
         lastIDAdded = e->id;

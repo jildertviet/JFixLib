@@ -12,7 +12,7 @@ public:
 
   JFixtureDimmer(){};
 
-  void setup(char numChannels = 4, uint8_t *pins = nullptr) {
+  void setup(uint8_t numChannels = 4, uint8_t *pins = nullptr) {
     channels = new float[numChannels];
     this->pins = new uint8_t[numChannels];
     this->numChannels = numChannels;
@@ -46,7 +46,7 @@ public:
   //   }
   // }
 
-  void setLED(char channel, float value) { // Receives 0 - 255
+  void setLED(uint8_t channel, float value) { // Receives 0 - 255
     // float v = brightnessCurve[value];    // Return 0.0 - 1.0
     if (pwmMode == PWM12BIT) {
       value *= 4096;
@@ -73,14 +73,14 @@ public:
       setLED(i, channels[i] * getBrightness());
     }
   };
-  void setChannel(char i, float val) override {
+  void setChannel(uint8_t i, float val) override {
     if (i < numChannels) {
       channels[i] = val;
     }
   }
 
-  void blink(char num = 1, short dur = 100, short delayTime = 100,
-             char channel = 0) override {
+  void blink(uint8_t num = 1, short dur = 100, short delayTime = 100,
+             uint8_t channel = 0) override {
     for (int i = 0; i < num; i++) {
       setLED(0, 200);
       delay(dur);

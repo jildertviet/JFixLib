@@ -119,5 +119,7 @@ void JOtaServer::handleOtaServer() {
     }
     delay(1000);
   } break;
+  case IDLE:
+    break;
   }
 }

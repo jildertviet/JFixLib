@@ -113,7 +113,7 @@ void JFixture::updateLaggers() {
 float JFixture::getBrightness() { return brightness; }
 
 void JFixture::setParameterBus(const uint8_t *data, int data_len) {
-  char busIndex = 0;
+  uint8_t busIndex = 0;
   float value = 0.0;
   memcpy(&busIndex, data, sizeof(char));
   memcpy(&value, data + sizeof(char), sizeof(float));

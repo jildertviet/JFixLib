@@ -51,24 +51,24 @@ public:
   void setLED(char channel, int value) { // Receives 0 - 255
   }
 
-  static void writeRGB(int id, float r, float g, float b, char channel,
+  static void writeRGB(int id, float r, float g, float b, uint8_t channel,
                        floatColor **leds);
 
-  void writeRGBHard(int id, float r, float g, float b, char channel,
+  void writeRGBHard(int id, float r, float g, float b, uint8_t channel,
                     floatColor **leds);
 
   void testLED();
   void showSucces() override {}
   void show() override{};
-  void setChannel(char i, float v) override;
+  void setChannel(uint8_t i, float v) override;
   void allBlack(bool bWrite = false);
   void writeLeds();
   void update() override;
 
   int ledIndex = 0;
 
-  void blink(char num = 1, short dur = 100, short delayTime = 100,
-             char channel = 0) override;
+  void blink(uint8_t num = 1, short dur = 100, short delayTime = 100,
+             uint8_t channel = 0) override;
 };
 
 #define JFIXTURE_ADDR
