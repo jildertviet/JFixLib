@@ -1,21 +1,30 @@
-// #include <WiFi.h>
-#define WS2812B_STATUS_LED
-// #define J_DATA_PINS  (int[]){3}
-#include "JFixLib.h"
+#include "driver/gpio.h"
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "sdkconfig.h"
+#include <stdio.h>
 
-JJonisk jonisk;
+static const char *TAG = "Jonisk";
 
-void setup() {
-  JJoniskSettings settings;
-  settings.networkName = "JV_";
-  settings.pins = new uint8_t[4]{16, 17, 18, 19};
-  settings.numChannels = 4;
-  settings.ledBuiltin = 5;
-  jonisk.setup(settings);
-  // jonisk.writeStatusLedPtr = &jonisk.digitalWriteBuiltinLedAddr;
+#define BLINK_GPIO GPIO_NUM_5
+
+static uint8_t s_led_state = 0;
+
+static void blink_led(void) { gpio_set_level(BLINK_GPIO, s_led_state); }
+
+static void configure_led(void) {
+  gpio_reset_pin(BLINK_GPIO);
+  gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 }
 
-void loop() {
-  jonisk.update();
-  // jTl.update();
+extern "C" void app_main(void) {
+  configure_led();
+
+  while (1) {
+    ESP_LOGI(TAG, "Turning the LED %s!", s_led_state == true ? "ON" : "OFF");
+    blink_led();
+    s_led_state = !s_led_state;
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
 }
