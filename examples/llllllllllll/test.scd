@@ -20,13 +20,16 @@ x = {inf.do{j.move([1,-1].choose*34);5.wait;}}.fork;
 x = {inf.do{t.children.do{|j| j.setMaxSpeed([10].choose);j.move([-1, 1].choose * rrand(10, 80))}; 9.wait; }}.fork;
 x = {inf.do{|i| t.children.do{|j, h| j.moveTo([-1, 1].wrapAt(i + h) * 30)}; 7.wait; }}.fork;
 
-x = {inf.do{|i| j.moveN(10!t.children.size); 7.wait; }}.fork; // Make sure it's broadcasting
+ID IS OFFSET BY 1 !!!
+x = {inf.do{|i| j.moveN(10!(t.children.size+1)); 7.wait; }}.fork; // Make sure it's broadcasting
 
 x.stop
-t.children.do{|j| j.moveTo(0)}
+j.moveToN(0!(t.children.size+1));
+j.moveToN(0!t.children.size);
+j.moveN(10!(t.children.size+1));
 
-j.setMaxSpeed(8.0)
-j.setAcceleration(9.0);
+j.setMaxSpeed(9.4)
+j.setAcceleration(30.0);
 
 j.setBackground([0.1, 0.005, 0.1, 0.0] * 0.5); // Pink
 j.setBackground([0.0, 0.0, 0.1, 0.0] * 4); // Blue
