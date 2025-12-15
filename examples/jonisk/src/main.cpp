@@ -1,30 +1,13 @@
-#include "driver/gpio.h"
-#include "esp_log.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "globals.h"
+#include "objects.h"
 #include "sdkconfig.h"
-#include <stdio.h>
 
 static const char *TAG = "Jonisk";
 
-#define BLINK_GPIO GPIO_NUM_5
-
-static uint8_t s_led_state = 0;
-
-static void blink_led(void) { gpio_set_level(BLINK_GPIO, s_led_state); }
-
-static void configure_led(void) {
-  gpio_reset_pin(BLINK_GPIO);
-  gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
-}
-
 extern "C" void app_main(void) {
-  configure_led();
-
+  blink.init();
+  xTaskCreate(blink.updateTask, "blink", 2048, &blink, 0, NULL);
   while (1) {
-    ESP_LOGI(TAG, "Turning the LED %s!", s_led_state == true ? "ON" : "OFF");
-    blink_led();
-    s_led_state = !s_led_state;
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
