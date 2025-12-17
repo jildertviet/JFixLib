@@ -1,0 +1,5 @@
+version: "0.0.1"
+description: JFixLib
+url: https://github.com/jildertviet/jfixlib
+dependencies:
+  idf : ">=5.4"
