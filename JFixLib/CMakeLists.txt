@@ -3,6 +3,7 @@ idf_component_register(
     "blink.cpp"
     "NVSStorage.cpp"
     "jfixture.cpp"
+    "OTAUpdater.cpp"
     INCLUDE_DIRS .
-    REQUIRES esp_driver_gpio mbedtls nvs_flash
+    REQUIRES esp_driver_gpio mbedtls nvs_flash esp_http_client esp_https_ota
 )

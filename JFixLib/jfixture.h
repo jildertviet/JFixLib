@@ -1,7 +1,7 @@
 #pragma once
 #include "NVSStorage.h"
 
-class jFixture : public NVSStorage {
+class jFixture {
 public:
   jFixture();
 
