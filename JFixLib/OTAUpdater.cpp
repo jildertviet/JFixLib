@@ -8,6 +8,8 @@
 
 static const char *TAG = "OTAUpdater";
 
+OTAUpdater ota;
+
 OTAUpdater::OTAUpdater() {}
 
 void OTAUpdater::checkForOTA() {

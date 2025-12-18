@@ -8,5 +8,6 @@ public:
   OTAUpdater();
   void checkForOTA();
 };
+extern OTAUpdater ota;
 
 #endif // OTA_UPDATER_H
