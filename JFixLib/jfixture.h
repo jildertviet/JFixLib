@@ -6,6 +6,7 @@ class jFixture {
 public:
   jFixture();
   void init();
+  void connectWiFi();
 
 private:
 };
