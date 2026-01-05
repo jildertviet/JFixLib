@@ -11,7 +11,7 @@ public:
 
 private:
   bool bLedState = 0;
-  const uint16_t blinkTimes[2] = {100, 900};
+  const uint16_t blinkTimes[2] = {900, 100};
   static const gpio_num_t pin = BLINK_GPIO;
 };
 
