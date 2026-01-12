@@ -54,7 +54,7 @@ esp_err_t BQ25792::begin() {
 
   ignoreTemperatureSensor(true);
 
-  xTaskCreate(update, "BQ25792::update", 2048, this, 0, NULL);
+  xTaskCreate(update, "BQ25792::update", 4096, this, 0, NULL);
   return err;
 }
 
@@ -85,11 +85,11 @@ esp_err_t BQ25792::initADC() {
 }
 
 esp_err_t BQ25792::enableCharging() {
-  return gpio_set_level(charge_enable_pin, 1);
+  return gpio_set_level(charge_enable_pin, 0);
 }
 
 esp_err_t BQ25792::disableCharging() {
-  return gpio_set_level(charge_enable_pin, 0);
+  return gpio_set_level(charge_enable_pin, 1);
 }
 
 esp_err_t BQ25792::getChargerStatus(uint8_t *status) {
