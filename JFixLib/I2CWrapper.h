@@ -20,6 +20,8 @@ public:
   static esp_err_t write(i2c_master_dev_handle_t dev_handle, uint8_t reg_addr,
                          const uint8_t *data, size_t len);
 
+  esp_err_t isDevicePresent(uint8_t device_address, int timeout_ms);
+
 private:
   i2c_master_bus_handle_t bus_handle;
 };

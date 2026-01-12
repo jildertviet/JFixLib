@@ -27,6 +27,11 @@ I2CWrapper::I2CWrapper(i2c_port_num_t port, gpio_num_t sda_pin,
   ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_mst_config, &bus_handle));
 }
 
+esp_err_t I2CWrapper::isDevicePresent(uint8_t device_address, int timeout_ms) {
+  // This helper function sends a signal to the address and waits for an ACK
+  return i2c_master_probe(bus_handle, device_address, timeout_ms);
+}
+
 esp_err_t I2CWrapper::addDevice(uint8_t device_address, uint32_t device_speed,
                                 i2c_master_dev_handle_t *dev_handle) {
   i2c_device_config_t dev_cfg = {

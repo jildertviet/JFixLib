@@ -18,6 +18,10 @@ public:
   esp_err_t getChargerStatus(uint8_t *status);
   esp_err_t getBatteryVoltage(uint8_t *voltage_mV = nullptr);
   esp_err_t getVsysVoltage(uint16_t *voltage_mV = nullptr);
+  esp_err_t getVac2Voltage(uint16_t *voltage_mV = nullptr);
+  esp_err_t getChargeVoltageLimit(uint16_t *chargeVoltageLimit = nullptr);
+  esp_err_t printFaults();
+
   bool isBatteryPresent();
   bool isVbusPresent();
   esp_err_t ignoreTemperatureSensor(bool ignore);
@@ -29,7 +33,9 @@ private:
   gpio_num_t int_pin;
   i2c_master_dev_handle_t dev_handle = NULL;
   uint16_t batteryVoltage_mV = 0;
+  uint16_t vac2Voltage_mV = 0;
   uint16_t vsysVoltage_mV = 0;
+  uint16_t chargeLimitVoltage_mV = 0;
   bool batteryPresent = false;
   bool vbusPresent = false;
 };
