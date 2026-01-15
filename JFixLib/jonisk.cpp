@@ -15,7 +15,7 @@ void Jonisk::init() {
     charger->enableCharging();
 
     uint8_t status = 0;
-    err = charger->getChargerStatus(&status);
+    err = charger->getChargerStatus0(&status);
     if (err == ESP_OK) {
       ESP_LOGI("TEST", "Charger status register: 0x%02X", status);
       ESP_LOGI("TEST", "IINDPM_STAT:       %s",
