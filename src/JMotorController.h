@@ -1,5 +1,5 @@
 #pragma once
-#ifdef ENABLE_MOTOR
+#if ENABLE_MOTOR
 #include <TMCStepper.h>
 
 #define EN_PIN 14  // Enable

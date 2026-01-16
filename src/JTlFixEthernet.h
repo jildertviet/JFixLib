@@ -1,3 +1,4 @@
+#if ENABLE_ETHERNET
 #include "JFixture.h"
 // #include "JEspnowDevice.h"
 // #include "JFixtureDimmer.h"
@@ -50,3 +51,4 @@ public:
   void blink(uint8_t num = 1, short dur = 100, short delayTime = 100,
              uint8_t channel = 0) override {}
 };
+#endif

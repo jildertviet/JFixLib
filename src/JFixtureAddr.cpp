@@ -1,7 +1,9 @@
 #include "JFixtureAddr.h"
 
+#if NEOPIXELBUS
 NeoPixelBus<NeoGrb48Feature, NeoEsp32I2s1X8Ws2816Method>
     strip(NEOPIXELBUS_NUMLEDS, NEOPIXELBUS_PIN);
+#endif
 
 JFixtureAddr::JFixtureAddr(){};
 
@@ -10,7 +12,7 @@ void JFixtureAddr::setup(char numColorChannels, const uint8_t *pins,
                          int numStrings) {
   channels = new float[numColorChannels];
   ledMode = mode;
-#ifdef NEOPIXELBUS
+#if NEOPIXELBUS
   numLedsPerString = NEOPIXELBUS_NUMLEDS;
 #endif
   this->numLedsPerString = numLedsPerString;
@@ -47,7 +49,7 @@ void JFixtureAddr::setup(char numColorChannels, const uint8_t *pins,
   }
   writeRGBPtr = &this->writeRGB;
   initCurve();
-#ifdef NEOPIXELBUS
+#if NEOPIXELBUS
   Serial.println("Use NeoPixelBus");
   strip.Begin();
 #endif
@@ -231,7 +233,7 @@ void JFixtureAddr::writeLeds() {
     }
   }
 #endif
-#ifdef ADAFRUIT_NEOPIXEL
+#if ADAFRUIT_NEOPIXEL
   for (int j = 0; j < numStrings; j++) {
     for (int i = 0; i < numLedsPerString; i++) {
       pixels.setPixelColor(i, pixels.Color(ledsToWrite[j][i].red,

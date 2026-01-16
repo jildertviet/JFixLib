@@ -1,5 +1,5 @@
-#ifdef ENABLE_ETHERNET
-#ifdef ENABLE_MOTOR
+#if ENABLE_ETHERNET
+#if ENABLE_MOTOR
 #include "JFixture.h"
 // #include "JEspnowDevice.h"
 // #include "JFixtureDimmer.h"

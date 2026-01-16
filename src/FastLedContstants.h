@@ -1,4 +1,6 @@
-void addLeds(int pin, CRGB *leds, int numLedsPerString) {
+#ifndef FASTLED_CONSTANTS_H
+#define FASTLED_CONSTANTS_H
+inline void addLeds(int pin, CRGB *leds, int numLedsPerString) {
   switch (pin) {
   case 0:
     FastLED.addLeds<NEOPIXEL, 0>(leds, numLedsPerString);
@@ -87,3 +89,4 @@ void addLeds(int pin, CRGB *leds, int numLedsPerString) {
     break;
   }
 }
+#endif // FASTLED_CONSTANTS_H

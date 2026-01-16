@@ -1,3 +1,4 @@
+#if ENABLE_MOTOR
 #include "JMotorController.h"
 
 bool bForward = 1;
@@ -110,3 +111,4 @@ void JMotorController::receiveMotorCommands(const uint8_t *mac_addr,
   } break;
   }
 }
+#endif
