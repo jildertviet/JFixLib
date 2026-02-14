@@ -16,7 +16,8 @@ public:
     UNKNOWN,
     TEST,
     SET_CHANNEL,
-    SET_WIFI
+    SET_WIFI,
+    SET_BRIGHTNESS
   };
 
 private:

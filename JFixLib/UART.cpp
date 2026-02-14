@@ -1,11 +1,13 @@
 #include "UART.h"
 #include "NVSStorage.h"
+#include "dimmer.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <algorithm>
 #include <cctype>
 #include <cstring>
+#include <cstdlib>
 
 static const char *TAG = "UART";
 
@@ -13,6 +15,7 @@ const std::unordered_map<std::string, UART::Command> UART::commandMap = {
     {"test", UART::Command::TEST},
     {"setchannel", UART::Command::SET_CHANNEL},
     {"setwifi", UART::Command::SET_WIFI},
+    {"setbrightness", UART::Command::SET_BRIGHTNESS},
 };
 
 UART uartHandler;
@@ -127,49 +130,81 @@ void UART::processCommand(const std::string &command,
     break;
   }
 
-  case Command::SET_CHANNEL: {
+      case Command::SET_CHANNEL: {
 
-    if (args.size() >= 2) {
-      ESP_LOGI(TAG, "Setting channel %s to %s", args[0].c_str(),
-               args[1].c_str());
-    } else {
-      ESP_LOGW(TAG, "setchannel requires 2 arguments: channel,value");
-    }
+        if (args.size() >= 2) {
 
-    break;
-  }
+          int ch = atoi(args[0].c_str());
 
-  case Command::SET_WIFI: {
+          float val = atof(args[1].c_str());
 
-    if (args.size() >= 2) {
+          dimmer.setChannel(ch, val);
 
-      nvs.writeString("ssid", args[0]);
+          dimmer.show();
 
-      nvs.writeString("password", args[1]);
+          ESP_LOGI(TAG, "Setting channel %d to %.2f", ch, val);
 
-      ESP_LOGI(TAG, "WiFi credentials updated. SSID: %s. Restart to apply.",
-               args[0].c_str());
+        } else {
 
-    } else if (args.size() == 1) {
+          ESP_LOGW(TAG, "setchannel requires 2 arguments: channel,value");
 
-      nvs.writeString("ssid", args[0]);
+        }
 
-      nvs.writeString("password", "");
+        break;
 
-      ESP_LOGI(TAG,
-               "WiFi SSID updated (open network). SSID: %s. Restart to apply.",
-               args[0].c_str());
+      }
 
-    } else {
+      case Command::SET_WIFI: {
 
-      ESP_LOGW(TAG,
-               "setwifi requires at least SSID. Format: setwifi:SSID,PASSWORD");
-    }
+        if (args.size() >= 2) {
 
-    break;
-  }
+          nvs.writeString("ssid", args[0]);
 
-  default:
+          nvs.writeString("password", args[1]);
+
+          ESP_LOGI(TAG, "WiFi credentials updated. SSID: %s. Restart to apply.", args[0].c_str());
+
+        } else if (args.size() == 1) {
+
+          nvs.writeString("ssid", args[0]);
+
+          nvs.writeString("password", "");
+
+          ESP_LOGI(TAG, "WiFi SSID updated (open network). SSID: %s. Restart to apply.", args[0].c_str());
+
+        } else {
+
+          ESP_LOGW(TAG, "setwifi requires at least SSID. Format: setwifi:SSID,PASSWORD");
+
+        }
+
+        break;
+
+      }
+
+      case Command::SET_BRIGHTNESS: {
+
+        if (args.size() >= 1) {
+
+          float val = atof(args[0].c_str());
+
+          dimmer.setBrightness(val);
+
+          dimmer.show();
+
+          ESP_LOGI(TAG, "Setting global brightness to %.2f", val);
+
+        } else {
+
+          ESP_LOGW(TAG, "setbrightness requires 1 argument: value");
+
+        }
+
+        break;
+
+      }
+
+      default:
 
     ESP_LOGW(TAG, "Unknown command: %s", command.c_str());
 

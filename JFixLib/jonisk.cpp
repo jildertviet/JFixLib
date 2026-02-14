@@ -1,12 +1,16 @@
 #include "jonisk.h"
 #include "BQ25792.h"
 #include "I2CWrapper.h"
+#include "dimmer.h"
 
 Jonisk::Jonisk() : charger(nullptr) {}
 
 void Jonisk::init() {
   jFixture::init();
   blink.init();
+
+  dimmer.init({1, 2, 3, 4});
+  dimmer.test();
 
   charger = new BQ25792(BQ_CE_PIN, BQ_INT_PIN);
 
