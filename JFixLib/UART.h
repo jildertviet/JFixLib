@@ -15,7 +15,8 @@ public:
   enum class Command {
     UNKNOWN,
     TEST,
-    SET_CHANNEL
+    SET_CHANNEL,
+    SET_WIFI
   };
 
 private:

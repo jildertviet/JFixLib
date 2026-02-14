@@ -2,6 +2,7 @@
 #include "JProtoExample.h"
 #include "NVSStorage.h"
 #include "OTAUpdater.h"
+#include "UART.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
@@ -37,6 +38,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 jFixture::jFixture() {}
 
 void jFixture::init() {
+  uartHandler.init();
   JProtoExample::test();
   nvs.init();
   connectWiFi();

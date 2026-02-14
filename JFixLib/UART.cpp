@@ -1,4 +1,5 @@
 #include "UART.h"
+#include "NVSStorage.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -11,6 +12,7 @@ static const char *TAG = "UART";
 const std::unordered_map<std::string, UART::Command> UART::commandMap = {
     {"test", UART::Command::TEST},
     {"setchannel", UART::Command::SET_CHANNEL},
+    {"setwifi", UART::Command::SET_WIFI},
 };
 
 UART uartHandler;
@@ -112,8 +114,6 @@ void UART::processCommand(const std::string &command,
 
   Command cmd = (it != commandMap.end()) ? it->second : Command::UNKNOWN;
 
-
-
   switch (cmd) {
 
   case Command::TEST: {
@@ -121,29 +121,52 @@ void UART::processCommand(const std::string &command,
     ESP_LOGI(TAG, "Test command received! Args count: %d", (int)args.size());
 
     for (size_t i = 0; i < args.size(); i++) {
-
       ESP_LOGI(TAG, "  Arg[%d]: %s", (int)i, args[i].c_str());
-
     }
 
     break;
-
   }
 
   case Command::SET_CHANNEL: {
 
     if (args.size() >= 2) {
-
-      ESP_LOGI(TAG, "Setting channel %s to %s", args[0].c_str(), args[1].c_str());
-
+      ESP_LOGI(TAG, "Setting channel %s to %s", args[0].c_str(),
+               args[1].c_str());
     } else {
-
       ESP_LOGW(TAG, "setchannel requires 2 arguments: channel,value");
-
     }
 
     break;
+  }
 
+  case Command::SET_WIFI: {
+
+    if (args.size() >= 2) {
+
+      nvs.writeString("ssid", args[0]);
+
+      nvs.writeString("password", args[1]);
+
+      ESP_LOGI(TAG, "WiFi credentials updated. SSID: %s. Restart to apply.",
+               args[0].c_str());
+
+    } else if (args.size() == 1) {
+
+      nvs.writeString("ssid", args[0]);
+
+      nvs.writeString("password", "");
+
+      ESP_LOGI(TAG,
+               "WiFi SSID updated (open network). SSID: %s. Restart to apply.",
+               args[0].c_str());
+
+    } else {
+
+      ESP_LOGW(TAG,
+               "setwifi requires at least SSID. Format: setwifi:SSID,PASSWORD");
+    }
+
+    break;
   }
 
   default:
@@ -151,7 +174,5 @@ void UART::processCommand(const std::string &command,
     ESP_LOGW(TAG, "Unknown command: %s", command.c_str());
 
     break;
-
   }
-
 }
