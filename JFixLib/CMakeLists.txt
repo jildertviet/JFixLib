@@ -6,6 +6,8 @@ idf_component_register(
     "OTAUpdater.cpp"
     "I2CWrapper.cpp"
     "BQ25792.cpp"
-    INCLUDE_DIRS .
-    REQUIRES esp_driver_gpio mbedtls nvs_flash esp_http_client esp_https_ota esp_wifi esp_event esp_netif freertos esp_driver_i2c esp_driver_ledc
+    "generated/simple.pb.c"
+    "JProtoExample.cpp"
+    INCLUDE_DIRS . generated
+    REQUIRES esp_driver_gpio mbedtls nvs_flash esp_http_client esp_https_ota esp_wifi esp_event esp_netif freertos esp_driver_i2c esp_driver_ledc nanopb
 )

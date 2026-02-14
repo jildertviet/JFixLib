@@ -1,4 +1,5 @@
 #include "jfixture.h"
+#include "JProtoExample.h"
 #include "NVSStorage.h"
 #include "OTAUpdater.h"
 #include "esp_event.h"
@@ -36,6 +37,7 @@ static void event_handler(void *arg, esp_event_base_t event_base,
 jFixture::jFixture() {}
 
 void jFixture::init() {
+  JProtoExample::test();
   nvs.init();
   connectWiFi();
   ota.checkForOTA();
