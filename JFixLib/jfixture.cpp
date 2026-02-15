@@ -16,6 +16,8 @@ static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
 
+jFixture *jFixture::instance = nullptr;
+
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data) {
   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
@@ -35,7 +37,11 @@ static void event_handler(void *arg, esp_event_base_t event_base,
   }
 }
 
-jFixture::jFixture() {}
+jFixture::jFixture() {
+  instance = this;
+  laggers[0].link(&brightness);
+  brightnessLag = &laggers[0];
+}
 
 void jFixture::init() {
   uartHandler.init();
@@ -43,6 +49,24 @@ void jFixture::init() {
   nvs.init();
   connectWiFi();
   ota.checkForOTA();
+}
+
+void jFixture::update() {
+  updateLaggers();
+}
+
+void jFixture::setBrightness(float b) {
+  brightnessLag->set(b);
+}
+
+float jFixture::getBrightness() {
+  return brightness;
+}
+
+void jFixture::updateLaggers() {
+  for (int i = 0; i < NUM_LAGGERS; i++) {
+    laggers[i].update();
+  }
 }
 
 void jFixture::connectWiFi() {

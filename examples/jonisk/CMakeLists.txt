@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-set(EXTRA_COMPONENT_DIRS ../../JFixLib src)
+set(EXTRA_COMPONENT_DIRS ../../JFixLib ../../nanopb src)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(jonisk)

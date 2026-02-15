@@ -6,7 +6,9 @@
 class Jonisk : public jFixture {
 public:
   Jonisk();
-  void init();
+  void init() override;
+  void update() override;
+  static void updateTask(void *pvParameters);
 
 private:
   BQ25792 *charger;

@@ -1,6 +1,7 @@
 #include "UART.h"
 #include "NVSStorage.h"
 #include "dimmer.h"
+#include "jfixture.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -182,27 +183,37 @@ void UART::processCommand(const std::string &command,
 
       }
 
-      case Command::SET_BRIGHTNESS: {
+        case Command::SET_BRIGHTNESS: {
 
-        if (args.size() >= 1) {
+          if (args.size() >= 1) {
 
-          float val = atof(args[0].c_str());
+            float val = atof(args[0].c_str());
 
-          dimmer.setBrightness(val);
+            if (jFixture::instance) {
 
-          dimmer.show();
+              jFixture::instance->setBrightness(val);
 
-          ESP_LOGI(TAG, "Setting global brightness to %.2f", val);
+              ESP_LOGI(TAG, "Setting global brightness (lagged) to %.2f", val);
 
-        } else {
+            } else {
 
-          ESP_LOGW(TAG, "setbrightness requires 1 argument: value");
+              dimmer.setBrightness(val);
+
+              dimmer.show();
+
+              ESP_LOGI(TAG, "Setting global brightness (immediate) to %.2f", val);
+
+            }
+
+          } else {
+
+            ESP_LOGW(TAG, "setbrightness requires 1 argument: value");
+
+          }
+
+          break;
 
         }
-
-        break;
-
-      }
 
       default:
 

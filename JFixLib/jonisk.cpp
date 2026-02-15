@@ -45,4 +45,19 @@ void Jonisk::init() {
   }
 
   xTaskCreate(blink.updateTask, "blink", 2048, &blink, 0, NULL);
+  xTaskCreate(updateTask, "jonisk_update", 4096, this, 5, NULL);
+}
+
+void Jonisk::update() {
+  jFixture::update();
+  dimmer.setBrightness(getBrightness());
+  dimmer.show();
+}
+
+void Jonisk::updateTask(void *pvParameters) {
+  Jonisk *self = static_cast<Jonisk *>(pvParameters);
+  while (1) {
+    self->update();
+    vTaskDelay(pdMS_TO_TICKS(20)); // 50Hz update rate
+  }
 }
