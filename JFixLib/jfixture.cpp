@@ -3,6 +3,7 @@
 #include "NVSStorage.h"
 #include "OTAUpdater.h"
 #include "UART.h"
+#include "espnow_handler.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_wifi.h"
@@ -58,6 +59,7 @@ void jFixture::init() {
   }
 
   connectWiFi();
+  EspnowHandler::getInstance().init();
   ota.checkForOTA();
 }
 
@@ -102,6 +104,9 @@ void jFixture::connectWiFi() {
   ESP_ERROR_CHECK(esp_event_handler_instance_register(
       IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+  ESP_ERROR_CHECK(esp_wifi_start()); // Start WiFi here so ESP-NOW works
+
   std::string ssid_str;
   std::string password_str;
 
@@ -109,7 +114,7 @@ void jFixture::connectWiFi() {
   esp_err_t err_pass = nvs.readString("password", password_str);
 
   if (err_ssid != ESP_OK || ssid_str.empty()) {
-    ESP_LOGE(TAG_JF, "SSID not found in NVS. Cannot connect to WiFi.");
+    ESP_LOGE(TAG_JF, "SSID not found in NVS. Station connection skipped (ESP-NOW will still work).");
     return;
   }
 
@@ -148,9 +153,8 @@ void jFixture::connectWiFi() {
     wifi_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
   }
 
-  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-  ESP_ERROR_CHECK(esp_wifi_start());
+  esp_wifi_connect(); // Start connection process
 
   ESP_LOGI(TAG_JF, "wifi_init_sta finished.");
 
