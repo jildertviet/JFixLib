@@ -47,6 +47,16 @@ void jFixture::init() {
   uartHandler.init();
   JProtoExample::test();
   nvs.init();
+
+  std::string id_str;
+  if (nvs.readString("device_id", id_str) == ESP_OK) {
+    id = atoi(id_str.c_str());
+    ESP_LOGI(TAG_JF, "Device ID loaded from NVS: %d", id);
+  } else {
+    id = 0; // Default to 0 if not set
+    ESP_LOGI(TAG_JF, "Device ID not found, defaulting to 0");
+  }
+
   connectWiFi();
   ota.checkForOTA();
 }
@@ -61,6 +71,12 @@ void jFixture::setBrightness(float b) {
 
 float jFixture::getBrightness() {
   return brightness;
+}
+
+void jFixture::setId(int newId) {
+  id = newId;
+  nvs.writeString("device_id", std::to_string(newId));
+  ESP_LOGI(TAG_JF, "Device ID updated to %d and saved to NVS", id);
 }
 
 void jFixture::updateLaggers() {

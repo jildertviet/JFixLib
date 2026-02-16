@@ -6,7 +6,12 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
-PB_BIND(SimpleMessage, SimpleMessage, AUTO)
+PB_BIND(LedCmd, LedCmd, AUTO)
 
+PB_BIND(ChannelCmd, ChannelCmd, AUTO)
 
+PB_BIND(WifiCmd, WifiCmd, AUTO)
 
+PB_BIND(IdCmd, IdCmd, AUTO)
+
+PB_BIND(Command, Command, AUTO)

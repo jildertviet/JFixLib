@@ -13,14 +13,13 @@ void JProtoExample::test() {
 
     /* Encoding */
     {
-        SimpleMessage message = SimpleMessage_init_default;
+        Command cmd = Command_init_default;
         pb_ostream_t stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
 
-        message.id = 42;
-        snprintf(message.text, sizeof(message.text), "Hello from Nanopb!");
-        message.active = true;
+        cmd.which_payload = Command_led_tag;
+        cmd.payload.led.brightness = 0.5f;
 
-        status = pb_encode(&stream, SimpleMessage_fields, &message);
+        status = pb_encode(&stream, Command_fields, &cmd);
         message_length = stream.bytes_written;
 
         if (!status) {
@@ -32,17 +31,18 @@ void JProtoExample::test() {
 
     /* Decoding */
     {
-        SimpleMessage message = SimpleMessage_init_default;
+        Command cmd = Command_init_default;
         pb_istream_t stream = pb_istream_from_buffer(buffer, message_length);
 
-        status = pb_decode(&stream, SimpleMessage_fields, &message);
+        status = pb_decode(&stream, Command_fields, &cmd);
 
         if (!status) {
             ESP_LOGE(TAG, "Decoding failed: %s", PB_GET_ERROR(&stream));
             return;
         }
 
-        ESP_LOGI(TAG, "Decoded: ID=%d, Text=%s, Active=%s", 
-                 (int)message.id, message.text, message.active ? "true" : "false");
+        if (cmd.which_payload == Command_led_tag) {
+            ESP_LOGI(TAG, "Decoded: LED Brightness=%.2f", cmd.payload.led.brightness);
+        }
     }
 }

@@ -1,27 +1,35 @@
 #include "UART.h"
-#include "NVSStorage.h"
-#include "dimmer.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "jfixture.h"
-#include <algorithm>
-#include <cctype>
+#include "parser.h"
 #include <cstdlib>
 #include <cstring>
 
 static const char *TAG = "UART";
 
-const std::unordered_map<std::string, UART::Command> UART::commandMap = {
-    {"test", UART::Command::TEST},
-    {"setchannel", UART::Command::SET_CHANNEL},
-    {"setwifi", UART::Command::SET_WIFI},
-    {"setbrightness", UART::Command::SET_BRIGHTNESS},
-};
+// Frame constants
+static const uint8_t FRAME_START = 0xAA;
+static const uint8_t FRAME_END = 0xBB;
 
 UART uartHandler;
 
 UART::UART() : uart_num(UART_NUM_0) {}
+
+// Simple CRC16-CCITT implementation
+uint16_t crc16_ccitt(const uint8_t *data, size_t len) {
+  uint16_t crc = 0xFFFF;
+  for (size_t i = 0; i < len; i++) {
+    crc ^= (uint16_t)data[i] << 8;
+    for (int j = 0; j < 8; j++) {
+      if (crc & 0x8000)
+        crc = (crc << 1) ^ 0x1021;
+      else
+        crc <<= 1;
+    }
+  }
+  return crc;
+}
 
 esp_err_t UART::init() {
   uart_config_t uart_config = {
@@ -49,130 +57,67 @@ esp_err_t UART::init() {
 void UART::uart_task(void *pvParameters) {
   UART *self = static_cast<UART *>(pvParameters);
   uint8_t *data = (uint8_t *)malloc(BUF_SIZE);
-  std::string buffer;
 
   while (1) {
-    int len = uart_read_bytes(self->uart_num, data, BUF_SIZE - 1,
-                              20 / portTICK_PERIOD_MS);
-    if (len > 0) {
-      for (int i = 0; i < len; i++) {
-        char c = (char)data[i];
-        if (c == ';' || c == '\n' || c == '\r') {
-          if (!buffer.empty()) {
-            self->handleMessage(buffer);
-            buffer.clear();
-          }
-        } else {
-          buffer += c;
-        }
-      }
+    uint8_t start_byte;
+    // 1. Sync: Wait for FRAME_START
+    if (uart_read_bytes(self->uart_num, &start_byte, 1, portMAX_DELAY) != 1)
+      continue;
+    if (start_byte != FRAME_START)
+      continue;
+
+    // 2. Read Length
+    uint8_t msg_len;
+    if (uart_read_bytes(self->uart_num, &msg_len, 1, pdMS_TO_TICKS(100)) != 1) {
+      ESP_LOGW(TAG, "Timeout reading length");
+      continue;
     }
+
+    if (msg_len >= BUF_SIZE) {
+      ESP_LOGE(TAG, "Message too long: %d", msg_len);
+      continue;
+    }
+
+    // 3. Read Payload
+    if (uart_read_bytes(self->uart_num, data, msg_len, pdMS_TO_TICKS(100)) !=
+        msg_len) {
+      ESP_LOGW(TAG, "Timeout reading payload");
+      continue;
+    }
+
+    // 4. Read CRC (2 bytes)
+    uint8_t crc_bytes[2];
+    if (uart_read_bytes(self->uart_num, crc_bytes, 2, pdMS_TO_TICKS(100)) !=
+        2) {
+      ESP_LOGW(TAG, "Timeout reading CRC");
+      continue;
+    }
+    uint16_t received_crc = (crc_bytes[0] << 8) | crc_bytes[1];
+
+    // 5. Read End Byte
+    uint8_t end_byte;
+    if (uart_read_bytes(self->uart_num, &end_byte, 1, pdMS_TO_TICKS(100)) !=
+        1) {
+      ESP_LOGW(TAG, "Timeout reading end byte");
+      continue;
+    }
+
+    if (end_byte != FRAME_END) {
+      ESP_LOGW(TAG, "Invalid end byte: 0x%02X", end_byte);
+      continue;
+    }
+
+    // 6. Verify CRC
+    uint16_t computed_crc = crc16_ccitt(data, msg_len);
+    if (computed_crc != received_crc) {
+      ESP_LOGE(TAG, "CRC Mismatch! Computed: 0x%04X, Received: 0x%04X",
+               computed_crc, received_crc);
+      continue;
+    }
+
+    // 7. Process valid message
+    Parser::getInstance().processIncomingBuffer(data, (size_t)msg_len);
   }
   free(data);
   vTaskDelete(NULL);
-}
-
-void UART::handleMessage(const std::string &message) {
-  std::string trimmed = message;
-  // Basic trimming of whitespace
-  trimmed.erase(trimmed.begin(), std::find_if(trimmed.begin(), trimmed.end(),
-                                              [](unsigned char ch) {
-                                                return !std::isspace(ch);
-                                              }));
-  trimmed.erase(std::find_if(trimmed.rbegin(), trimmed.rend(),
-                             [](unsigned char ch) { return !std::isspace(ch); })
-                    .base(),
-                trimmed.end());
-
-  if (trimmed.empty())
-    return;
-
-  size_t colonPos = trimmed.find(':');
-  std::string command;
-  std::vector<std::string> args;
-
-  if (colonPos != std::string::npos) {
-    command = trimmed.substr(0, colonPos);
-    std::string argsStr = trimmed.substr(colonPos + 1);
-
-    size_t start = 0;
-    size_t end = argsStr.find(',');
-    while (end != std::string::npos) {
-      args.push_back(argsStr.substr(start, end - start));
-      start = end + 1;
-      end = argsStr.find(',', start);
-    }
-    args.push_back(argsStr.substr(start));
-  } else {
-    command = trimmed;
-  }
-
-  processCommand(command, args);
-}
-
-void UART::processCommand(const std::string &command,
-                          const std::vector<std::string> &args) {
-  auto it = commandMap.find(command);
-  Command cmd = (it != commandMap.end()) ? it->second : Command::UNKNOWN;
-  switch (cmd) {
-  case Command::TEST: {
-    ESP_LOGI(TAG, "Test command received! Args count: %d", (int)args.size());
-    for (size_t i = 0; i < args.size(); i++) {
-      ESP_LOGI(TAG, "  Arg[%d]: %s", (int)i, args[i].c_str());
-    }
-    break;
-  }
-
-  case Command::SET_CHANNEL: {
-    if (args.size() >= 2) {
-      int ch = atoi(args[0].c_str());
-      float val = atof(args[1].c_str());
-      dimmer.setChannel(ch, val);
-      dimmer.show();
-      ESP_LOGI(TAG, "Setting channel %d to %.2f", ch, val);
-    } else {
-      ESP_LOGW(TAG, "setchannel requires 2 arguments: channel,value");
-    }
-    break;
-  }
-
-  case Command::SET_WIFI: {
-    if (args.size() >= 2) {
-      nvs.writeString("ssid", args[0]);
-      nvs.writeString("password", args[1]);
-      ESP_LOGI(TAG, "WiFi credentials updated. SSID: %s. Restart to apply.",
-               args[0].c_str());
-    } else if (args.size() == 1) {
-      nvs.writeString("ssid", args[0]);
-      nvs.writeString("password", "");
-      ESP_LOGI(TAG,
-               "WiFi SSID updated (open network). SSID: %s. Restart to apply.",
-               args[0].c_str());
-    } else {
-      ESP_LOGW(TAG,
-               "setwifi requires at least SSID. Format: setwifi:SSID,PASSWORD");
-    }
-    break;
-  }
-  case Command::SET_BRIGHTNESS: {
-    if (args.size() >= 1) {
-      float val = atof(args[0].c_str());
-      if (jFixture::instance) {
-        jFixture::instance->setBrightness(val);
-        ESP_LOGI(TAG, "Setting global brightness (lagged) to %.2f", val);
-      } else {
-        dimmer.setBrightness(val);
-        dimmer.show();
-        ESP_LOGI(TAG, "Setting global brightness (immediate) to %.2f", val);
-      }
-    } else {
-      ESP_LOGW(TAG, "setbrightness requires 1 argument: value");
-    }
-    break;
-  }
-  default:
-
-    ESP_LOGW(TAG, "Unknown command: %s", command.c_str());
-    break;
-  }
 }

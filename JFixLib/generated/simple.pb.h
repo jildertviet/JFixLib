@@ -10,11 +10,34 @@
 #endif
 
 /* Struct definitions */
-typedef struct _SimpleMessage {
+typedef struct _LedCmd {
+    float brightness;
+} LedCmd;
+
+typedef struct _ChannelCmd {
+    int32_t channel;
+    float value;
+} ChannelCmd;
+
+typedef struct _WifiCmd {
+    char ssid[32];
+    char password[64];
+} WifiCmd;
+
+typedef struct _IdCmd {
     int32_t id;
-    char text[40];
-    bool active;
-} SimpleMessage;
+} IdCmd;
+
+typedef struct _Command {
+    int32_t id;
+    pb_size_t which_payload;
+    union {
+        LedCmd led;
+        ChannelCmd channel;
+        WifiCmd wifi;
+        IdCmd set_id;
+    } payload;
+} Command;
 
 
 #ifdef __cplusplus
@@ -22,30 +45,85 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define SimpleMessage_init_default               {0, "", 0}
-#define SimpleMessage_init_zero                  {0, "", 0}
+#define LedCmd_init_default                      {0}
+#define ChannelCmd_init_default                  {0, 0}
+#define WifiCmd_init_default                     {"", ""}
+#define IdCmd_init_default                       {0}
+#define Command_init_default                    {0, 0, {LedCmd_init_default}}
+#define LedCmd_init_zero                         {0}
+#define ChannelCmd_init_zero                     {0, 0}
+#define WifiCmd_init_zero                        {"", ""}
+#define IdCmd_init_zero                          {0}
+#define Command_init_zero                       {0, 0, {LedCmd_init_zero}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define SimpleMessage_id_tag                     1
-#define SimpleMessage_text_tag                   2
-#define SimpleMessage_active_tag                 3
+#define LedCmd_brightness_tag                    1
+#define ChannelCmd_channel_tag                   1
+#define ChannelCmd_value_tag                     2
+#define WifiCmd_ssid_tag                         1
+#define WifiCmd_password_tag                     2
+#define IdCmd_id_tag                             1
+#define Command_id_tag                           1
+#define Command_led_tag                          2
+#define Command_channel_tag                      3
+#define Command_wifi_tag                         4
+#define Command_set_id_tag                       5
 
 /* Struct field encoding specification for nanopb */
-#define SimpleMessage_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, INT32,    id,                1) \
-X(a, STATIC,   SINGULAR, STRING,   text,              2) \
-X(a, STATIC,   SINGULAR, BOOL,     active,            3)
-#define SimpleMessage_CALLBACK NULL
-#define SimpleMessage_DEFAULT NULL
+#define LedCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, FLOAT,    brightness,        1)
+#define LedCmd_CALLBACK NULL
+#define LedCmd_DEFAULT NULL
 
-extern const pb_msgdesc_t SimpleMessage_msg;
+#define ChannelCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    channel,           1) \
+X(a, STATIC,   SINGULAR, FLOAT,    value,             2)
+#define ChannelCmd_CALLBACK NULL
+#define ChannelCmd_DEFAULT NULL
+
+#define WifiCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, STRING,   ssid,              1) \
+X(a, STATIC,   SINGULAR, STRING,   password,          2)
+#define WifiCmd_CALLBACK NULL
+#define WifiCmd_DEFAULT NULL
+
+#define IdCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    id,                1)
+#define IdCmd_CALLBACK NULL
+#define IdCmd_DEFAULT NULL
+
+#define Command_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    id,                1) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,led,payload.led),   2) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,channel,payload.channel),   3) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,wifi,payload.wifi),   4) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_id,payload.set_id),   5)
+#define Command_CALLBACK NULL
+#define Command_DEFAULT NULL
+#define Command_payload_led_MSGTYPE LedCmd
+#define Command_payload_channel_MSGTYPE ChannelCmd
+#define Command_payload_wifi_MSGTYPE WifiCmd
+#define Command_payload_set_id_MSGTYPE IdCmd
+
+extern const pb_msgdesc_t LedCmd_msg;
+extern const pb_msgdesc_t ChannelCmd_msg;
+extern const pb_msgdesc_t WifiCmd_msg;
+extern const pb_msgdesc_t IdCmd_msg;
+extern const pb_msgdesc_t Command_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
-#define SimpleMessage_fields &SimpleMessage_msg
+#define LedCmd_fields &LedCmd_msg
+#define ChannelCmd_fields &ChannelCmd_msg
+#define WifiCmd_fields &WifiCmd_msg
+#define IdCmd_fields &IdCmd_msg
+#define Command_fields &Command_msg
 
 /* Maximum encoded size of messages (where known) */
-#define SIMPLE_PB_H_MAX_SIZE                     SimpleMessage_size
-#define SimpleMessage_size                       54
+#define LedCmd_size                              5
+#define ChannelCmd_size                          16
+#define WifiCmd_size                             99
+#define IdCmd_size                               11
+#define Command_size                             115
 
 #ifdef __cplusplus
 } /* extern "C" */

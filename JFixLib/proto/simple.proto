@@ -2,8 +2,30 @@ syntax = "proto3";
 
 import "nanopb.proto";
 
-message SimpleMessage {
-    int32 id = 1;
-    string text = 2 [(nanopb).max_size = 40];
-    bool active = 3;
+message LedCmd {
+  float brightness = 1;
+}
+
+message ChannelCmd {
+  int32 channel = 1;
+  float value = 2;
+}
+
+message WifiCmd {
+  string ssid = 1 [(nanopb).max_size = 32];
+  string password = 2 [(nanopb).max_size = 64];
+}
+
+message IdCmd {
+  int32 id = 1;
+}
+
+message Command {
+  int32 id = 1; // 0 for broadcast, otherwise targeted ID
+  oneof payload {
+    LedCmd led = 2;
+    ChannelCmd channel = 3;
+    WifiCmd wifi = 4;
+    IdCmd set_id = 5;
+  }
 }
