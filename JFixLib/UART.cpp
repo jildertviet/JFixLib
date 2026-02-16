@@ -1,14 +1,14 @@
 #include "UART.h"
 #include "NVSStorage.h"
 #include "dimmer.h"
-#include "jfixture.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "jfixture.h"
 #include <algorithm>
 #include <cctype>
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
 static const char *TAG = "UART";
 
@@ -111,114 +111,68 @@ void UART::handleMessage(const std::string &message) {
 }
 
 void UART::processCommand(const std::string &command,
-
                           const std::vector<std::string> &args) {
-
   auto it = commandMap.find(command);
-
   Command cmd = (it != commandMap.end()) ? it->second : Command::UNKNOWN;
-
   switch (cmd) {
-
   case Command::TEST: {
-
     ESP_LOGI(TAG, "Test command received! Args count: %d", (int)args.size());
-
     for (size_t i = 0; i < args.size(); i++) {
       ESP_LOGI(TAG, "  Arg[%d]: %s", (int)i, args[i].c_str());
     }
-
     break;
   }
 
-      case Command::SET_CHANNEL: {
+  case Command::SET_CHANNEL: {
+    if (args.size() >= 2) {
+      int ch = atoi(args[0].c_str());
+      float val = atof(args[1].c_str());
+      dimmer.setChannel(ch, val);
+      dimmer.show();
+      ESP_LOGI(TAG, "Setting channel %d to %.2f", ch, val);
+    } else {
+      ESP_LOGW(TAG, "setchannel requires 2 arguments: channel,value");
+    }
+    break;
+  }
 
-        if (args.size() >= 2) {
-
-          int ch = atoi(args[0].c_str());
-
-          float val = atof(args[1].c_str());
-
-          dimmer.setChannel(ch, val);
-
-          dimmer.show();
-
-          ESP_LOGI(TAG, "Setting channel %d to %.2f", ch, val);
-
-        } else {
-
-          ESP_LOGW(TAG, "setchannel requires 2 arguments: channel,value");
-
-        }
-
-        break;
-
+  case Command::SET_WIFI: {
+    if (args.size() >= 2) {
+      nvs.writeString("ssid", args[0]);
+      nvs.writeString("password", args[1]);
+      ESP_LOGI(TAG, "WiFi credentials updated. SSID: %s. Restart to apply.",
+               args[0].c_str());
+    } else if (args.size() == 1) {
+      nvs.writeString("ssid", args[0]);
+      nvs.writeString("password", "");
+      ESP_LOGI(TAG,
+               "WiFi SSID updated (open network). SSID: %s. Restart to apply.",
+               args[0].c_str());
+    } else {
+      ESP_LOGW(TAG,
+               "setwifi requires at least SSID. Format: setwifi:SSID,PASSWORD");
+    }
+    break;
+  }
+  case Command::SET_BRIGHTNESS: {
+    if (args.size() >= 1) {
+      float val = atof(args[0].c_str());
+      if (jFixture::instance) {
+        jFixture::instance->setBrightness(val);
+        ESP_LOGI(TAG, "Setting global brightness (lagged) to %.2f", val);
+      } else {
+        dimmer.setBrightness(val);
+        dimmer.show();
+        ESP_LOGI(TAG, "Setting global brightness (immediate) to %.2f", val);
       }
-
-      case Command::SET_WIFI: {
-
-        if (args.size() >= 2) {
-
-          nvs.writeString("ssid", args[0]);
-
-          nvs.writeString("password", args[1]);
-
-          ESP_LOGI(TAG, "WiFi credentials updated. SSID: %s. Restart to apply.", args[0].c_str());
-
-        } else if (args.size() == 1) {
-
-          nvs.writeString("ssid", args[0]);
-
-          nvs.writeString("password", "");
-
-          ESP_LOGI(TAG, "WiFi SSID updated (open network). SSID: %s. Restart to apply.", args[0].c_str());
-
-        } else {
-
-          ESP_LOGW(TAG, "setwifi requires at least SSID. Format: setwifi:SSID,PASSWORD");
-
-        }
-
-        break;
-
-      }
-
-        case Command::SET_BRIGHTNESS: {
-
-          if (args.size() >= 1) {
-
-            float val = atof(args[0].c_str());
-
-            if (jFixture::instance) {
-
-              jFixture::instance->setBrightness(val);
-
-              ESP_LOGI(TAG, "Setting global brightness (lagged) to %.2f", val);
-
-            } else {
-
-              dimmer.setBrightness(val);
-
-              dimmer.show();
-
-              ESP_LOGI(TAG, "Setting global brightness (immediate) to %.2f", val);
-
-            }
-
-          } else {
-
-            ESP_LOGW(TAG, "setbrightness requires 1 argument: value");
-
-          }
-
-          break;
-
-        }
-
-      default:
+    } else {
+      ESP_LOGW(TAG, "setbrightness requires 1 argument: value");
+    }
+    break;
+  }
+  default:
 
     ESP_LOGW(TAG, "Unknown command: %s", command.c_str());
-
     break;
   }
 }

@@ -9,7 +9,7 @@ void Jonisk::init() {
   jFixture::init();
   blink.init();
 
-  dimmer.init({1, 2, 3, 4});
+  dimmer.init({16, 17, 18, 8});
   dimmer.test();
 
   charger = new BQ25792(BQ_CE_PIN, BQ_INT_PIN);
