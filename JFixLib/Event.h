@@ -36,7 +36,7 @@ public:
   void initParameterConfigs();
   
   bool bActive = false;
-  bool bInvertHeight = false;
+  float bInvertHeight = 0.0f;
   uint32_t endTime = 0;
   bool checkLifeTime();
   void updateEnvelopes();

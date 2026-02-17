@@ -3,3 +3,4 @@ description: JFixLib
 url: https://github.com/jildertviet/jfixlib
 dependencies:
   idf: '>=5.4'
+  espressif/led_strip: "^3.0.0"

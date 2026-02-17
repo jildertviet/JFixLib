@@ -17,6 +17,10 @@ idf_component_register(
     "JEnv.cpp"
     "Event.cpp"
     "JEvent_Perlin.cpp"
+    "JRect.cpp"
+    "expRandLines.cpp"
+    "jfixture_graphics.cpp"
+    "jfixture_addr.cpp"
     INCLUDE_DIRS . generated
-    REQUIRES esp_driver_gpio mbedtls nvs_flash esp_http_client esp_https_ota esp_wifi esp_event esp_netif freertos esp_driver_i2c esp_driver_ledc esp_driver_uart esp_timer nanopb
+    REQUIRES esp_driver_gpio mbedtls nvs_flash esp_http_client esp_https_ota esp_wifi esp_event esp_netif freertos esp_driver_i2c esp_driver_ledc esp_driver_uart esp_timer nanopb led_strip
 )

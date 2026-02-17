@@ -21,6 +21,9 @@ public:
 protected:
   int id = -1;
   float brightness = 1.0f;
+  float viewport[2] = {20.0f, 144.0f};
+  float viewportOffset[2] = {0.0f, 0.0f};
+  bool bStatic = false;
   static const int NUM_LAGGERS = 4;
   Lagger laggers[NUM_LAGGERS];
   Lagger *brightnessLag;
