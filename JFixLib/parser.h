@@ -23,6 +23,7 @@ private:
     static void handleChannel(const Command& cmd);
     static void handleWifi(const Command& cmd);
     static void handleId(const Command& cmd);
+    static void handleMotor(const Command& cmd);
 };
 
 #endif // PARSER_H

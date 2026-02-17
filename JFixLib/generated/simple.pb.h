@@ -28,6 +28,12 @@ typedef struct _IdCmd {
     int32_t id;
 } IdCmd;
 
+typedef struct _MotorCmd {
+    int32_t steps;
+    float speed;
+    bool relative;
+} MotorCmd;
+
 typedef struct _Command {
     int32_t id;
     pb_size_t which_payload;
@@ -36,6 +42,7 @@ typedef struct _Command {
         ChannelCmd channel;
         WifiCmd wifi;
         IdCmd set_id;
+        MotorCmd motor;
     } payload;
 } Command;
 
@@ -49,11 +56,13 @@ extern "C" {
 #define ChannelCmd_init_default                  {0, 0}
 #define WifiCmd_init_default                     {"", ""}
 #define IdCmd_init_default                       {0}
+#define MotorCmd_init_default                    {0, 0, 0}
 #define Command_init_default                    {0, 0, {LedCmd_init_default}}
 #define LedCmd_init_zero                         {0}
 #define ChannelCmd_init_zero                     {0, 0}
 #define WifiCmd_init_zero                        {"", ""}
 #define IdCmd_init_zero                          {0}
+#define MotorCmd_init_zero                       {0, 0, 0}
 #define Command_init_zero                       {0, 0, {LedCmd_init_zero}}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -63,11 +72,15 @@ extern "C" {
 #define WifiCmd_ssid_tag                         1
 #define WifiCmd_password_tag                     2
 #define IdCmd_id_tag                             1
+#define MotorCmd_steps_tag                       1
+#define MotorCmd_speed_tag                       2
+#define MotorCmd_relative_tag                    3
 #define Command_id_tag                           1
 #define Command_led_tag                          2
 #define Command_channel_tag                      3
 #define Command_wifi_tag                         4
 #define Command_set_id_tag                       5
+#define Command_motor_tag                        6
 
 /* Struct field encoding specification for nanopb */
 #define LedCmd_FIELDLIST(X, a) \
@@ -92,23 +105,33 @@ X(a, STATIC,   SINGULAR, INT32,    id,                1)
 #define IdCmd_CALLBACK NULL
 #define IdCmd_DEFAULT NULL
 
+#define MotorCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    steps,             1) \
+X(a, STATIC,   SINGULAR, FLOAT,    speed,             2) \
+X(a, STATIC,   SINGULAR, BOOL,     relative,          3)
+#define MotorCmd_CALLBACK NULL
+#define MotorCmd_DEFAULT NULL
+
 #define Command_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, INT32,    id,                1) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,led,payload.led),   2) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,channel,payload.channel),   3) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,wifi,payload.wifi),   4) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_id,payload.set_id),   5)
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_id,payload.set_id),   5) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,motor,payload.motor),   6)
 #define Command_CALLBACK NULL
 #define Command_DEFAULT NULL
 #define Command_payload_led_MSGTYPE LedCmd
 #define Command_payload_channel_MSGTYPE ChannelCmd
 #define Command_payload_wifi_MSGTYPE WifiCmd
 #define Command_payload_set_id_MSGTYPE IdCmd
+#define Command_payload_motor_MSGTYPE MotorCmd
 
 extern const pb_msgdesc_t LedCmd_msg;
 extern const pb_msgdesc_t ChannelCmd_msg;
 extern const pb_msgdesc_t WifiCmd_msg;
 extern const pb_msgdesc_t IdCmd_msg;
+extern const pb_msgdesc_t MotorCmd_msg;
 extern const pb_msgdesc_t Command_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
@@ -116,6 +139,7 @@ extern const pb_msgdesc_t Command_msg;
 #define ChannelCmd_fields &ChannelCmd_msg
 #define WifiCmd_fields &WifiCmd_msg
 #define IdCmd_fields &IdCmd_msg
+#define MotorCmd_fields &MotorCmd_msg
 #define Command_fields &Command_msg
 
 /* Maximum encoded size of messages (where known) */
@@ -123,7 +147,8 @@ extern const pb_msgdesc_t Command_msg;
 #define ChannelCmd_size                          16
 #define WifiCmd_size                             99
 #define IdCmd_size                               11
-#define Command_size                             115
+#define MotorCmd_size                            18
+#define Command_size                             122
 
 #ifdef __cplusplus
 } /* extern "C" */

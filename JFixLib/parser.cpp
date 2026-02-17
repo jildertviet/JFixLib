@@ -3,6 +3,7 @@
 #include "NVSStorage.h"
 #include "dimmer.h"
 #include "jfixture.h"
+#include "motor_controller.h"
 #include <pb_decode.h>
 
 static const char *TAG = "Parser";
@@ -12,6 +13,7 @@ Parser::Parser() {
     dispatcher[Command_channel_tag] = handleChannel;
     dispatcher[Command_wifi_tag] = handleWifi;
     dispatcher[Command_set_id_tag] = handleId;
+    dispatcher[Command_motor_tag] = handleMotor;
 }
 
 Parser& Parser::getInstance() {
@@ -80,5 +82,19 @@ void Parser::handleId(const Command& cmd) {
     int newId = cmd.payload.set_id.id;
     if (jFixture::instance) {
         jFixture::instance->setId(newId);
+    }
+}
+
+void Parser::handleMotor(const Command& cmd) {
+    int32_t steps = cmd.payload.motor.steps;
+    float speed = cmd.payload.motor.speed;
+    bool relative = cmd.payload.motor.relative;
+
+    if (relative) {
+        motorController.move(steps, speed);
+        ESP_LOGI(TAG, "Motor move relative: %d steps at %.2f speed", (int)steps, speed);
+    } else {
+        motorController.moveTo(steps, speed);
+        ESP_LOGI(TAG, "Motor move absolute: to %d at %.2f speed", (int)steps, speed);
     }
 }

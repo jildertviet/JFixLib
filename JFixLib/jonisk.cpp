@@ -2,6 +2,7 @@
 #include "BQ25792.h"
 #include "I2CWrapper.h"
 #include "dimmer.h"
+#include "motor_controller.h"
 
 Jonisk::Jonisk() : charger(nullptr) {}
 
@@ -11,6 +12,8 @@ void Jonisk::init() {
 
   dimmer.init({16, 17, 18, 8});
   dimmer.test();
+
+  motorController.init(GPIO_NUM_4, GPIO_NUM_13, GPIO_NUM_14);
 
   charger = new BQ25792(BQ_CE_PIN, BQ_INT_PIN);
 

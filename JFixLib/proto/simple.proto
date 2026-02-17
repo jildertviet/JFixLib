@@ -20,6 +20,12 @@ message IdCmd {
   int32 id = 1;
 }
 
+message MotorCmd {
+  int32 steps = 1;
+  float speed = 2;
+  bool relative = 3;
+}
+
 message Command {
   int32 id = 1; // 0 for broadcast, otherwise targeted ID
   oneof payload {
@@ -27,5 +33,6 @@ message Command {
     ChannelCmd channel = 3;
     WifiCmd wifi = 4;
     IdCmd set_id = 5;
+    MotorCmd motor = 6;
   }
 }

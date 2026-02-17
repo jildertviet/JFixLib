@@ -14,4 +14,6 @@ PB_BIND(WifiCmd, WifiCmd, AUTO)
 
 PB_BIND(IdCmd, IdCmd, AUTO)
 
+PB_BIND(MotorCmd, MotorCmd, AUTO)
+
 PB_BIND(Command, Command, AUTO)
