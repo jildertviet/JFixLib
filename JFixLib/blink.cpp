@@ -44,3 +44,8 @@ void Blink::update() {
   vTaskDelay(blinkTimes[bLedState] / portTICK_PERIOD_MS);
   bLedState = !bLedState;
 }
+
+void Blink::setInterval(uint16_t on_ms, uint16_t off_ms) {
+  blinkTimes[1] = on_ms;
+  blinkTimes[0] = off_ms;
+}

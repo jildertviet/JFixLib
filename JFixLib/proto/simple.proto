@@ -26,6 +26,11 @@ message MotorCmd {
   bool relative = 3;
 }
 
+message BlinkCmd {
+  int32 on_ms = 1;
+  int32 off_ms = 2;
+}
+
 message Command {
   int32 id = 1; // 0 for broadcast, otherwise targeted ID
   oneof payload {
@@ -34,5 +39,6 @@ message Command {
     WifiCmd wifi = 4;
     IdCmd set_id = 5;
     MotorCmd motor = 6;
+    BlinkCmd blink = 7;
   }
 }

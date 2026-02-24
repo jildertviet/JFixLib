@@ -4,6 +4,7 @@
 #include "dimmer.h"
 #include "jfixture.h"
 #include "motor_controller.h"
+#include "blink.h"
 #include <pb_decode.h>
 
 static const char *TAG = "Parser";
@@ -14,6 +15,7 @@ Parser::Parser() {
     dispatcher[Command_wifi_tag] = handleWifi;
     dispatcher[Command_set_id_tag] = handleId;
     dispatcher[Command_motor_tag] = handleMotor;
+    dispatcher[Command_blink_tag] = handleBlink;
 }
 
 Parser& Parser::getInstance() {
@@ -97,4 +99,11 @@ void Parser::handleMotor(const Command& cmd) {
         motorController.moveTo(steps, speed);
         ESP_LOGI(TAG, "Motor move absolute: to %d at %.2f speed", (int)steps, speed);
     }
+}
+
+void Parser::handleBlink(const Command& cmd) {
+    uint16_t on = (uint16_t)cmd.payload.blink.on_ms;
+    uint16_t off = (uint16_t)cmd.payload.blink.off_ms;
+    blink.setInterval(on, off);
+    ESP_LOGI(TAG, "Blink interval updated: ON=%dms, OFF=%dms", on, off);
 }

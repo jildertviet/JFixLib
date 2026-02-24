@@ -57,6 +57,8 @@ def main():
     print("  setchannel:[id],<ch>,<val>")
     print("  setwifi:[id],<ssid>,<pass>")
     print("  setid:[id],<new_id>")
+    print("  setmotor:[id],<steps>,<speed>,[relative=1]")
+    print("  setblink:[id],<on_ms>,<off_ms>")
     print("  Note: [id] is optional. If omitted, id=0 (broadcast) is used.")
     print("  Example: setbrightness:10,0.5  (set brightness of device 10 to 0.5)")
     print("  Example: setbrightness:0.5     (set brightness of ALL devices to 0.5)")
@@ -65,9 +67,13 @@ def main():
     while True:
         try:
             line = input("> ").strip()
-            if not line: continue
-            if line == "exit": break
+        except EOFError:
+            break
+            
+        if not line: continue
+        if line == "exit": break
 
+        try:
             cmd = simple_pb2.Command()
             cmd.id = 0 # Default broadcast
 
@@ -82,6 +88,10 @@ def main():
                 if cmd_name == "setchannel" and len(args) == 3: has_id = True
                 if cmd_name == "setwifi" and len(args) == 3: has_id = True
                 if cmd_name == "setid" and len(args) == 2: has_id = True
+                if cmd_name == "setmotor" and len(args) >= 3:
+                    if len(args) == 4: has_id = True
+                    elif len(args) == 3 and args[0].isdigit() and int(args[0]) < 100: has_id = True
+                if cmd_name == "setblink" and len(args) == 3: has_id = True
 
                 arg_idx = 0
                 if has_id:
@@ -101,6 +111,15 @@ def main():
                     send_command(ser, cmd)
                 elif cmd_name == "setid":
                     cmd.set_id.id = int(args[arg_idx])
+                    send_command(ser, cmd)
+                elif cmd_name == "setmotor":
+                    cmd.motor.steps = int(args[arg_idx])
+                    cmd.motor.speed = float(args[arg_idx+1])
+                    cmd.motor.relative = bool(int(args[arg_idx+2])) if len(args) > arg_idx+2 else True
+                    send_command(ser, cmd)
+                elif cmd_name == "setblink":
+                    cmd.blink.on_ms = int(args[arg_idx])
+                    cmd.blink.off_ms = int(args[arg_idx+1])
                     send_command(ser, cmd)
                 else:
                     print(f"Unknown command: {cmd_name}")

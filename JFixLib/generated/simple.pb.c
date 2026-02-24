@@ -16,4 +16,6 @@ PB_BIND(IdCmd, IdCmd, AUTO)
 
 PB_BIND(MotorCmd, MotorCmd, AUTO)
 
+PB_BIND(BlinkCmd, BlinkCmd, AUTO)
+
 PB_BIND(Command, Command, AUTO)
