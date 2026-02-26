@@ -14,6 +14,7 @@ idf_component_register(
     "parser.cpp"
     "espnow_handler.cpp"
     "ethernet_handler.cpp"
+    "JOsc.cpp"
     "JWavetable.cpp"
     "JEnv.cpp"
     "Event.cpp"
