@@ -13,6 +13,7 @@ idf_component_register(
     "lagger.cpp"
     "parser.cpp"
     "espnow_handler.cpp"
+    "ethernet_handler.cpp"
     "JWavetable.cpp"
     "JEnv.cpp"
     "Event.cpp"
@@ -23,5 +24,5 @@ idf_component_register(
     "jfixture_addr.cpp"
     "motor_controller.cpp"
     INCLUDE_DIRS . generated
-    REQUIRES esp_driver_gpio mbedtls nvs_flash esp_http_client esp_https_ota esp_wifi esp_event esp_netif freertos esp_driver_i2c esp_driver_ledc esp_driver_uart esp_timer nanopb led_strip
+    REQUIRES esp_driver_gpio mbedtls nvs_flash esp_http_client esp_https_ota esp_wifi esp_event esp_netif freertos esp_driver_i2c esp_driver_ledc esp_driver_uart esp_timer nanopb led_strip esp_eth esp_driver_spi
 )
