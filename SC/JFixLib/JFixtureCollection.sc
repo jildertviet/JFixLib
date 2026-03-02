@@ -73,10 +73,11 @@ JFixtureCollection {
         })
       });
 			addr = addr.collect({|e| e.split($x)[1].asHexIfPossible});
-      switch(type, 
-        0, {children.add(JJonisk.new(i, addr, serialOrNetAddr));},
-        1, {children.add(JTLFix.new(i, addr, serialOrNetAddr));},
-        2, {children.add(Jllllllllllll.new(i, addr, serialOrNetAddr));},
+      // IDs are 1-based: Command.id=0 is reserved for broadcast.
+      switch(type,
+        0, {children.add(JJonisk.new(i + 1, addr, serialOrNetAddr));},
+        1, {children.add(JTLFix.new(i + 1, addr, serialOrNetAddr));},
+        2, {children.add(Jllllllllllll.new(i + 1, addr, serialOrNetAddr));},
       );
 		};
     lastSeenData = [0, 0]!children.size; // [button, time]
@@ -289,22 +290,13 @@ JFixtureCollection {
 	}
 
   sendRGBWn{
-    children[0].bus.getn(children.size * 4, {
-			|v|
-			var msg = (0xFF!6) ++ [0x33] ++ v.collect({|e| Int16(e * 65536).asBytes}).reshape(v.size * 2) ++ "end";
-      children[0].send(msg, true);
-		});
+    // 0x33 broadcast-RGBW has no equivalent in the v2 ProtoBuf schema.
+    "sendRGBWn: not supported in v2 protocol".warn;
   }
 
-  sendBrightnessN{ // Send brightness as float
-    children[0].bus.getn(children.size * 4, {
-			|v|
-			var msg;
-      var arrayToWrite = 0!(v.size/4);
-      (v.size/4).do{|i| arrayToWrite[i] = v[i*4]}; // Channel 0. Set mode to 1 in synths 
-      msg = (0xFF!6) ++ [0x34] ++ arrayToWrite.asBytes32F ++ "end";
-      children[0].send(msg, true);
-		});
+  sendBrightnessN{
+    // 0x34 broadcast-brightness has no equivalent in the v2 ProtoBuf schema.
+    "sendBrightnessN: not supported in v2 protocol".warn;
   }
 
   gui{

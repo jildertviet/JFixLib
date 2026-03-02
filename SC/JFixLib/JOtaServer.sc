@@ -1,12 +1,19 @@
+// Tag 20: SetOtaUrlCmd { url (string, max 128 bytes) }.
+// Writes the OTA URL to NVS; device must reboot to apply.
+// Note: WiFi credentials are set separately via JFixture.setWifi().
 JOtaServer : JFixture{
   *new{
     |id, addr, serial|
     ^super.new(id, addr, serial);
   }
-  setOTAServer{
-    |ssid="", password="", url="https://192.168.1.100/.pio/build/esp32dev/firmware.bin"|
-    var json = "{\"ssid\":\""++ ssid ++"\", \"password\":\""++password++"\", \"url\":\""++url++"\"}";
-    var msg = 0xFF!6 ++ [0x15] ++ this.address ++ json ++ "end"; // Always single, no broadcast
-    this.send(msg);
+
+  setOTAServer{ |url = ""|
+    // Always unicast — target specific device, never broadcast OTA URL.
+    var savedBroadcast = bBroadcast;
+    bBroadcast = false;
+    this.send(JPb.command(this.getCommandId(), 20,
+      JPb.string(1, url)
+    ));
+    bBroadcast = savedBroadcast;
   }
 }

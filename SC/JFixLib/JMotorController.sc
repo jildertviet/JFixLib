@@ -1,27 +1,56 @@
-JMotorController : JFixture { 
+// Tag 6: MotorCmd { steps (int32), speed (float), relative (bool) }
+// speed = 0.0 means "use firmware default".
+JMotorController : JFixture {
   *new{
     |id, addr, serial|
-  "Motor controller".postln;
+    "Motor controller".postln;
     ^super.new(id, addr, serial);
   }
-  // init{}
 
-  move{|relative=10|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x01] ++ relative.asFloat.asBytes32 ++ "end");
+  // Relative move by N steps.
+  move{ |steps = 10, speed = 0.0|
+    this.send(JPb.command(this.getCommandId(), 6,
+      JPb.int32(1, steps.asInteger) ++
+      JPb.float32(2, speed) ++
+      JPb.bool(3, true)
+    ));
   }
-  moveN{|relative=#[10,0]|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x05] ++ relative.asFloat.asBytes32F ++ "end");
+
+  // Absolute move to position.
+  moveTo{ |position = 0, speed = 0.0|
+    this.send(JPb.command(this.getCommandId(), 6,
+      JPb.int32(1, position.asInteger) ++
+      JPb.float32(2, speed) ++
+      JPb.bool(3, false)
+    ));
   }
-  moveTo{|absolute=10|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x02] ++ absolute.asFloat.asBytes32 ++ "end");
+
+  // Broadcast relative move — all devices receive the same step count.
+  // For per-device values, send individual move commands instead.
+  moveN{ |steps = 10, speed = 0.0|
+    var saved = bBroadcast;
+    bBroadcast = true;
+    this.move(steps, speed);
+    bBroadcast = saved;
   }
-  moveToN{|relative=#[10,0]|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x06] ++ relative.asFloat.asBytes32F ++ "end");
+
+  // Per-device absolute moves: send unicast MotorCmd to each device ID 1..positions.size.
+  moveToN{ |positions = #[0, 0], speed = 0.0|
+    positions.doWithIndex { |pos, i|
+      this.sendRaw(JPb.command(i + 1, 6,
+        JPb.int32(1, pos.asInteger) ++
+        JPb.float32(2, speed) ++
+        JPb.bool(3, false)
+      ));
+    };
   }
-  setAcceleration{|accell=10|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x03] ++ accell.asFloat.asBytes32 ++ "end");
+
+  // setAcceleration and setMaxSpeed have no equivalent in v2 MotorCmd.
+  // Pass speed directly in move/moveTo instead.
+  setAcceleration{ |accel = 10|
+    "setAcceleration: not in v2 ProtoBuf schema — pass speed in move/moveTo".warn;
   }
-  setMaxSpeed{|speed=1.0|
-    this.send(0xFF!6 ++ 0x35 ++ this.getAddress() ++ [0x04] ++ speed.asFloat.asBytes32 ++ "end");
+  setMaxSpeed{ |speed = 1.0|
+    "setMaxSpeed: not in v2 ProtoBuf schema — pass speed in move/moveTo".warn;
   }
 }
