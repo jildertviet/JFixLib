@@ -66,7 +66,7 @@ void JOsc::setVal(char type, float value) {
     Event::setVal(type, value);
     switch (type) {
     case 'f': frequency = value; break;
-    case 'r': range = value; break;
+    case 'R': range = value; break;   // 'r' is reserved for red in Event::setVal
     case 'o': offset = value; break;
     case 'q': w->fillSineNorm(value); break;
     }
