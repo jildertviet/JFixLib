@@ -16,10 +16,13 @@ public:
     virtual void init() override;
     virtual void update() override;
 
+    jFixtureGraphics* asGraphics() override { return this; }
+
     void addEvent(Event *e);
     Event *getEventByID(int id);
     void deleteEvents();
     void sync(int eventID);
+    JWavetable* getWavetable() { return w; }
 
     // Legacy binary data handlers (to be refactored to ProtoBuf later)
     void addEvent(const uint8_t *data, int data_len);

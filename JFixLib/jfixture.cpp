@@ -1,8 +1,5 @@
 #include "jfixture.h"
-#include "JProtoExample.h"
 #include "NVSStorage.h"
-#include "OTAUpdater.h"
-#include "UART.h"
 #include "espnow_handler.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -11,6 +8,10 @@
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 #include <cstring>
+
+#ifdef JFIX_ENABLE_UART
+#include "UART.h"
+#endif
 
 static const char *TAG_JF = "jFixture";
 static EventGroupHandle_t s_wifi_event_group;
@@ -45,8 +46,9 @@ jFixture::jFixture() {
 }
 
 void jFixture::init() {
+#ifdef JFIX_ENABLE_UART
   uartHandler.init();
-  JProtoExample::test();
+#endif
   nvs.init();
 
   std::string id_str;
@@ -59,8 +61,13 @@ void jFixture::init() {
   }
 
   connectWiFi();
-  EspnowHandler::getInstance().init();
+#ifdef JFIX_ENABLE_OTA
   ota.checkForOTA();
+#endif
+  // Disconnect from AP so we can set a fixed channel for ESP-NOW.
+  // The event handlers are already unregistered by connectWiFi(), so no reconnect will occur.
+  esp_wifi_disconnect();
+  EspnowHandler::getInstance().init();
 }
 
 void jFixture::update() {
@@ -79,6 +86,38 @@ void jFixture::setId(int newId) {
   id = newId;
   nvs.writeString("device_id", std::to_string(newId));
   ESP_LOGI(TAG_JF, "Device ID updated to %d and saved to NVS", id);
+}
+
+void jFixture::setParameterBus(int index, float value) {
+  if (index >= 0 && index < NUM_PARAMETER_BUSSES) {
+    parameterBusses[index] = value;
+  }
+}
+
+void jFixture::setParameterBusN(int startIndex, const float* values, int count) {
+  for (int i = 0; i < count; i++) {
+    int idx = startIndex + i;
+    if (idx >= NUM_PARAMETER_BUSSES) break;
+    parameterBusses[idx] = values[i];
+  }
+}
+
+void jFixture::setBackground(float r, float g, float b, float a) {
+    rgbaBackground[0] = r;
+    rgbaBackground[1] = g;
+    rgbaBackground[2] = b;
+    rgbaBackground[3] = a;
+}
+
+void jFixture::setViewportOffset(float x, float y) {
+    viewportOffset[0] = x;
+    viewportOffset[1] = y;
+}
+
+void jFixture::setLagTime(int lagger_id, float lag_ms) {
+  if (lagger_id >= 0 && lagger_id < NUM_LAGGERS) {
+    laggers[lagger_id].lagTime = lag_ms;
+  }
 }
 
 void jFixture::updateLaggers() {

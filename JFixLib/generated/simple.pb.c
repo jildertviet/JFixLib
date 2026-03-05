@@ -8,14 +8,70 @@
 
 PB_BIND(LedCmd, LedCmd, AUTO)
 
+
 PB_BIND(ChannelCmd, ChannelCmd, AUTO)
+
 
 PB_BIND(WifiCmd, WifiCmd, AUTO)
 
+
 PB_BIND(IdCmd, IdCmd, AUTO)
+
 
 PB_BIND(MotorCmd, MotorCmd, AUTO)
 
+
 PB_BIND(BlinkCmd, BlinkCmd, AUTO)
 
+
+PB_BIND(SleepCmd, SleepCmd, AUTO)
+
+
+PB_BIND(LagCmd, LagCmd, AUTO)
+
+
+PB_BIND(DeleteEventsCmd, DeleteEventsCmd, AUTO)
+
+
+PB_BIND(SyncCmd, SyncCmd, AUTO)
+
+
+PB_BIND(RebootCmd, RebootCmd, AUTO)
+
+
+PB_BIND(AddEventCmd, AddEventCmd, AUTO)
+
+
+PB_BIND(AddEnvCmd, AddEnvCmd, AUTO)
+
+
+PB_BIND(SetValCmd, SetValCmd, AUTO)
+
+
+PB_BIND(SetValNCmd, SetValNCmd, AUTO)
+
+
+PB_BIND(SetCustomArgCmd, SetCustomArgCmd, AUTO)
+
+
+PB_BIND(LinkBusCmd, LinkBusCmd, AUTO)
+
+
+PB_BIND(SetParamBusCmd, SetParamBusCmd, AUTO)
+
+
+PB_BIND(SetOtaUrlCmd, SetOtaUrlCmd, AUTO)
+
+
+PB_BIND(SetBackgroundCmd, SetBackgroundCmd, AUTO)
+
+
+PB_BIND(SetViewportOffsetCmd, SetViewportOffsetCmd, AUTO)
+
+
 PB_BIND(Command, Command, AUTO)
+
+
+
+
+

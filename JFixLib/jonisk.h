@@ -1,5 +1,6 @@
 #include "BQ25792.h"
 #include "I2CWrapper.h"
+#include "MMA8451.h"
 #include "blink.h"
 #include "jfixture.h"
 
@@ -12,4 +13,5 @@ public:
 
 private:
   BQ25792 *charger;
+  MMA8451 accel;
 };

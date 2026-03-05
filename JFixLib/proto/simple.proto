@@ -2,17 +2,19 @@ syntax = "proto3";
 
 import "nanopb.proto";
 
+// ── Simple control ────────────────────────────────────────────────────────────
+
 message LedCmd {
   float brightness = 1;
 }
 
 message ChannelCmd {
   int32 channel = 1;
-  float value = 2;
+  float value   = 2;
 }
 
 message WifiCmd {
-  string ssid = 1 [(nanopb).max_size = 32];
+  string ssid     = 1 [(nanopb).max_size = 32];
   string password = 2 [(nanopb).max_size = 64];
 }
 
@@ -21,24 +23,179 @@ message IdCmd {
 }
 
 message MotorCmd {
-  int32 steps = 1;
-  float speed = 2;
-  bool relative = 3;
+  int32 steps    = 1;
+  float speed    = 2;
+  bool  relative = 3;
 }
 
 message BlinkCmd {
-  int32 on_ms = 1;
+  int32 on_ms  = 1;
   int32 off_ms = 2;
 }
 
+// Deep-sleep the device for the given duration (0 = indefinite until wakeup).
+message SleepCmd {
+  int32 duration_ms = 1;
+}
+
+// Set the lag time of a specific lagger (0 = brightness lagger).
+message LagCmd {
+  int32 lagger_id   = 1;
+  float lag_time_ms = 2;
+}
+
+// Delete all running events on a graphics fixture.
+message DeleteEventsCmd {
+}
+
+// Sync (reset start time of) an event by its ID.
+message SyncCmd {
+  int32 event_id = 1;
+}
+
+// Restart the device immediately.
+message RebootCmd {
+}
+
+// ── Animation ─────────────────────────────────────────────────────────────────
+
+enum EventType {
+  EVENT_UNKNOWN = 0;
+  EVENT_PERLIN  = 1;
+  EVENT_RECT    = 2;
+  EVENT_OSC     = 3;
+}
+
+// Create and add an event with common base parameters.
+// Type-specific parameters are set afterwards via SetValCmd / SetCustomArgCmd:
+//   Perlin: noiseScale       → SetCustomArgCmd arg_id=0
+//           noiseTimeScale   → SetCustomArgCmd arg_id=1
+//           horizPixelOffset → SetCustomArgCmd arg_id=2
+//   Osc:   frequency        → SetValCmd var='f'
+//           range            → SetValCmd var='R'
+//           offset           → SetValCmd var='o'
+//           wavetable power  → SetValCmd var='q'
+message AddEventCmd {
+  int32     event_id     = 1;
+  EventType type         = 2;
+  float     loc_x        = 3;
+  float     loc_y        = 4;
+  float     size_x       = 5;
+  float     size_y       = 6;
+  float     r            = 7;
+  float     g            = 8;
+  float     b            = 9;
+  float     a            = 10;
+  bool      wait_for_env = 11;
+}
+
+// Attach an ADSR envelope to a named parameter of an existing event.
+// var: ASCII 'b'=brightness, 'x'=loc_x, 'y'=loc_y, 'w'=size_x, 'h'=size_y
+message AddEnvCmd {
+  int32 event_id   = 1;
+  int32 var        = 2;
+  int32 attack_ms  = 3;
+  int32 sustain_ms = 4;
+  int32 release_ms = 5;
+  float target     = 6;
+  bool  kill       = 7;
+}
+
+// Set a named parameter on an existing event.
+// var (ASCII): 'b'=brightness, 'x','y'=loc, 'w','h'=size,
+//              'r','g','B'=color channels, 'c'=full rgba (use r,g,b,a fields),
+//              'f'=osc freq, 'R'=osc range, 'o'=osc offset, 'q'=osc wavetable power
+message SetValCmd {
+  int32 event_id = 1;
+  int32 var      = 2;
+  float value    = 3;
+  // Used when var='c' (full color set):
+  float r        = 4;
+  float g        = 5;
+  float b        = 6;
+  float a        = 7;
+}
+
+// Broadcast variant: each device picks values[this->id].
+// max_count=56: the maximum that guarantees the actual encoded packet ≤ 250 bytes
+// for any valid int32 field values (nanopb encodes repeated float as packed).
+// In the typical broadcast case (id=0, small IDs) you get up to 59 values, but
+// the proto buffer is allocated for the worst case.
+message SetValNCmd {
+  int32          event_id = 1;
+  int32          var      = 2;
+  repeated float values   = 3 [(nanopb).max_count = 56];
+}
+
+// Set an event's customBusses slot (float pointer array in Event).
+// Perlin wires slots 0/1/2 to noiseScale/noiseTimeScale/horizPixelOffset.
+message SetCustomArgCmd {
+  int32 event_id = 1;
+  int32 arg_id   = 2;
+  float value    = 3;
+}
+
+// Link a named parameter of an event to a parameterBus slot.
+// var: same ASCII namespace as SetValCmd.
+message LinkBusCmd {
+  int32 event_id  = 1;
+  int32 var       = 2;
+  int32 bus_index = 3;
+}
+
+// Write a single value into the shared parameterBusses array.
+message SetParamBusCmd {
+  int32 bus_index = 1;
+  float value     = 2;
+}
+
+// Set the OTA firmware URL stored in NVS (key "OTAurl").
+// Persists across reboots; takes effect on next reboot+OTA check.
+message SetOtaUrlCmd {
+  string url = 1 [(nanopb).max_size = 128];
+}
+
+// Set the RGBA background floor for addressable LED fixtures.
+// Every pixel is clamped to at least (r, g, b) when written to the LED strip.
+message SetBackgroundCmd {
+  float r = 1;
+  float g = 2;
+  float b = 3;
+  float a = 4;
+}
+
+// Set the viewport X/Y offset for a graphics fixture.
+// Shifts the coordinate origin used by all events.
+message SetViewportOffsetCmd {
+  float x = 1;
+  float y = 2;
+}
+
+// ── Top-level command ─────────────────────────────────────────────────────────
+
 message Command {
-  int32 id = 1; // 0 for broadcast, otherwise targeted ID
+  int32 id = 1; // 0 for broadcast, otherwise targeted device ID
   oneof payload {
-    LedCmd led = 2;
-    ChannelCmd channel = 3;
-    WifiCmd wifi = 4;
-    IdCmd set_id = 5;
-    MotorCmd motor = 6;
-    BlinkCmd blink = 7;
+    LedCmd               led                = 2;
+    ChannelCmd           channel            = 3;
+    WifiCmd              wifi               = 4;
+    IdCmd                set_id             = 5;
+    MotorCmd             motor              = 6;
+    BlinkCmd             blink              = 7;
+    SleepCmd             sleep              = 8;
+    LagCmd               lag                = 9;
+    DeleteEventsCmd      delete_events      = 10;
+    SyncCmd              sync               = 11;
+    RebootCmd            reboot             = 12;
+    AddEventCmd          add_event          = 13;
+    AddEnvCmd            add_env            = 14;
+    SetValCmd            set_val            = 15;
+    SetValNCmd           set_val_n          = 16;
+    SetCustomArgCmd      set_custom         = 17;
+    LinkBusCmd           link_bus           = 18;
+    SetParamBusCmd       set_param_bus      = 19;
+    SetOtaUrlCmd         set_ota_url        = 20;
+    SetBackgroundCmd     set_background     = 21;
+    SetViewportOffsetCmd set_viewport_offset = 22;
   }
 }

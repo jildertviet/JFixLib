@@ -1,7 +1,14 @@
 #pragma once
 #include "NVSStorage.h"
-#include "OTAUpdater.h"
 #include "lagger.h"
+
+#ifdef JFIX_ENABLE_OTA
+#include "OTAUpdater.h"
+#endif
+
+#ifdef JFIX_ENABLE_GRAPHICS
+class jFixtureGraphics; // forward declaration for asGraphics()
+#endif
 
 class jFixture {
 public:
@@ -16,6 +23,28 @@ public:
   void setId(int newId);
   int getId() const { return id; }
 
+  // Set lag time for lagger at index (0 = brightness lagger)
+  void setLagTime(int lagger_id, float lag_ms);
+
+  // Set the background RGBA floor (pixels are clamped to at least r,g,b when rendered).
+  void setBackground(float r, float g, float b, float a);
+
+  // Set the viewport X/Y offset applied to all events.
+  void setViewportOffset(float x, float y);
+
+#ifdef JFIX_ENABLE_GRAPHICS
+  // Returns this as jFixtureGraphics* if the instance is one, nullptr otherwise.
+  // Avoids dynamic_cast (RTTI is disabled in ESP-IDF builds).
+  virtual jFixtureGraphics* asGraphics() { return nullptr; }
+#endif
+
+  // Parameter buses: shared float values that events can subscribe to via linkBus.
+  static const int NUM_PARAMETER_BUSSES = 16;
+  float parameterBusses[NUM_PARAMETER_BUSSES] = {};
+
+  void setParameterBus(int index, float value);
+  void setParameterBusN(int startIndex, const float* values, int count);
+
   static jFixture *instance;
 
 protected:
@@ -23,6 +52,7 @@ protected:
   float brightness = 1.0f;
   float viewport[2] = {20.0f, 144.0f};
   float viewportOffset[2] = {0.0f, 0.0f};
+  float rgbaBackground[4] = {0.0f, 0.0f, 0.0f, 0.0f};
   bool bStatic = false;
   static const int NUM_LAGGERS = 4;
   Lagger laggers[NUM_LAGGERS];

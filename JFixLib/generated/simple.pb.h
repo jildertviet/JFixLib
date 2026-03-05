@@ -9,6 +9,14 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
+/* Enum definitions */
+typedef enum _EventType {
+    EventType_EVENT_UNKNOWN = 0,
+    EventType_EVENT_PERLIN = 1,
+    EventType_EVENT_RECT = 2,
+    EventType_EVENT_OSC = 3
+} EventType;
+
 /* Struct definitions */
 typedef struct _LedCmd {
     float brightness;
@@ -39,16 +47,163 @@ typedef struct _BlinkCmd {
     int32_t off_ms;
 } BlinkCmd;
 
+/* Deep-sleep the device for the given duration (0 = indefinite until wakeup). */
+typedef struct _SleepCmd {
+    int32_t duration_ms;
+} SleepCmd;
+
+/* Set the lag time of a specific lagger (0 = brightness lagger). */
+typedef struct _LagCmd {
+    int32_t lagger_id;
+    float lag_time_ms;
+} LagCmd;
+
+/* Delete all running events on a graphics fixture. */
+typedef struct _DeleteEventsCmd {
+    char dummy_field;
+} DeleteEventsCmd;
+
+/* Sync (reset start time of) an event by its ID. */
+typedef struct _SyncCmd {
+    int32_t event_id;
+} SyncCmd;
+
+/* Restart the device immediately. */
+typedef struct _RebootCmd {
+    char dummy_field;
+} RebootCmd;
+
+/* Create and add an event with common base parameters.
+ Type-specific parameters are set afterwards via SetValCmd / SetCustomArgCmd:
+   Perlin: noiseScale       → SetCustomArgCmd arg_id=0
+           noiseTimeScale   → SetCustomArgCmd arg_id=1
+           horizPixelOffset → SetCustomArgCmd arg_id=2
+   Osc:   frequency        → SetValCmd var='f'
+           range            → SetValCmd var='R'
+           offset           → SetValCmd var='o'
+           wavetable power  → SetValCmd var='q' */
+typedef struct _AddEventCmd {
+    int32_t event_id;
+    EventType type;
+    float loc_x;
+    float loc_y;
+    float size_x;
+    float size_y;
+    float r;
+    float g;
+    float b;
+    float a;
+    bool wait_for_env;
+} AddEventCmd;
+
+/* Attach an ADSR envelope to a named parameter of an existing event.
+ var: ASCII 'b'=brightness, 'x'=loc_x, 'y'=loc_y, 'w'=size_x, 'h'=size_y */
+typedef struct _AddEnvCmd {
+    int32_t event_id;
+    int32_t var;
+    int32_t attack_ms;
+    int32_t sustain_ms;
+    int32_t release_ms;
+    float target;
+    bool kill;
+} AddEnvCmd;
+
+/* Set a named parameter on an existing event.
+ var (ASCII): 'b'=brightness, 'x','y'=loc, 'w','h'=size,
+              'r','g','B'=color channels, 'c'=full rgba (use r,g,b,a fields),
+              'f'=osc freq, 'R'=osc range, 'o'=osc offset, 'q'=osc wavetable power */
+typedef struct _SetValCmd {
+    int32_t event_id;
+    int32_t var;
+    float value;
+    /* Used when var='c' (full color set): */
+    float r;
+    float g;
+    float b;
+    float a;
+} SetValCmd;
+
+/* Broadcast variant: each device picks values[this->id].
+ max_count=56: the maximum that guarantees the actual encoded packet ≤ 250 bytes
+ for any valid int32 field values (nanopb encodes repeated float as packed).
+ In the typical broadcast case (id=0, small IDs) you get up to 59 values, but
+ the proto buffer is allocated for the worst case. */
+typedef struct _SetValNCmd {
+    int32_t event_id;
+    int32_t var;
+    pb_size_t values_count;
+    float values[56];
+} SetValNCmd;
+
+/* Set an event's customBusses slot (float pointer array in Event).
+ Perlin wires slots 0/1/2 to noiseScale/noiseTimeScale/horizPixelOffset. */
+typedef struct _SetCustomArgCmd {
+    int32_t event_id;
+    int32_t arg_id;
+    float value;
+} SetCustomArgCmd;
+
+/* Link a named parameter of an event to a parameterBus slot.
+ var: same ASCII namespace as SetValCmd. */
+typedef struct _LinkBusCmd {
+    int32_t event_id;
+    int32_t var;
+    int32_t bus_index;
+} LinkBusCmd;
+
+/* Write a single value into the shared parameterBusses array. */
+typedef struct _SetParamBusCmd {
+    int32_t bus_index;
+    float value;
+} SetParamBusCmd;
+
+/* Set the OTA firmware URL stored in NVS (key "OTAurl").
+ Persists across reboots; takes effect on next reboot+OTA check. */
+typedef struct _SetOtaUrlCmd {
+    char url[128];
+} SetOtaUrlCmd;
+
+/* Set the RGBA background floor for addressable LED fixtures.
+ Every pixel is clamped to at least (r, g, b) when written to the LED strip. */
+typedef struct _SetBackgroundCmd {
+    float r;
+    float g;
+    float b;
+    float a;
+} SetBackgroundCmd;
+
+/* Set the viewport X/Y offset for a graphics fixture.
+ Shifts the coordinate origin used by all events. */
+typedef struct _SetViewportOffsetCmd {
+    float x;
+    float y;
+} SetViewportOffsetCmd;
+
 typedef struct _Command {
-    int32_t id;
+    int32_t id; /* 0 for broadcast, otherwise targeted device ID */
     pb_size_t which_payload;
-    union {
+    union _Command_payload {
         LedCmd led;
         ChannelCmd channel;
         WifiCmd wifi;
         IdCmd set_id;
         MotorCmd motor;
         BlinkCmd blink;
+        SleepCmd sleep;
+        LagCmd lag;
+        DeleteEventsCmd delete_events;
+        SyncCmd sync;
+        RebootCmd reboot;
+        AddEventCmd add_event;
+        AddEnvCmd add_env;
+        SetValCmd set_val;
+        SetValNCmd set_val_n;
+        SetCustomArgCmd set_custom;
+        LinkBusCmd link_bus;
+        SetParamBusCmd set_param_bus;
+        SetOtaUrlCmd set_ota_url;
+        SetBackgroundCmd set_background;
+        SetViewportOffsetCmd set_viewport_offset;
     } payload;
 } Command;
 
@@ -57,6 +212,35 @@ typedef struct _Command {
 extern "C" {
 #endif
 
+/* Helper constants for enums */
+#define _EventType_MIN EventType_EVENT_UNKNOWN
+#define _EventType_MAX EventType_EVENT_OSC
+#define _EventType_ARRAYSIZE ((EventType)(EventType_EVENT_OSC+1))
+
+
+
+
+
+
+
+
+
+
+
+
+#define AddEventCmd_type_ENUMTYPE EventType
+
+
+
+
+
+
+
+
+
+
+
+
 /* Initializer values for message structs */
 #define LedCmd_init_default                      {0}
 #define ChannelCmd_init_default                  {0, 0}
@@ -64,14 +248,44 @@ extern "C" {
 #define IdCmd_init_default                       {0}
 #define MotorCmd_init_default                    {0, 0, 0}
 #define BlinkCmd_init_default                    {0, 0}
-#define Command_init_default                    {0, 0, {LedCmd_init_default}}
+#define SleepCmd_init_default                    {0}
+#define LagCmd_init_default                      {0, 0}
+#define DeleteEventsCmd_init_default             {0}
+#define SyncCmd_init_default                     {0}
+#define RebootCmd_init_default                   {0}
+#define AddEventCmd_init_default                 {0, _EventType_MIN, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+#define AddEnvCmd_init_default                   {0, 0, 0, 0, 0, 0, 0}
+#define SetValCmd_init_default                   {0, 0, 0, 0, 0, 0, 0}
+#define SetValNCmd_init_default                  {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+#define SetCustomArgCmd_init_default             {0, 0, 0}
+#define LinkBusCmd_init_default                  {0, 0, 0}
+#define SetParamBusCmd_init_default              {0, 0}
+#define SetOtaUrlCmd_init_default                {""}
+#define SetBackgroundCmd_init_default            {0, 0, 0, 0}
+#define SetViewportOffsetCmd_init_default        {0, 0}
+#define Command_init_default                     {0, 0, {LedCmd_init_default}}
 #define LedCmd_init_zero                         {0}
 #define ChannelCmd_init_zero                     {0, 0}
 #define WifiCmd_init_zero                        {"", ""}
 #define IdCmd_init_zero                          {0}
 #define MotorCmd_init_zero                       {0, 0, 0}
 #define BlinkCmd_init_zero                       {0, 0}
-#define Command_init_zero                       {0, 0, {LedCmd_init_zero}}
+#define SleepCmd_init_zero                       {0}
+#define LagCmd_init_zero                         {0, 0}
+#define DeleteEventsCmd_init_zero                {0}
+#define SyncCmd_init_zero                        {0}
+#define RebootCmd_init_zero                      {0}
+#define AddEventCmd_init_zero                    {0, _EventType_MIN, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+#define AddEnvCmd_init_zero                      {0, 0, 0, 0, 0, 0, 0}
+#define SetValCmd_init_zero                      {0, 0, 0, 0, 0, 0, 0}
+#define SetValNCmd_init_zero                     {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}
+#define SetCustomArgCmd_init_zero                {0, 0, 0}
+#define LinkBusCmd_init_zero                     {0, 0, 0}
+#define SetParamBusCmd_init_zero                 {0, 0}
+#define SetOtaUrlCmd_init_zero                   {""}
+#define SetBackgroundCmd_init_zero               {0, 0, 0, 0}
+#define SetViewportOffsetCmd_init_zero           {0, 0}
+#define Command_init_zero                        {0, 0, {LedCmd_init_zero}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define LedCmd_brightness_tag                    1
@@ -85,6 +299,53 @@ extern "C" {
 #define MotorCmd_relative_tag                    3
 #define BlinkCmd_on_ms_tag                       1
 #define BlinkCmd_off_ms_tag                      2
+#define SleepCmd_duration_ms_tag                 1
+#define LagCmd_lagger_id_tag                     1
+#define LagCmd_lag_time_ms_tag                   2
+#define SyncCmd_event_id_tag                     1
+#define AddEventCmd_event_id_tag                 1
+#define AddEventCmd_type_tag                     2
+#define AddEventCmd_loc_x_tag                    3
+#define AddEventCmd_loc_y_tag                    4
+#define AddEventCmd_size_x_tag                   5
+#define AddEventCmd_size_y_tag                   6
+#define AddEventCmd_r_tag                        7
+#define AddEventCmd_g_tag                        8
+#define AddEventCmd_b_tag                        9
+#define AddEventCmd_a_tag                        10
+#define AddEventCmd_wait_for_env_tag             11
+#define AddEnvCmd_event_id_tag                   1
+#define AddEnvCmd_var_tag                        2
+#define AddEnvCmd_attack_ms_tag                  3
+#define AddEnvCmd_sustain_ms_tag                 4
+#define AddEnvCmd_release_ms_tag                 5
+#define AddEnvCmd_target_tag                     6
+#define AddEnvCmd_kill_tag                       7
+#define SetValCmd_event_id_tag                   1
+#define SetValCmd_var_tag                        2
+#define SetValCmd_value_tag                      3
+#define SetValCmd_r_tag                          4
+#define SetValCmd_g_tag                          5
+#define SetValCmd_b_tag                          6
+#define SetValCmd_a_tag                          7
+#define SetValNCmd_event_id_tag                  1
+#define SetValNCmd_var_tag                       2
+#define SetValNCmd_values_tag                    3
+#define SetCustomArgCmd_event_id_tag             1
+#define SetCustomArgCmd_arg_id_tag               2
+#define SetCustomArgCmd_value_tag                3
+#define LinkBusCmd_event_id_tag                  1
+#define LinkBusCmd_var_tag                       2
+#define LinkBusCmd_bus_index_tag                 3
+#define SetParamBusCmd_bus_index_tag             1
+#define SetParamBusCmd_value_tag                 2
+#define SetOtaUrlCmd_url_tag                     1
+#define SetBackgroundCmd_r_tag                   1
+#define SetBackgroundCmd_g_tag                   2
+#define SetBackgroundCmd_b_tag                   3
+#define SetBackgroundCmd_a_tag                   4
+#define SetViewportOffsetCmd_x_tag               1
+#define SetViewportOffsetCmd_y_tag               2
 #define Command_id_tag                           1
 #define Command_led_tag                          2
 #define Command_channel_tag                      3
@@ -92,6 +353,21 @@ extern "C" {
 #define Command_set_id_tag                       5
 #define Command_motor_tag                        6
 #define Command_blink_tag                        7
+#define Command_sleep_tag                        8
+#define Command_lag_tag                          9
+#define Command_delete_events_tag                10
+#define Command_sync_tag                         11
+#define Command_reboot_tag                       12
+#define Command_add_event_tag                    13
+#define Command_add_env_tag                      14
+#define Command_set_val_tag                      15
+#define Command_set_val_n_tag                    16
+#define Command_set_custom_tag                   17
+#define Command_link_bus_tag                     18
+#define Command_set_param_bus_tag                19
+#define Command_set_ota_url_tag                  20
+#define Command_set_background_tag               21
+#define Command_set_viewport_offset_tag          22
 
 /* Struct field encoding specification for nanopb */
 #define LedCmd_FIELDLIST(X, a) \
@@ -129,6 +405,115 @@ X(a, STATIC,   SINGULAR, INT32,    off_ms,            2)
 #define BlinkCmd_CALLBACK NULL
 #define BlinkCmd_DEFAULT NULL
 
+#define SleepCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    duration_ms,       1)
+#define SleepCmd_CALLBACK NULL
+#define SleepCmd_DEFAULT NULL
+
+#define LagCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    lagger_id,         1) \
+X(a, STATIC,   SINGULAR, FLOAT,    lag_time_ms,       2)
+#define LagCmd_CALLBACK NULL
+#define LagCmd_DEFAULT NULL
+
+#define DeleteEventsCmd_FIELDLIST(X, a) \
+
+#define DeleteEventsCmd_CALLBACK NULL
+#define DeleteEventsCmd_DEFAULT NULL
+
+#define SyncCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    event_id,          1)
+#define SyncCmd_CALLBACK NULL
+#define SyncCmd_DEFAULT NULL
+
+#define RebootCmd_FIELDLIST(X, a) \
+
+#define RebootCmd_CALLBACK NULL
+#define RebootCmd_DEFAULT NULL
+
+#define AddEventCmd_FIELDLIST(X, a_) \
+X(a_, STATIC,   SINGULAR, INT32,    event_id,          1) \
+X(a_, STATIC,   SINGULAR, UENUM,    type,              2) \
+X(a_, STATIC,   SINGULAR, FLOAT,    loc_x,             3) \
+X(a_, STATIC,   SINGULAR, FLOAT,    loc_y,             4) \
+X(a_, STATIC,   SINGULAR, FLOAT,    size_x,            5) \
+X(a_, STATIC,   SINGULAR, FLOAT,    size_y,            6) \
+X(a_, STATIC,   SINGULAR, FLOAT,    r,                 7) \
+X(a_, STATIC,   SINGULAR, FLOAT,    g,                 8) \
+X(a_, STATIC,   SINGULAR, FLOAT,    b,                 9) \
+X(a_, STATIC,   SINGULAR, FLOAT,    a,                10) \
+X(a_, STATIC,   SINGULAR, BOOL,     wait_for_env,     11)
+#define AddEventCmd_CALLBACK NULL
+#define AddEventCmd_DEFAULT NULL
+
+#define AddEnvCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    event_id,          1) \
+X(a, STATIC,   SINGULAR, INT32,    var,               2) \
+X(a, STATIC,   SINGULAR, INT32,    attack_ms,         3) \
+X(a, STATIC,   SINGULAR, INT32,    sustain_ms,        4) \
+X(a, STATIC,   SINGULAR, INT32,    release_ms,        5) \
+X(a, STATIC,   SINGULAR, FLOAT,    target,            6) \
+X(a, STATIC,   SINGULAR, BOOL,     kill,              7)
+#define AddEnvCmd_CALLBACK NULL
+#define AddEnvCmd_DEFAULT NULL
+
+#define SetValCmd_FIELDLIST(X, a_) \
+X(a_, STATIC,   SINGULAR, INT32,    event_id,          1) \
+X(a_, STATIC,   SINGULAR, INT32,    var,               2) \
+X(a_, STATIC,   SINGULAR, FLOAT,    value,             3) \
+X(a_, STATIC,   SINGULAR, FLOAT,    r,                 4) \
+X(a_, STATIC,   SINGULAR, FLOAT,    g,                 5) \
+X(a_, STATIC,   SINGULAR, FLOAT,    b,                 6) \
+X(a_, STATIC,   SINGULAR, FLOAT,    a,                 7)
+#define SetValCmd_CALLBACK NULL
+#define SetValCmd_DEFAULT NULL
+
+#define SetValNCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    event_id,          1) \
+X(a, STATIC,   SINGULAR, INT32,    var,               2) \
+X(a, STATIC,   REPEATED, FLOAT,    values,            3)
+#define SetValNCmd_CALLBACK NULL
+#define SetValNCmd_DEFAULT NULL
+
+#define SetCustomArgCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    event_id,          1) \
+X(a, STATIC,   SINGULAR, INT32,    arg_id,            2) \
+X(a, STATIC,   SINGULAR, FLOAT,    value,             3)
+#define SetCustomArgCmd_CALLBACK NULL
+#define SetCustomArgCmd_DEFAULT NULL
+
+#define LinkBusCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    event_id,          1) \
+X(a, STATIC,   SINGULAR, INT32,    var,               2) \
+X(a, STATIC,   SINGULAR, INT32,    bus_index,         3)
+#define LinkBusCmd_CALLBACK NULL
+#define LinkBusCmd_DEFAULT NULL
+
+#define SetParamBusCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, INT32,    bus_index,         1) \
+X(a, STATIC,   SINGULAR, FLOAT,    value,             2)
+#define SetParamBusCmd_CALLBACK NULL
+#define SetParamBusCmd_DEFAULT NULL
+
+#define SetOtaUrlCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, STRING,   url,               1)
+#define SetOtaUrlCmd_CALLBACK NULL
+#define SetOtaUrlCmd_DEFAULT NULL
+
+#define SetBackgroundCmd_FIELDLIST(X, a_) \
+X(a_, STATIC,   SINGULAR, FLOAT,    r,                 1) \
+X(a_, STATIC,   SINGULAR, FLOAT,    g,                 2) \
+X(a_, STATIC,   SINGULAR, FLOAT,    b,                 3) \
+X(a_, STATIC,   SINGULAR, FLOAT,    a,                 4)
+#define SetBackgroundCmd_CALLBACK NULL
+#define SetBackgroundCmd_DEFAULT NULL
+
+#define SetViewportOffsetCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, FLOAT,    x,                 1) \
+X(a, STATIC,   SINGULAR, FLOAT,    y,                 2)
+#define SetViewportOffsetCmd_CALLBACK NULL
+#define SetViewportOffsetCmd_DEFAULT NULL
+
 #define Command_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, INT32,    id,                1) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,led,payload.led),   2) \
@@ -136,7 +521,22 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (payload,channel,payload.channel),   3) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,wifi,payload.wifi),   4) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_id,payload.set_id),   5) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,motor,payload.motor),   6) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (payload,blink,payload.blink),   7)
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,blink,payload.blink),   7) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,sleep,payload.sleep),   8) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,lag,payload.lag),   9) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,delete_events,payload.delete_events),  10) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,sync,payload.sync),  11) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,reboot,payload.reboot),  12) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,add_event,payload.add_event),  13) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,add_env,payload.add_env),  14) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_val,payload.set_val),  15) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_val_n,payload.set_val_n),  16) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_custom,payload.set_custom),  17) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,link_bus,payload.link_bus),  18) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_param_bus,payload.set_param_bus),  19) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_ota_url,payload.set_ota_url),  20) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_background,payload.set_background),  21) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_viewport_offset,payload.set_viewport_offset),  22)
 #define Command_CALLBACK NULL
 #define Command_DEFAULT NULL
 #define Command_payload_led_MSGTYPE LedCmd
@@ -145,6 +545,21 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (payload,blink,payload.blink),   7)
 #define Command_payload_set_id_MSGTYPE IdCmd
 #define Command_payload_motor_MSGTYPE MotorCmd
 #define Command_payload_blink_MSGTYPE BlinkCmd
+#define Command_payload_sleep_MSGTYPE SleepCmd
+#define Command_payload_lag_MSGTYPE LagCmd
+#define Command_payload_delete_events_MSGTYPE DeleteEventsCmd
+#define Command_payload_sync_MSGTYPE SyncCmd
+#define Command_payload_reboot_MSGTYPE RebootCmd
+#define Command_payload_add_event_MSGTYPE AddEventCmd
+#define Command_payload_add_env_MSGTYPE AddEnvCmd
+#define Command_payload_set_val_MSGTYPE SetValCmd
+#define Command_payload_set_val_n_MSGTYPE SetValNCmd
+#define Command_payload_set_custom_MSGTYPE SetCustomArgCmd
+#define Command_payload_link_bus_MSGTYPE LinkBusCmd
+#define Command_payload_set_param_bus_MSGTYPE SetParamBusCmd
+#define Command_payload_set_ota_url_MSGTYPE SetOtaUrlCmd
+#define Command_payload_set_background_MSGTYPE SetBackgroundCmd
+#define Command_payload_set_viewport_offset_MSGTYPE SetViewportOffsetCmd
 
 extern const pb_msgdesc_t LedCmd_msg;
 extern const pb_msgdesc_t ChannelCmd_msg;
@@ -152,6 +567,21 @@ extern const pb_msgdesc_t WifiCmd_msg;
 extern const pb_msgdesc_t IdCmd_msg;
 extern const pb_msgdesc_t MotorCmd_msg;
 extern const pb_msgdesc_t BlinkCmd_msg;
+extern const pb_msgdesc_t SleepCmd_msg;
+extern const pb_msgdesc_t LagCmd_msg;
+extern const pb_msgdesc_t DeleteEventsCmd_msg;
+extern const pb_msgdesc_t SyncCmd_msg;
+extern const pb_msgdesc_t RebootCmd_msg;
+extern const pb_msgdesc_t AddEventCmd_msg;
+extern const pb_msgdesc_t AddEnvCmd_msg;
+extern const pb_msgdesc_t SetValCmd_msg;
+extern const pb_msgdesc_t SetValNCmd_msg;
+extern const pb_msgdesc_t SetCustomArgCmd_msg;
+extern const pb_msgdesc_t LinkBusCmd_msg;
+extern const pb_msgdesc_t SetParamBusCmd_msg;
+extern const pb_msgdesc_t SetOtaUrlCmd_msg;
+extern const pb_msgdesc_t SetBackgroundCmd_msg;
+extern const pb_msgdesc_t SetViewportOffsetCmd_msg;
 extern const pb_msgdesc_t Command_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
@@ -161,16 +591,47 @@ extern const pb_msgdesc_t Command_msg;
 #define IdCmd_fields &IdCmd_msg
 #define MotorCmd_fields &MotorCmd_msg
 #define BlinkCmd_fields &BlinkCmd_msg
+#define SleepCmd_fields &SleepCmd_msg
+#define LagCmd_fields &LagCmd_msg
+#define DeleteEventsCmd_fields &DeleteEventsCmd_msg
+#define SyncCmd_fields &SyncCmd_msg
+#define RebootCmd_fields &RebootCmd_msg
+#define AddEventCmd_fields &AddEventCmd_msg
+#define AddEnvCmd_fields &AddEnvCmd_msg
+#define SetValCmd_fields &SetValCmd_msg
+#define SetValNCmd_fields &SetValNCmd_msg
+#define SetCustomArgCmd_fields &SetCustomArgCmd_msg
+#define LinkBusCmd_fields &LinkBusCmd_msg
+#define SetParamBusCmd_fields &SetParamBusCmd_msg
+#define SetOtaUrlCmd_fields &SetOtaUrlCmd_msg
+#define SetBackgroundCmd_fields &SetBackgroundCmd_msg
+#define SetViewportOffsetCmd_fields &SetViewportOffsetCmd_msg
 #define Command_fields &Command_msg
 
 /* Maximum encoded size of messages (where known) */
-#define LedCmd_size                              5
-#define ChannelCmd_size                          16
-#define WifiCmd_size                             99
-#define IdCmd_size                               11
-#define MotorCmd_size                            18
+#define AddEnvCmd_size                           62
+#define AddEventCmd_size                         55
 #define BlinkCmd_size                            22
-#define Command_size                             126
+#define ChannelCmd_size                          16
+#define Command_size                             317
+#define DeleteEventsCmd_size                     0
+#define IdCmd_size                               11
+#define LagCmd_size                              16
+#define LedCmd_size                              5
+#define LinkBusCmd_size                          33
+#define MotorCmd_size                            18
+#define RebootCmd_size                           0
+#define SIMPLE_PB_H_MAX_SIZE                     Command_size
+#define SetBackgroundCmd_size                    20
+#define SetCustomArgCmd_size                     27
+#define SetOtaUrlCmd_size                        130
+#define SetParamBusCmd_size                      16
+#define SetValCmd_size                           47
+#define SetValNCmd_size                          302
+#define SetViewportOffsetCmd_size                10
+#define SleepCmd_size                            11
+#define SyncCmd_size                             11
+#define WifiCmd_size                             98
 
 #ifdef __cplusplus
 } /* extern "C" */

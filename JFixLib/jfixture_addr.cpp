@@ -112,9 +112,13 @@ void jFixtureAddr::writeLeds() {
     for (int j = 0; j < (int)ledStrips.size(); j++) {
         for (int i = 0; i < numLedsPerString; i++) {
             floatColor *c = &ledBuffer[j][i];
-            uint32_t r = (uint32_t)(std::pow(c->r, 2.0f) * 255.0f * brightness);
-            uint32_t g = (uint32_t)(std::pow(c->g, 2.0f) * 255.0f * brightness);
-            uint32_t b = (uint32_t)(std::pow(c->b, 2.0f) * 255.0f * brightness);
+            // Apply rgbaBackground as a floor: pixels are never darker than the background.
+            float fr = (c->r > rgbaBackground[0]) ? c->r : rgbaBackground[0];
+            float fg = (c->g > rgbaBackground[1]) ? c->g : rgbaBackground[1];
+            float fb = (c->b > rgbaBackground[2]) ? c->b : rgbaBackground[2];
+            uint32_t r = (uint32_t)(std::pow(fr, 2.0f) * 255.0f * brightness);
+            uint32_t g = (uint32_t)(std::pow(fg, 2.0f) * 255.0f * brightness);
+            uint32_t b = (uint32_t)(std::pow(fb, 2.0f) * 255.0f * brightness);
             
             if (r > 255) r = 255;
             if (g > 255) g = 255;
