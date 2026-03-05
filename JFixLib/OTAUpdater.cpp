@@ -42,6 +42,8 @@ void OTAUpdater::checkForOTA() {
       .url = ota_url.c_str(),
       .cert_pem = NULL,
       .timeout_ms = 5000,
+      .skip_cert_common_name_check = true,  // Allow IP-based URLs
+      .crt_bundle_attach = NULL,  // HTTP-only OTA (no TLS cert bundle)
       .keep_alive_enable = true,
   };
 
