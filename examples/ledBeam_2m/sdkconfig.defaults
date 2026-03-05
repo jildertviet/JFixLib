@@ -1,0 +1,19 @@
+# Reduce binary size for 2MB flash / dual OTA layout
+
+# 2MB flash
+CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
+
+# Custom partition table with two OTA slots for 2MB flash
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# Log level: WARN (saves ~20-50KB of string literals vs INFO)
+CONFIG_LOG_DEFAULT_LEVEL_WARN=y
+CONFIG_LOG_DEFAULT_LEVEL=2
+
+# Silent assertions (removes assertion message strings, ~10-20KB)
+CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_SILENT=y
+
+# Disable Mozilla root CA certificate bundle (~60-80KB)
+# OTA uses HTTP (not HTTPS), so TLS certs are unnecessary
+CONFIG_MBEDTLS_CERTIFICATE_BUNDLE=n

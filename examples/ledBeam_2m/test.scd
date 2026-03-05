@@ -4,7 +4,7 @@ t.readConfigFile("/home/jildert/JFixLib/examples/ledBeam_2m/ledBeam_2m.config", 
 c = JTlFixComp.new(t)
 // Define red function
 
-t.children.do{|e| e.setBackground([1.0, 0.0, 1,0, 0.0] * 1.0);};
+t.children.do{|e| e.setBackground([1.0, 0.0, 0,0, 0.0] * 0.0);};
 
 t.children[0].send(0xFF!6 ++ [0x09, 0x03, 0x00] ++ "end");
 JTLFix
@@ -61,50 +61,18 @@ JTLFix.setViewportOffset(t.children, true);
 ~red = {
     var j = t.children;
 var b;
-j[0].start;
-b = JFixEvent_JRect.new(j[0]).size_([0.5, 1.0]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
+// j[0].start;
+b = JFixEvent_JRect.new(j[0]).size_([0.5, 0.1]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
 j[0].addEvent(b);
-b.doEnv('b', 1, 900, 50, bKill: 1);
+b.doEnv('b', 1, 900, 1000, 1.0, bKill: 1);
 // b.doEnv('w', 500, 900, 400, 10); // seq on from L to R. 
-b.doEnv('w', 1, 1000, 400, 10);
-j[0].end;
+b.doEnv('h', 300, 10, 400, 1.0, bKill: 1);
+// j[0].end;
 };
 ~red.();
 )
 t.children[0].deleteEvents
 s.scope
-0xC8
-172.asHexString
-(
-{
-8.do{ // RECORD AUDIO
-  c.minimal1;
-  14.wait;
-  c.stop; 
-  0.3.wait;
-  c.minimal2;
-  36.wait; // Compensate for tempo change...
-  "Stop".postln;
-  c.stop; 0.3.wait;
-  TempoClock.default.tempo = 1;
-  c.hzTicks;
-  10.wait;
-  c.stop; 
-  1.0.wait;
-  c.soundscape;
-  30.wait;
-  c.stop; 
-  0.3.wait;
-  c.klankTickers;
-  30.wait;
-  c.stop; 0.3.wait;
-  c.perlin;
-  20.wait;
-  c.stop; 0.3.wait;
-  ~red.();
-  5.wait;
-  }
-}.fork;
-)
+
 
 t.children.do{|e| e.deepSleep(1.0)};

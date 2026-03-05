@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.16)
 
+# JFixLib feature flags — minimal build for JLedBeam
+set(JFIX_ENABLE_GRAPHICS ON CACHE BOOL "" FORCE)
+set(JFIX_ENABLE_OTA      ON CACHE BOOL "" FORCE)
+
 set(EXTRA_COMPONENT_DIRS ../../JFixLib ../../nanopb src)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)

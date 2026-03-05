@@ -36,7 +36,7 @@ python3 "$NVS_GEN" generate "$NVS_CSV" "$NVS_BIN" "$NVS_SIZE"
 
 echo ""
 echo "=== Flashing NVS to $PORT at $NVS_OFFSET ==="
-python3 -m esptool --chip esp32s3 -p "$PORT" -b 460800 \
+python3 -m esptool --chip auto -p "$PORT" -b 460800 \
     --before default_reset --after hard_reset \
     write_flash "$NVS_OFFSET" "$NVS_BIN"
 
