@@ -34,9 +34,12 @@ void Blink::updateTask(void *pvParameters) {
   }
 }
 
+void Blink::setBrightness(float b) {
+  _brightness = b < 0.f ? 0.f : (b > 1.f ? 1.f : b);
+}
+
 void Blink::update() {
-  // 100% of 2^13 (8192)
-  uint32_t duty = bLedState ? 200 : 0;
+  uint32_t duty = bLedState ? (uint32_t)(_brightness * 8191) : 0;
 
   ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty);
   ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
