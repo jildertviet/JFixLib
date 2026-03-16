@@ -4,6 +4,7 @@
 #include <cstring>
 
 #ifndef JFIX_EMULATION
+#include "defines.h"
 #include "espnow_handler.h"
 #include "esp_event.h"
 #include "esp_wifi.h"
@@ -27,7 +28,8 @@ static EventGroupHandle_t s_wifi_event_group;
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data) {
   if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-    esp_wifi_connect();
+    // Do not auto-connect here; esp_wifi_connect() is called explicitly after
+    // credentials are read from NVS.
   } else if (event_base == WIFI_EVENT &&
              event_id == WIFI_EVENT_STA_DISCONNECTED) {
     esp_wifi_connect();
@@ -61,12 +63,12 @@ void jFixture::init() {
   nvs.init();
 
   std::string id_str;
-  if (nvs.readString("device_id", id_str) == ESP_OK) {
+  if (nvs.readString("device_id", id_str) == ESP_OK && !id_str.empty()) {
     id = atoi(id_str.c_str());
     ESP_LOGI(TAG_JF, "Device ID loaded from NVS: %d", id);
   } else {
     id = 0;
-    ESP_LOGI(TAG_JF, "Device ID not found, defaulting to 0");
+    ESP_LOGI(TAG_JF, "Device ID not found in NVS, defaulting to 0");
   }
 
   connectWiFi();
@@ -81,6 +83,10 @@ void jFixture::init() {
   ota.checkForOTA();
 #endif
   esp_wifi_disconnect();
+  // Force the channel back to the compile-time value before ESP-NOW init.
+  // After disconnecting from an AP the driver may retain the AP's channel.
+  esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
+  ESP_LOGI(TAG_JF, "WiFi channel set to %d", WIFI_CHANNEL);
   EspnowHandler::getInstance().init();
 #else
   // Emulation: just default the ID
@@ -181,6 +187,9 @@ void jFixture::connectWiFi() {
 
   if (err_ssid != ESP_OK || ssid_str.empty()) {
     ESP_LOGE(TAG_JF, "SSID not found in NVS. Station connection skipped (ESP-NOW will still work).");
+    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
+    ESP_ERROR_CHECK(esp_event_handler_instance_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
+    vEventGroupDelete(s_wifi_event_group);
     return;
   }
 

@@ -34,10 +34,10 @@ JMotorController : JFixture {
     bBroadcast = saved;
   }
 
-  // Per-device absolute moves: send unicast MotorCmd to each device ID 1..positions.size.
+  // Per-device absolute moves: send unicast MotorCmd to each device ID 0..positions.size-1.
   moveToN{ |positions = #[0, 0], speed = 0.0|
     positions.doWithIndex { |pos, i|
-      this.sendRaw(JPb.command(i + 1, 6,
+      this.sendRaw(JPb.command(i, 6,
         JPb.int32(1, pos.asInteger) ++
         JPb.float32(2, speed) ++
         JPb.bool(3, false)

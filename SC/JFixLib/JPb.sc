@@ -38,6 +38,11 @@ JPb {
         ^JPb.tag(fieldNum, 0) ++ [if(value, 1, 0)];
     }
 
+    // Bytes field (wire type 2 = length-delimited).
+    *bytes { |fieldNum, value|
+        ^JPb.tag(fieldNum, 2) ++ JPb.varint(value.size) ++ value;
+    }
+
     // String field (wire type 2 = length-delimited).
     *string { |fieldNum, value|
         var bytes = value.ascii;
@@ -55,11 +60,11 @@ JPb {
         ^JPb.tag(fieldNum, 2) ++ JPb.varint(bytes.size) ++ bytes;
     }
 
-    // Build a top-level Command { id, <payloadTag>: <payloadBytes> }.
-    // id = 0 = broadcast (proto3 default, field is omitted).
-    *command { |id = 0, payloadTag, payloadBytes|
-        var bytes = [];
-        if(id != 0, { bytes = JPb.int32(1, id) });
-        ^bytes ++ JPb.message(payloadTag, payloadBytes);
+    // Build a length-prefixed Command { id, <payloadTag>: <payloadBytes> }.
+    // Returns: [2-byte big-endian length] ++ [protobuf bytes].
+    // id = 255 = broadcast.
+    *command { |id = 255, payloadTag, payloadBytes|
+        var pb = JPb.int32(1, id) ++ JPb.message(payloadTag, payloadBytes);
+        ^[(pb.size >> 8) & 0xFF, pb.size & 0xFF] ++ pb;
     }
 }

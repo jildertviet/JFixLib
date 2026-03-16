@@ -32,8 +32,10 @@ typedef struct _WifiCmd {
     char password[64];
 } WifiCmd;
 
+typedef PB_BYTES_ARRAY_T(6) IdCmd_mac_t;
 typedef struct _IdCmd {
-    int32_t id;
+    IdCmd_mac_t mac; /* target device MAC address */
+    int32_t id; /* new device ID to assign */
 } IdCmd;
 
 typedef struct _MotorCmd {
@@ -126,7 +128,7 @@ typedef struct _SetValCmd {
 /* Broadcast variant: each device picks values[this->id].
  max_count=56: the maximum that guarantees the actual encoded packet ≤ 250 bytes
  for any valid int32 field values (nanopb encodes repeated float as packed).
- In the typical broadcast case (id=0, small IDs) you get up to 59 values, but
+ In the typical broadcast case (id=255, small IDs) you get up to 59 values, but
  the proto buffer is allocated for the worst case. */
 typedef struct _SetValNCmd {
     int32_t event_id;
@@ -180,7 +182,7 @@ typedef struct _SetViewportOffsetCmd {
 } SetViewportOffsetCmd;
 
 typedef struct _Command {
-    int32_t id; /* 0 for broadcast, otherwise targeted device ID */
+    int32_t id; /* 255 for broadcast, otherwise targeted device ID */
     pb_size_t which_payload;
     union _Command_payload {
         LedCmd led;
@@ -245,7 +247,7 @@ extern "C" {
 #define LedCmd_init_default                      {0}
 #define ChannelCmd_init_default                  {0, 0}
 #define WifiCmd_init_default                     {"", ""}
-#define IdCmd_init_default                       {0}
+#define IdCmd_init_default                       {{0, {0}}, 0}
 #define MotorCmd_init_default                    {0, 0, 0}
 #define BlinkCmd_init_default                    {0, 0}
 #define SleepCmd_init_default                    {0}
@@ -267,7 +269,7 @@ extern "C" {
 #define LedCmd_init_zero                         {0}
 #define ChannelCmd_init_zero                     {0, 0}
 #define WifiCmd_init_zero                        {"", ""}
-#define IdCmd_init_zero                          {0}
+#define IdCmd_init_zero                          {{0, {0}}, 0}
 #define MotorCmd_init_zero                       {0, 0, 0}
 #define BlinkCmd_init_zero                       {0, 0}
 #define SleepCmd_init_zero                       {0}
@@ -293,7 +295,8 @@ extern "C" {
 #define ChannelCmd_value_tag                     2
 #define WifiCmd_ssid_tag                         1
 #define WifiCmd_password_tag                     2
-#define IdCmd_id_tag                             1
+#define IdCmd_mac_tag                            1
+#define IdCmd_id_tag                             2
 #define MotorCmd_steps_tag                       1
 #define MotorCmd_speed_tag                       2
 #define MotorCmd_relative_tag                    3
@@ -388,7 +391,8 @@ X(a, STATIC,   SINGULAR, STRING,   password,          2)
 #define WifiCmd_DEFAULT NULL
 
 #define IdCmd_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, INT32,    id,                1)
+X(a, STATIC,   SINGULAR, BYTES,    mac,               1) \
+X(a, STATIC,   SINGULAR, INT32,    id,                2)
 #define IdCmd_CALLBACK NULL
 #define IdCmd_DEFAULT NULL
 
@@ -615,7 +619,7 @@ extern const pb_msgdesc_t Command_msg;
 #define ChannelCmd_size                          16
 #define Command_size                             317
 #define DeleteEventsCmd_size                     0
-#define IdCmd_size                               11
+#define IdCmd_size                               19
 #define LagCmd_size                              16
 #define LedCmd_size                              5
 #define LinkBusCmd_size                          33

@@ -6,6 +6,7 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
+#include "esp_wifi.h"
 #include "nvs_flash.h"
 
 static const char *TAG = "OTAUpdater";
@@ -61,6 +62,7 @@ void OTAUpdater::checkForOTA() {
     esp_restart();
   } else {
     ESP_LOGE(TAG, "OTA Update failed: %s", esp_err_to_name(err));
+    esp_wifi_disconnect();
   }
 }
 #endif // !JFIX_EMULATION

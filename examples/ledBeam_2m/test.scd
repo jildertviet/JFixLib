@@ -4,7 +4,9 @@ t.readConfigFile("/home/jildert/JFixLib/examples/ledBeam_2m/ledBeam_2m.config", 
 c = JTlFixComp.new(t)
 // Define red function
 
-t.children.do{|e| e.setBackground([1.0, 0.0, 0,0, 0.0] * 0.0);};
+t.children[18].writeID()
+var brightness = 0.1; t.children[18].setBackground([1.0, 0.0, 0,0, 1.0] * brightness);
+var brightness = 0.0; t.children[18].setBackground([1.0, 0.0, 0,0, 1.0] * brightness);
 
 t.children[0].send(0xFF!6 ++ [0x09, 0x03, 0x00] ++ "end");
 JTLFix
@@ -59,15 +61,16 @@ JTLFix.setViewportOffset(t.children, true);
 
 (// RED
 ~red = {
-    var j = t.children;
+    var j = t.children[18];
 var b;
-// j[0].start;
-b = JFixEvent_JRect.new(j[0]).size_([0.5, 0.1]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
-j[0].addEvent(b);
-b.doEnv('b', 1, 900, 1000, 1.0, bKill: 1);
+var id = 18;
+j.start;
+b = JFixEvent_JRect.new(j).size_([0.5, 0.1]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
+j.addEvent(b);
+b.doEnv('b', 1, 90, 1000, 1.0, bKill: 1);
 // b.doEnv('w', 500, 900, 400, 10); // seq on from L to R. 
 b.doEnv('h', 300, 10, 400, 1.0, bKill: 1);
-// j[0].end;
+j.end;
 };
 ~red.();
 )

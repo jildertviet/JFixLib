@@ -69,7 +69,7 @@ idf_component_register(
     SRCS ${JFIX_SRCS}
     INCLUDE_DIRS . generated
     REQUIRES esp_driver_gpio nvs_flash esp_http_client esp_https_ota
-             esp_wifi esp_event esp_netif freertos esp_driver_i2c
+             app_update esp_wifi esp_event esp_netif freertos esp_driver_i2c
              esp_driver_ledc esp_driver_uart esp_timer nanopb led_strip
              esp_eth esp_driver_spi esp_system esp_hw_support
 )

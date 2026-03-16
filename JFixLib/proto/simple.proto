@@ -19,7 +19,8 @@ message WifiCmd {
 }
 
 message IdCmd {
-  int32 id = 1;
+  bytes mac = 1 [(nanopb).max_size = 6];  // target device MAC address
+  int32 id  = 2;                           // new device ID to assign
 }
 
 message MotorCmd {
@@ -119,7 +120,7 @@ message SetValCmd {
 // Broadcast variant: each device picks values[this->id].
 // max_count=56: the maximum that guarantees the actual encoded packet ≤ 250 bytes
 // for any valid int32 field values (nanopb encodes repeated float as packed).
-// In the typical broadcast case (id=0, small IDs) you get up to 59 values, but
+// In the typical broadcast case (id=255, small IDs) you get up to 59 values, but
 // the proto buffer is allocated for the worst case.
 message SetValNCmd {
   int32          event_id = 1;
@@ -174,7 +175,7 @@ message SetViewportOffsetCmd {
 // ── Top-level command ─────────────────────────────────────────────────────────
 
 message Command {
-  int32 id = 1; // 0 for broadcast, otherwise targeted device ID
+  int32 id = 1; // 255 for broadcast, otherwise targeted device ID
   oneof payload {
     LedCmd               led                = 2;
     ChannelCmd           channel            = 3;

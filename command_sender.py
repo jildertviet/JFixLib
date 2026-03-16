@@ -86,11 +86,11 @@ def main():
             print(f"Error initializing OSC client: {e}")
             return
 
-    print("\nCommands ([id] optional, omit for broadcast; 0 also broadcasts):")
+    print("\nCommands ([id] optional, omit for broadcast; 255 also broadcasts):")
     print("  setbrightness:[id,]<val>")
     print("  setchannel:[id,]<ch>,<val>")
     print("  setwifi:[id,]<ssid>,<pass>")
-    print("  setid:[id,]<new_id>")
+    print("  setid:<mac>,<new_id>  (mac as aa:bb:cc:dd:ee:ff)")
     print("  setmotor:[id,]<steps>,<speed>[,<relative=1>]")
     print("  setblink:[id,]<on_ms>,<off_ms>")
     print("  sleep:[id,]<duration_ms>  (0 = indefinite deep-sleep)")
@@ -101,7 +101,7 @@ def main():
     print("  setotaurl:[id,]<url>")
     print("  setparambus:[id,]<bus_index>,<value>")
     print("  setbackground:[id,]<r>,<g>,<b>,<a>")
-    print("  -- Animation (ID required; use 0 for broadcast) --")
+    print("  -- Animation (ID required; use 255 for broadcast) --")
     print("  addevent:<id>,<event_id>,<type>,<loc_x>,<loc_y>,<size_x>,<size_y>,<r>,<g>,<b>,<a>[,<wait>]")
     print("    type: 1=perlin  2=rect  3=osc")
     print("  addenv:<id>,<event_id>,<var>,<attack_ms>,<sustain_ms>,<release_ms>,<target>[,<kill>]")
@@ -124,7 +124,7 @@ def main():
 
         try:
             cmd = simple_pb2.Command()
-            cmd.id = 0  # Default broadcast
+            cmd.id = 255  # Default broadcast
 
             if ":" in line:
                 # Remove trailing semicolon
@@ -139,7 +139,7 @@ def main():
                 if cmd_name == "setbrightness" and len(cmd_args) == 2: has_id = True
                 if cmd_name == "setchannel"    and len(cmd_args) == 3: has_id = True
                 if cmd_name == "setwifi"       and len(cmd_args) == 3: has_id = True
-                if cmd_name == "setid"         and len(cmd_args) == 2: has_id = True
+                # setid never uses the [id,...] prefix — MAC is the identifier
                 if cmd_name == "setmotor" and len(cmd_args) >= 3:
                     if len(cmd_args) == 4: has_id = True
                     elif len(cmd_args) == 3 and cmd_args[0].isdigit() and int(cmd_args[0]) < 100: has_id = True
@@ -172,7 +172,11 @@ def main():
                     cmd.wifi.password = cmd_args[arg_idx+1] if len(cmd_args) > arg_idx+1 else ""
                     sender_func(output_obj, cmd)
                 elif cmd_name == "setid":
-                    cmd.set_id.id = int(float(cmd_args[arg_idx]))
+                    # setid:<mac>,<new_id>  e.g. setid:aa:bb:cc:dd:ee:ff,5
+                    mac_str = cmd_args[arg_idx]
+                    cmd.set_id.mac = bytes(int(b, 16) for b in mac_str.split(":"))
+                    cmd.set_id.id = int(float(cmd_args[arg_idx+1]))
+                    cmd.id = 255  # broadcast so it reaches the target regardless of current ID
                     sender_func(output_obj, cmd)
                 elif cmd_name == "setmotor":
                     cmd.motor.steps = int(float(cmd_args[arg_idx]))

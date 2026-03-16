@@ -18,7 +18,7 @@ JFixtureSynthController : JModes{
 }
 
 // v2 protocol: commands are ProtoBuf-encoded Command messages (simple.proto).
-// Targeting uses Command.id (int): 0 = broadcast, N = specific device.
+// Targeting uses Command.id (int): 255 = broadcast, N = specific device.
 // MAC address is kept for documentation / transport-level routing only.
 JFixture : JFixtureSynthController{
   var <> address = #[0xFF,0xFF,0xFF,0xFF,0xFF,0xFF]; // kept for reference / ESP-NOW bridge
@@ -57,9 +57,9 @@ JFixture : JFixtureSynthController{
     asr = [0.1, 1.0, 1.0];
   }
 
-  // Returns 0 (broadcast) or this.id (unicast) depending on bBroadcast flag.
+  // Returns 255 (broadcast) or this.id (unicast) depending on bBroadcast flag.
   getCommandId{
-    if(bBroadcast == true, { ^0 }, { ^this.id });
+    if(bBroadcast == true, { ^255 }, { ^this.id });
   }
 
   getAddressHexString{
@@ -98,24 +98,28 @@ JFixture : JFixtureSynthController{
     });
   }
 
-  // Collect messages until end() is called, then send them individually.
+  // Collect messages until end() is called, then send them as one grouped packet.
+  // Each message from JPb.command() is already length-prefixed, so concatenation
+  // produces the wire format: [len1][cmd1][len2][cmd2]...
   start{
     bCollectMsgs = true;
     msgList.clear();
   }
 
   end{
+    var grouped = [];
     bCollectMsgs = false;
-    msgList.do { |msg| this.sendRaw(msg) };
+    msgList.do { |msg| grouped = grouped ++ msg };
+    this.sendRaw(grouped);
     msgList.clear();
   }
 
   // ── Simple commands ────────────────────────────────────────────────────────
 
-  // Tag 5: IdCmd { id }  — store device ID in NVS.
-  writeID{ |id_|
-    this.send(JPb.command(this.getCommandId(), 5,
-      JPb.int32(1, id_)
+  // Tag 5: IdCmd { mac, id }  — set device ID from this fixture's index and MAC.
+  writeID{
+    this.send(JPb.command(255, 5,
+      JPb.bytes(1, this.address) ++ JPb.int32(2, this.id)
     ));
   }
 
@@ -186,13 +190,43 @@ JFixture : JFixtureSynthController{
   }
 
   // Tag 19 (unicast per device): no broadcast-with-per-device-values in v2 proto.
-  // Sends individual set_param_bus commands to devices 1..values.size.
+  // Sends individual set_param_bus commands to devices 0..values.size-1.
   setParameterBusN{ |busIndex = 0, values = #[0, 0]|
     values.doWithIndex { |v, i|
-      this.sendRaw(JPb.command(i + 1, 19,
+      this.sendRaw(JPb.command(i, 19,
         JPb.int32(1, busIndex) ++ JPb.float32(2, v)
       ));
     };
+  }
+
+  // ── Legacy v1 OTA (for devices still running Arduino/v1 firmware) ──────────
+  // Sends the old binary-framed opcode 0x15 + JSON payload so that v1 devices
+  // can pull the new v2 firmware and perform OTA.  The v1 wire format wraps
+  // messages as:  0xFF!6 ++ [opcode] ++ address ++ payload ++ "end"
+  // and the old send path stripped the 0xFF prefix and "end" suffix before
+  // handing the bytes to the ESP-NOW bridge / UDP broadcaster.
+
+  sendLegacyRaw { |msg|
+    // Replicate old sendRaw: strip 6-byte 0xFF prefix and 3-byte "end" suffix.
+    var stripped = msg.copy;
+    6.do { stripped.removeAt(0) };
+    3.do { stripped.removeAt(stripped.size - 1) };
+    stripped = stripped.collect({ |e| if(e.isInteger, { e }, { e.ascii }) });
+    if(espnowBridge != nil, {
+      espnowBridge.sendMsg("/espnow", Int8Array.newFrom(stripped));
+    });
+    if(broadcaster != nil, {
+      broadcaster.sendRaw(Int8Array.newFrom(stripped));
+    });
+  }
+
+  // Legacy v1 OTA trigger.  ssid/password are included for compatibility with
+  // the old JOtaServer format; url should point to the v2 firmware .bin.
+  // Always sends to this.address (unicast) — not broadcast.
+  setOTAServerLegacy { |ssid = "", password = "", url = "http://192.168.1.100/.pio/build/esp32dev/firmware.bin"|
+    var json = "{\"ssid\":\""++ ssid ++"\", \"password\":\""++ password ++"\", \"url\":\""++ url ++"\"}";
+    var msg = (0xFF!6) ++ [0x15] ++ this.address ++ json.ascii ++ "end".ascii;
+    this.sendLegacyRaw(msg);
   }
 
 }

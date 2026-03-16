@@ -73,11 +73,11 @@ JFixtureCollection {
         })
       });
 			addr = addr.collect({|e| e.split($x)[1].asHexIfPossible});
-      // IDs are 1-based: Command.id=0 is reserved for broadcast.
+      // IDs are 0-based: Command.id=255 is reserved for broadcast.
       switch(type,
-        0, {children.add(JJonisk.new(i + 1, addr, serialOrNetAddr));},
-        1, {children.add(JTLFix.new(i + 1, addr, serialOrNetAddr));},
-        2, {children.add(Jllllllllllll.new(i + 1, addr, serialOrNetAddr));},
+        0, {children.add(JJonisk.new(i, addr, serialOrNetAddr));},
+        1, {children.add(JTLFix.new(i, addr, serialOrNetAddr));},
+        2, {children.add(Jllllllllllll.new(i, addr, serialOrNetAddr));},
       );
 		};
     lastSeenData = [0, 0]!children.size; // [button, time]
