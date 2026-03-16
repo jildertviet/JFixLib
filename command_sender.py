@@ -23,31 +23,36 @@ def crc16_ccitt(data):
 
 def send_uart(ser, cmd_obj):
     payload = cmd_obj.SerializeToString()
-    length = len(payload)
+    # Prepend 2-byte big-endian length prefix (matches processIncomingBuffer)
+    pb_len = len(payload)
+    prefixed = bytes([(pb_len >> 8) & 0xFF, pb_len & 0xFF]) + payload
+    length = len(prefixed)
 
     if length > 255:
         print("Error: Payload too large for 1-byte length field.")
         return
 
-    crc = crc16_ccitt(payload)
+    crc = crc16_ccitt(prefixed)
 
     # Construct frame: START | LEN | DATA | CRC_H | CRC_L | END
     frame = bytearray()
     frame.append(FRAME_START)
     frame.append(length)
-    frame.extend(payload)
+    frame.extend(prefixed)
     frame.append((crc >> 8) & 0xFF)
     frame.append(crc & 0xFF)
     frame.append(FRAME_END)
 
     ser.write(frame)
-    print(f"Sent UART {len(frame)} byte frame (payload: {length} bytes, CRC: 0x{crc:04X})")
+    print(f"Sent UART {len(frame)} byte frame (payload: {pb_len} bytes, CRC: 0x{crc:04X})")
 
 def send_osc(client, cmd_obj):
     payload = cmd_obj.SerializeToString()
-    # Send as a blob (bytes) to /espnow
-    client.send_message("/espnow", payload)
-    print(f"Sent OSC blob to /espnow ({len(payload)} bytes)")
+    # Prepend 2-byte big-endian length prefix (matches JPb.command / processIncomingBuffer)
+    length = len(payload)
+    prefixed = bytes([(length >> 8) & 0xFF, length & 0xFF]) + payload
+    client.send_message("/espnow", prefixed)
+    print(f"Sent OSC blob to /espnow ({len(prefixed)} bytes, payload: {length})")
 
 def parse_var(var_str):
     """Convert a var argument to its int32 value.

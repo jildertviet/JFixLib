@@ -33,23 +33,29 @@ uint16_t crc16_ccitt(const uint8_t *data, size_t len) {
 }
 
 esp_err_t UART::init() {
-  uart_config_t uart_config = {
-      .baud_rate = 115200,
-      .data_bits = UART_DATA_8_BITS,
-      .parity = UART_PARITY_DISABLE,
-      .stop_bits = UART_STOP_BITS_1,
-      .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-      .rx_flow_ctrl_thresh = 122,
-      .source_clk = UART_SCLK_DEFAULT,
-  };
+  // UART0 is typically already configured by the ESP-IDF console at 115200 baud.
+  // Only install the driver if it hasn't been installed yet.
+  if (!uart_is_driver_installed(uart_num)) {
+    uart_config_t uart_config = {
+        .baud_rate = 115200,
+        .data_bits = UART_DATA_8_BITS,
+        .parity = UART_PARITY_DISABLE,
+        .stop_bits = UART_STOP_BITS_1,
+        .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
+        .rx_flow_ctrl_thresh = 122,
+        .source_clk = UART_SCLK_DEFAULT,
+    };
 
-  esp_err_t err = uart_param_config(uart_num, &uart_config);
-  if (err != ESP_OK)
-    return err;
+    esp_err_t err = uart_param_config(uart_num, &uart_config);
+    if (err != ESP_OK)
+      return err;
 
-  err = uart_driver_install(uart_num, BUF_SIZE * 2, 0, 0, NULL, 0);
-  if (err != ESP_OK)
-    return err;
+    err = uart_driver_install(uart_num, BUF_SIZE * 2, 0, 0, NULL, 0);
+    if (err != ESP_OK)
+      return err;
+  } else {
+    ESP_LOGI(TAG, "UART%d driver already installed, reusing", uart_num);
+  }
 
   xTaskCreate(uart_task, "uart_task", 4096, this, 1, NULL);
   return ESP_OK;
