@@ -4,9 +4,9 @@ t.readConfigFile("/home/jildert/JFixLib/examples/ledBeam_2m/ledBeam_2m.config", 
 c = JTlFixComp.new(t)
 // Define red function
 
-t.children[18].writeID()
-var brightness = 0.1; t.children[18].setBackground([1.0, 0.0, 0,0, 1.0] * brightness);
-var brightness = 0.0; t.children[18].setBackground([1.0, 0.0, 0,0, 1.0] * brightness);
+t.children[1].writeID()
+var brightness = 0.5; t.children[0].setBackground([1.0, 0.0, 0.0, 1.0] * brightness);
+var brightness = 0.0; t.children[18].setBackground([1.0, 0.0, 0.0, 1.0] * brightness);
 
 t.children[0].send(0xFF!6 ++ [0x09, 0x03, 0x00] ++ "end");
 JTLFix
@@ -26,10 +26,13 @@ p.sendMsg("/espnow", Int8Array.newFrom([1,2,3]));
 [ 36, 111, 40, 242, 178, 210 ] .do{|e|e.asHexString.postln}
 93.asHexString
 [0x24,0x6F,0x28,0xDD,0x46,0x5D].asArray
+
+t.children[11].reboot;
 (
 {
-t.children.at([0]).do{|e|
-    e.setOTAServer("Klank", ~pw, "https://192.168.10.104/.pio/build/esp32dev/firmware.bin");
+t.children.at([11]).do{|e|
+    e.setOTAServer("http://192.168.10.21/ledBeam_2m.bin");
+    // e.setWifi("Klank", ~pw); 
     // 35.wait;
   };
   "Done".postln;
@@ -61,9 +64,8 @@ JTLFix.setViewportOffset(t.children, true);
 
 (// RED
 ~red = {
-    var j = t.children[18];
+    var j = t.children.choose;
 var b;
-var id = 18;
 j.start;
 b = JFixEvent_JRect.new(j).size_([0.5, 0.1]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
 j.addEvent(b);
