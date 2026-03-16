@@ -1,6 +1,8 @@
 #ifndef MOTOR_CONTROLLER_H
 #define MOTOR_CONTROLLER_H
 
+#ifndef JFIX_EMULATION
+
 #include "esp_err.h"
 #include "hal/gpio_types.h"
 #include <stdint.h>
@@ -33,5 +35,7 @@ private:
 };
 
 extern MotorController motorController;
+
+#endif // !JFIX_EMULATION
 
 #endif // MOTOR_CONTROLLER_H

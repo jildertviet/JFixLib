@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "motor_controller.h"
 #include "driver/gpio.h"
 #include "esp_log.h"
@@ -93,3 +94,4 @@ void MotorController::run() {
         }
     }
 }
+#endif // !JFIX_EMULATION

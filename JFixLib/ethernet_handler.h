@@ -1,6 +1,8 @@
 #ifndef ETHERNET_HANDLER_H
 #define ETHERNET_HANDLER_H
 
+#ifndef JFIX_EMULATION
+
 #include "esp_err.h"
 #include "esp_eth.h"
 #include "esp_netif.h"
@@ -44,5 +46,7 @@ private:
     int _socket = -1;
     esp_netif_t *_eth_netif = nullptr;
 };
+
+#endif // !JFIX_EMULATION
 
 #endif // ETHERNET_HANDLER_H

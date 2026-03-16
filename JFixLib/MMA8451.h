@@ -1,6 +1,8 @@
 #ifndef MMA8451_H
 #define MMA8451_H
 
+#ifndef JFIX_EMULATION
+
 #include "I2CWrapper.h"
 
 // Default I2C address — SA0 pin low (0x1C) as wired on jonisk PCB
@@ -35,5 +37,7 @@ private:
   esp_err_t standby();
   esp_err_t active();
 };
+
+#endif // !JFIX_EMULATION
 
 #endif // MMA8451_H

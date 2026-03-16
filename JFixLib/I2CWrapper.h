@@ -1,6 +1,8 @@
 #ifndef I2C_WRAPPER_H
 #define I2C_WRAPPER_H
 
+#ifndef JFIX_EMULATION
+
 #include "driver/i2c_master.h"
 #include "esp_err.h"
 
@@ -27,5 +29,7 @@ private:
 };
 
 extern I2CWrapper i2c;
+
+#endif // !JFIX_EMULATION
 
 #endif // I2C_WRAPPER_H

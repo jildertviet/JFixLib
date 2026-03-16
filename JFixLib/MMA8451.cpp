@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "MMA8451.h"
 #include "esp_log.h"
 
@@ -105,3 +106,4 @@ esp_err_t MMA8451::read(AccelData &out) {
 
   return ESP_OK;
 }
+#endif // !JFIX_EMULATION

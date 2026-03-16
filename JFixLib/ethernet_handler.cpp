@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "ethernet_handler.h"
 #include "parser.h"
 #include "esp_log.h"
@@ -123,10 +124,10 @@ esp_err_t EthernetHandler::init(uint8_t device_id) {
     esp_netif_config_t netif_cfg = ESP_NETIF_DEFAULT_ETH();
     _eth_netif = esp_netif_new(&netif_cfg);
 
-    // Set static IP: 192.168.1.{device_id}, fallback to .1 for 0 or 255
+    // Set static IP: 192.168.1.{device_id + 1} (offset by 1 since .0 is network addr)
     esp_netif_dhcpc_stop(_eth_netif);
     esp_netif_ip_info_t ip_info = {};
-    uint8_t last_octet = (device_id == 0 || device_id == 255) ? 1 : device_id;
+    uint8_t last_octet = device_id + 1;
     IP4_ADDR(&ip_info.ip, 192, 168, 1, last_octet);
     IP4_ADDR(&ip_info.gw, 192, 168, 1, 1);
     IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
@@ -149,3 +150,4 @@ esp_err_t EthernetHandler::init(uint8_t device_id) {
     ESP_LOGI(TAG, "Ethernet init started");
     return ESP_OK;
 }
+#endif // !JFIX_EMULATION

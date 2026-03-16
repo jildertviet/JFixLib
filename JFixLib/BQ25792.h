@@ -1,6 +1,8 @@
 #ifndef BQ25792_H
 #define BQ25792_H
 
+#ifndef JFIX_EMULATION
+
 #include "I2CWrapper.h"
 #include "driver/gpio.h"
 #include "globals.h"
@@ -79,5 +81,7 @@ private:
   bool batteryPresent = false;
   bool vbusPresent = false;
 };
+
+#endif // !JFIX_EMULATION
 
 #endif // BQ25792_H

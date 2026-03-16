@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "jonisk.h"
 #include "BQ25792.h"
 #include "I2CWrapper.h"
@@ -100,3 +101,4 @@ void Jonisk::updateTask(void *pvParameters) {
     vTaskDelay(pdMS_TO_TICKS(20)); // 50Hz update rate
   }
 }
+#endif // !JFIX_EMULATION

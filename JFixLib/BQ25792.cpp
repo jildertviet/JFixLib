@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "BQ25792.h"
 
 #define BQ25792_CHARGER_CONTROL_0_REG 0x0F
@@ -299,3 +300,4 @@ void BQ25792::pingWdt() {
     I2CWrapper::write(dev_handle, BQ25792_CHARGER_CONTROL_1_REG, &val, 1);
   }
 }
+#endif // !JFIX_EMULATION

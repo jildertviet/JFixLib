@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "BQ25792.h"
 #include "I2CWrapper.h"
 #include "MMA8451.h"
@@ -15,3 +16,4 @@ private:
   BQ25792 *charger;
   MMA8451 accel;
 };
+#endif // !JFIX_EMULATION

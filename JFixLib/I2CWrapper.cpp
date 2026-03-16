@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "I2CWrapper.h"
 #include "globals.h"
 #include <cstring>
@@ -77,3 +78,4 @@ esp_err_t I2CWrapper::write(i2c_master_dev_handle_t dev_handle,
 
   return ret;
 }
+#endif // !JFIX_EMULATION

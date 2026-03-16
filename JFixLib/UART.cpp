@@ -1,3 +1,4 @@
+#ifndef JFIX_EMULATION
 #include "UART.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -121,3 +122,4 @@ void UART::uart_task(void *pvParameters) {
   free(data);
   vTaskDelete(NULL);
 }
+#endif // !JFIX_EMULATION

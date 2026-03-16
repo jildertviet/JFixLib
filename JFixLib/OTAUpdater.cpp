@@ -1,8 +1,10 @@
+#ifndef JFIX_EMULATION
 #include "OTAUpdater.h"
 #include "NVSStorage.h"
 #include "esp_http_client.h"
 #include "esp_https_ota.h"
 #include "esp_log.h"
+#include "esp_ota_ops.h"
 #include "esp_system.h"
 #include "nvs_flash.h"
 
@@ -22,6 +24,7 @@ void OTAUpdater::checkForOTA() {
     }
   }
 
+  esp_ota_mark_app_valid_cancel_rollback();
   std::string ota_url;
   esp_err_t err = nvs.readString("OTAurl", ota_url);
 
@@ -42,8 +45,8 @@ void OTAUpdater::checkForOTA() {
       .url = ota_url.c_str(),
       .cert_pem = NULL,
       .timeout_ms = 5000,
-      .skip_cert_common_name_check = true,  // Allow IP-based URLs
-      .crt_bundle_attach = NULL,  // HTTP-only OTA (no TLS cert bundle)
+      .skip_cert_common_name_check = true, // Allow IP-based URLs
+      .crt_bundle_attach = NULL,           // HTTP-only OTA (no TLS cert bundle)
       .keep_alive_enable = true,
   };
 
@@ -60,3 +63,4 @@ void OTAUpdater::checkForOTA() {
     ESP_LOGE(TAG, "OTA Update failed: %s", esp_err_to_name(err));
   }
 }
+#endif // !JFIX_EMULATION
