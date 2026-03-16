@@ -23,6 +23,8 @@ static inline int64_t esp_timer_get_time() {
 #define ESP_LOGI(tag, fmt, ...) printf("[I][%s] " fmt "\n", tag, ##__VA_ARGS__)
 #define ESP_LOGW(tag, fmt, ...) printf("[W][%s] " fmt "\n", tag, ##__VA_ARGS__)
 #define ESP_LOGE(tag, fmt, ...) printf("[E][%s] " fmt "\n", tag, ##__VA_ARGS__)
+#define ESP_LOG_BUFFER_HEX_LEVEL(tag, buf, len, level) do { } while(0)
+#define ESP_LOG_DEBUG 0
 
 // ── Error types ─────────────────────────────────────────────────────────────
 typedef int esp_err_t;
