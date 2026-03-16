@@ -1,24 +1,28 @@
 #include "jfixture.h"
+#include "jfix_platform.h"
 #include "NVSStorage.h"
+#include <cstring>
+
+#ifndef JFIX_EMULATION
 #include "espnow_handler.h"
 #include "esp_event.h"
-#include "esp_log.h"
 #include "esp_wifi.h"
+#include "esp_mac.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
-#include <cstring>
+#endif
 
 #ifdef JFIX_ENABLE_UART
 #include "UART.h"
 #endif
 
 static const char *TAG_JF = "jFixture";
+
+#ifndef JFIX_EMULATION
 static EventGroupHandle_t s_wifi_event_group;
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT BIT1
-
-jFixture *jFixture::instance = nullptr;
 
 static void event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data) {
@@ -38,6 +42,9 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
   }
 }
+#endif // !JFIX_EMULATION
+
+jFixture *jFixture::instance = nullptr;
 
 jFixture::jFixture() {
   instance = this;
@@ -49,6 +56,8 @@ void jFixture::init() {
 #ifdef JFIX_ENABLE_UART
   uartHandler.init();
 #endif
+
+#ifndef JFIX_EMULATION
   nvs.init();
 
   std::string id_str;
@@ -56,18 +65,28 @@ void jFixture::init() {
     id = atoi(id_str.c_str());
     ESP_LOGI(TAG_JF, "Device ID loaded from NVS: %d", id);
   } else {
-    id = 0; // Default to 0 if not set
+    id = 0;
     ESP_LOGI(TAG_JF, "Device ID not found, defaulting to 0");
   }
 
   connectWiFi();
+
+  esp_efuse_mac_get_default(baseMac);
+  esp_wifi_get_mac(WIFI_IF_STA, staMac);
+  ESP_LOGI(TAG_JF, "Base MAC: %02x:%02x:%02x:%02x:%02x:%02x  STA MAC: %02x:%02x:%02x:%02x:%02x:%02x",
+           baseMac[0], baseMac[1], baseMac[2], baseMac[3], baseMac[4], baseMac[5],
+           staMac[0], staMac[1], staMac[2], staMac[3], staMac[4], staMac[5]);
+
 #ifdef JFIX_ENABLE_OTA
   ota.checkForOTA();
 #endif
-  // Disconnect from AP so we can set a fixed channel for ESP-NOW.
-  // The event handlers are already unregistered by connectWiFi(), so no reconnect will occur.
   esp_wifi_disconnect();
   EspnowHandler::getInstance().init();
+#else
+  // Emulation: just default the ID
+  id = 0;
+  ESP_LOGI(TAG_JF, "Emulation mode — device ID = %d", id);
+#endif // !JFIX_EMULATION
 }
 
 void jFixture::update() {
@@ -82,10 +101,17 @@ float jFixture::getBrightness() {
   return brightness;
 }
 
+bool jFixture::macMatches(const uint8_t* other, size_t len) const {
+  if (len != 6) return false;
+  return memcmp(other, baseMac, 6) == 0 || memcmp(other, staMac, 6) == 0;
+}
+
 void jFixture::setId(int newId) {
   id = newId;
+#ifndef JFIX_EMULATION
   nvs.writeString("device_id", std::to_string(newId));
-  ESP_LOGI(TAG_JF, "Device ID updated to %d and saved to NVS", id);
+#endif
+  ESP_LOGI(TAG_JF, "Device ID updated to %d", id);
 }
 
 void jFixture::setParameterBus(int index, float value) {
@@ -126,6 +152,7 @@ void jFixture::updateLaggers() {
   }
 }
 
+#ifndef JFIX_EMULATION
 void jFixture::connectWiFi() {
   s_wifi_event_group = xEventGroupCreate();
 
@@ -144,7 +171,7 @@ void jFixture::connectWiFi() {
       IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, &instance_got_ip));
 
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-  ESP_ERROR_CHECK(esp_wifi_start()); // Start WiFi here so ESP-NOW works
+  ESP_ERROR_CHECK(esp_wifi_start());
 
   std::string ssid_str;
   std::string password_str;
@@ -158,8 +185,8 @@ void jFixture::connectWiFi() {
   }
 
   wifi_config_t wifi_config = {
-      .sta = {.ssid = "",     // Will be filled below
-              .password = "", // Will be filled below
+      .sta = {.ssid = "",
+              .password = "",
               .scan_method = WIFI_ALL_CHANNEL_SCAN,
               .bssid_set = false,
               .bssid = {0},
@@ -184,28 +211,21 @@ void jFixture::connectWiFi() {
   if (!password_str.empty()) {
     strncpy((char *)wifi_config.sta.password, password_str.c_str(),
             sizeof(wifi_config.sta.password) - 1);
-    wifi_config.sta.threshold.authmode =
-        WIFI_AUTH_WPA_WPA2_PSK; // Assuming WPA/WPA2 if password exists
+    wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
   } else {
-    wifi_config.sta.password[0] =
-        '\0'; // Ensure password is null-terminated for open network
+    wifi_config.sta.password[0] = '\0';
     wifi_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
   }
 
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-  esp_wifi_connect(); // Start connection process
+  esp_wifi_connect();
 
   ESP_LOGI(TAG_JF, "wifi_init_sta finished.");
 
-  /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or
-   * connection failed for the maximum number of re-tries (WIFI_FAIL_BIT). The
-   * bits are set by event_handler() (located in this file) */
   EventBits_t bits = xEventGroupWaitBits(s_wifi_event_group,
                                          WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
                                          pdFALSE, pdFALSE, portMAX_DELAY);
 
-  /* xEventGroupWaitBits() returns the bits before the call returned, hence we
-   * can use them to verify which event actually happened. */
   if (bits & WIFI_CONNECTED_BIT) {
     ESP_LOGI(TAG_JF, "connected to ap SSID:%s", ssid_str.c_str());
   } else if (bits & WIFI_FAIL_BIT) {
@@ -214,10 +234,14 @@ void jFixture::connectWiFi() {
     ESP_LOGE(TAG_JF, "UNEXPECTED EVENT");
   }
 
-  /* The event will not be processed after unregistering */
   ESP_ERROR_CHECK(esp_event_handler_instance_unregister(
       IP_EVENT, IP_EVENT_STA_GOT_IP, instance_got_ip));
   ESP_ERROR_CHECK(esp_event_handler_instance_unregister(
       WIFI_EVENT, ESP_EVENT_ANY_ID, instance_any_id));
   vEventGroupDelete(s_wifi_event_group);
 }
+#else
+void jFixture::connectWiFi() {
+  // No WiFi in emulation mode
+}
+#endif // !JFIX_EMULATION

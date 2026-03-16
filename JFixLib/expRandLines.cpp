@@ -1,5 +1,8 @@
 #include "expRandLines.h"
+#include "jfix_platform.h"
+#ifndef JFIX_EMULATION
 #include "esp_random.h"
+#endif
 #include <cmath>
 
 static uint32_t get_random(uint32_t min, uint32_t max) {

@@ -1,6 +1,24 @@
 #include "espnow_handler.h"
+#include "jfix_platform.h"
+
+#ifdef JFIX_EMULATION
+
+// Emulation: ESP-NOW is not used — communication goes via OSC in the oF app.
+EspnowHandler::EspnowHandler() {}
+
+EspnowHandler& EspnowHandler::getInstance() {
+    static EspnowHandler instance;
+    return instance;
+}
+
+esp_err_t EspnowHandler::init() {
+    ESP_LOGI("EspnowHandler", "Emulation mode — ESP-NOW disabled");
+    return ESP_OK;
+}
+
+#else // Real ESP32
+
 #include "defines.h"
-#include "esp_log.h"
 #include "esp_wifi.h"
 #include "parser.h"
 #include "pb_encode.h"
@@ -9,8 +27,6 @@
 
 static const char *TAG = "EspnowHandler";
 
-// Item posted to the receive queue from the WiFi-task callback.
-// The callback mallocs the data buffer; the task frees it after processing.
 struct espnow_recv_event_t {
     uint8_t *data;
     int len;
@@ -33,7 +49,6 @@ esp_err_t EspnowHandler::init() {
     return ESP_ERR_NO_MEM;
   }
 
-  // Set fixed channel for ESP-NOW. Requires STA to be disconnected from any AP first.
   esp_err_t ch_err = esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE);
   if (ch_err != ESP_OK) {
     ESP_LOGW(TAG, "Failed to set channel %d: %s", WIFI_CHANNEL, esp_err_to_name(ch_err));
@@ -47,10 +62,9 @@ esp_err_t EspnowHandler::init() {
 
   esp_now_register_recv_cb(receive_cb);
 
-  // Add broadcast peer
   esp_now_peer_info_t peer = {};
   memcpy(peer.peer_addr, broadcast_mac, 6);
-  peer.channel = 0; // Use current channel
+  peer.channel = 0;
   peer.encrypt = false;
 
   err = esp_now_add_peer(&peer);
@@ -59,8 +73,6 @@ esp_err_t EspnowHandler::init() {
     return err;
   }
 
-  // Spawn a task to process received packets outside the WiFi task context.
-  // Stack 4096: enough for ProtoBuf decode + handler dispatch.
   xTaskCreate(receive_task, "espnow_recv", 4096,
               static_cast<void *>(&getInstance()), 5, nullptr);
 
@@ -68,8 +80,6 @@ esp_err_t EspnowHandler::init() {
   return ESP_OK;
 }
 
-// Called from the WiFi task — must not block or do heavy work.
-// Copies the incoming bytes onto the heap and posts a pointer to the queue.
 void EspnowHandler::receive_cb(const esp_now_recv_info_t *recv_info,
                                const uint8_t *data, int len) {
   if (data == nullptr || len <= 0) {
@@ -92,7 +102,6 @@ void EspnowHandler::receive_cb(const esp_now_recv_info_t *recv_info,
   }
 }
 
-// Runs as a FreeRTOS task: drains the queue and dispatches to the Parser.
 void EspnowHandler::receive_task(void *pvParameters) {
   EspnowHandler *self = static_cast<EspnowHandler *>(pvParameters);
   espnow_recv_event_t evt;
@@ -118,3 +127,5 @@ esp_err_t EspnowHandler::send(const Command &cmd, const uint8_t *target_mac) {
   }
   return err;
 }
+
+#endif // JFIX_EMULATION

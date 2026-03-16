@@ -1,4 +1,5 @@
 #pragma once
+#include "jfix_platform.h"
 #include "NVSStorage.h"
 #include "lagger.h"
 
@@ -22,6 +23,7 @@ public:
 
   void setId(int newId);
   int getId() const { return id; }
+  bool macMatches(const uint8_t* other, size_t len) const;
 
   // Set lag time for lagger at index (0 = brightness lagger)
   void setLagTime(int lagger_id, float lag_ms);
@@ -49,6 +51,8 @@ public:
 
 protected:
   int id = -1;
+  uint8_t baseMac[6] = {};
+  uint8_t staMac[6] = {};
   float brightness = 1.0f;
   float viewport[2] = {20.0f, 144.0f};
   float viewportOffset[2] = {0.0f, 0.0f};

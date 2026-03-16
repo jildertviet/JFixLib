@@ -1,14 +1,36 @@
 #include "dimmer.h"
-#include "esp_log.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "jfix_platform.h"
 #include <cmath>
-
-static const char *TAG = "Dimmer";
 
 Dimmer dimmer;
 
 Dimmer::Dimmer() {}
+
+#ifdef JFIX_EMULATION
+
+esp_err_t Dimmer::init(const std::vector<int> &pins) {
+  _pins = pins;
+  _channelValues.assign(_pins.size(), 0.0f);
+  return ESP_OK;
+}
+
+void Dimmer::setChannel(int channel, float value) {
+  if (channel >= 0 && channel < (int)_channelValues.size()) {
+    _channelValues[channel] = value;
+  }
+}
+
+void Dimmer::setBrightness(float brightness) { _globalBrightness = brightness; }
+void Dimmer::show() {}
+void Dimmer::test() {}
+void Dimmer::blink(uint8_t num, uint16_t dur, uint16_t delayTime, uint8_t channel) {}
+
+#else // Real ESP32
+
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+static const char *TAG = "Dimmer";
 
 esp_err_t Dimmer::init(const std::vector<int> &pins) {
   _pins = pins;
@@ -29,7 +51,7 @@ esp_err_t Dimmer::init(const std::vector<int> &pins) {
     ledc_channel_config_t ledc_channel = {
         .gpio_num = (int)_pins[i],
         .speed_mode = MODE,
-        .channel = (ledc_channel_t)(1 + i), // 0 is for blink
+        .channel = (ledc_channel_t)(1 + i),
         .intr_type = LEDC_INTR_DISABLE,
         .timer_sel = TIMER,
         .duty = 0,
@@ -95,3 +117,5 @@ void Dimmer::blink(uint8_t num, uint16_t dur, uint16_t delayTime,
     vTaskDelay(pdMS_TO_TICKS(delayTime));
   }
 }
+
+#endif // JFIX_EMULATION

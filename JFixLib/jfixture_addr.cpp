@@ -1,6 +1,5 @@
 #include "jfixture_addr.h"
-#include "esp_log.h"
-#include "esp_timer.h"
+#include "jfix_platform.h"
 #include <string.h>
 #include <cmath>
 
@@ -17,9 +16,11 @@ jFixtureAddr::~jFixtureAddr() {
         }
         delete[] ledBuffer;
     }
+#ifndef JFIX_EMULATION
     for (auto handle : ledStrips) {
         led_strip_del(handle);
     }
+#endif
 }
 
 void jFixtureAddr::setup(uint8_t numColorChannels, const uint8_t *pins,
@@ -35,6 +36,7 @@ void jFixtureAddr::setup(uint8_t numColorChannels, const uint8_t *pins,
         ledBuffer[i] = new floatColor[numLedsPerString];
         memset(ledBuffer[i], 0, sizeof(floatColor) * numLedsPerString);
 
+#ifndef JFIX_EMULATION
         if (pins) {
             led_strip_config_t strip_config = {
                 .strip_gpio_num = pins[i],
@@ -45,7 +47,7 @@ void jFixtureAddr::setup(uint8_t numColorChannels, const uint8_t *pins,
             };
             led_strip_rmt_config_t rmt_config = {
                 .clk_src = RMT_CLK_SRC_DEFAULT,
-                .resolution_hz = 10 * 1000 * 1000, // 10MHz
+                .resolution_hz = 10 * 1000 * 1000,
                 .mem_block_symbols = 64,
                 .flags = { .with_dma = false }
             };
@@ -53,10 +55,13 @@ void jFixtureAddr::setup(uint8_t numColorChannels, const uint8_t *pins,
             ESP_ERROR_CHECK(led_strip_new_rmt_device(&strip_config, &rmt_config, &strip));
             ledStrips.push_back(strip);
         }
+#endif
     }
 
     initCurve();
+#ifndef JFIX_EMULATION
     testLED();
+#endif
     allBlack(true);
 }
 
@@ -69,7 +74,7 @@ void jFixtureAddr::initCurve() {
 void jFixtureAddr::writeRGB(int id, float r, float g, float b, uint8_t channel,
                             floatColor **leds) {
     if (!leds || !leds[channel]) return;
-    
+
     if (r > leds[channel][id].r) leds[channel][id].r = r;
     if (g > leds[channel][id].g) leds[channel][id].g = g;
     if (b > leds[channel][id].b) leds[channel][id].b = b;
@@ -84,6 +89,7 @@ void jFixtureAddr::writeRGBHard(int id, float r, float g, float b, uint8_t chann
 }
 
 void jFixtureAddr::testLED() {
+#ifndef JFIX_EMULATION
     ESP_LOGI(TAG, "Starting LED test...");
     for (int h = 0; h < 3; h++) {
         for (int j = 0; j < numStrings; j++) {
@@ -97,6 +103,7 @@ void jFixtureAddr::testLED() {
         vTaskDelay(pdMS_TO_TICKS(500));
     }
     ESP_LOGI(TAG, "LED test complete.");
+#endif
 }
 
 void jFixtureAddr::allBlack(bool bWrite) {
@@ -109,17 +116,17 @@ void jFixtureAddr::allBlack(bool bWrite) {
 }
 
 void jFixtureAddr::writeLeds() {
+#ifndef JFIX_EMULATION
     for (int j = 0; j < (int)ledStrips.size(); j++) {
         for (int i = 0; i < numLedsPerString; i++) {
             floatColor *c = &ledBuffer[j][i];
-            // Apply rgbaBackground as a floor: pixels are never darker than the background.
             float fr = (c->r > rgbaBackground[0]) ? c->r : rgbaBackground[0];
             float fg = (c->g > rgbaBackground[1]) ? c->g : rgbaBackground[1];
             float fb = (c->b > rgbaBackground[2]) ? c->b : rgbaBackground[2];
             uint32_t r = (uint32_t)(std::pow(fr, 2.0f) * 255.0f * brightness);
             uint32_t g = (uint32_t)(std::pow(fg, 2.0f) * 255.0f * brightness);
             uint32_t b = (uint32_t)(std::pow(fb, 2.0f) * 255.0f * brightness);
-            
+
             if (r > 255) r = 255;
             if (g > 255) g = 255;
             if (b > 255) b = 255;
@@ -128,11 +135,13 @@ void jFixtureAddr::writeLeds() {
         }
         led_strip_refresh(ledStrips[j]);
     }
+#endif
+    // In emulation mode, the oF app reads ledBuffer directly via getLedBuffer()
 }
 
 void jFixtureAddr::update() {
     jFixtureGraphics::update();
-    
+
     if (bStatic) {
         for (int j = 0; j < numStrings; j++) {
             for (int i = 0; i < numLedsPerString; i++) {

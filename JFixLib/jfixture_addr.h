@@ -2,7 +2,10 @@
 #define JFIXTURE_ADDR_H
 
 #include "jfixture_graphics.h"
+#include "jfix_platform.h"
+#ifndef JFIX_EMULATION
 #include "led_strip.h"
+#endif
 #include <vector>
 
 class jFixtureAddr : public jFixtureGraphics {
@@ -31,10 +34,18 @@ public:
     void blink(uint8_t num = 1, uint16_t dur = 100, uint16_t delayTime = 100,
                uint8_t channel = 0);
 
+    // Emulation: expose LED buffer for external rendering
+    floatColor** getLedBuffer() const { return ledBuffer; }
+    uint16_t getNumLedsPerString() const { return numLedsPerString; }
+    uint8_t getNumStrings() const { return numStrings; }
+    float getBrightnessCurveVal(int i) const { return brightnessCurve[i]; }
+
 protected:
     floatColor **ledBuffer = nullptr;
+#ifndef JFIX_EMULATION
     std::vector<led_strip_handle_t> ledStrips;
-    
+#endif
+
     uint16_t numLedsPerString = 1;
     uint8_t numStrings = 1;
     JAddressableMode ledMode = J_WS2812B;

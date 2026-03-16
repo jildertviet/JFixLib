@@ -1,7 +1,9 @@
 #include "parser.h"
-#include "esp_log.h"
+#include "jfix_platform.h"
+#ifndef JFIX_EMULATION
 #include "esp_sleep.h"
 #include "esp_system.h"
+#endif
 #include "NVSStorage.h"
 #include "dimmer.h"
 #include "jfixture.h"
@@ -59,22 +61,36 @@ Parser& Parser::getInstance() {
 }
 
 void Parser::processIncomingBuffer(uint8_t* buffer, size_t size) {
-    Command cmd = Command_init_default;
-    pb_istream_t stream = pb_istream_from_buffer(buffer, size);
-
-    if (pb_decode(&stream, Command_fields, &cmd)) {
-        int myId = (jFixture::instance) ? jFixture::instance->getId() : 0;
-        if (cmd.id != 0 && cmd.id != myId) {
-            return;
+    size_t offset = 0;
+    while (offset + 2 <= size) {
+        uint16_t cmdLen = (buffer[offset] << 8) | buffer[offset + 1];
+        offset += 2;
+        if (cmdLen == 0 || offset + cmdLen > size) {
+            ESP_LOGE(TAG, "Invalid command length %d at offset %d", (int)cmdLen, (int)(offset - 2));
+            break;
         }
 
-        if (dispatcher.count(cmd.which_payload)) {
-            dispatcher[cmd.which_payload](cmd);
+        Command cmd = Command_init_default;
+        pb_istream_t stream = pb_istream_from_buffer(buffer + offset, cmdLen);
+        if (pb_decode(&stream, Command_fields, &cmd)) {
+            dispatchCommand(cmd);
         } else {
-            ESP_LOGW(TAG, "Unknown command tag: %d", (int)cmd.which_payload);
+            ESP_LOGE(TAG, "ProtoBuf decoding failed: %s", PB_GET_ERROR(&stream));
         }
+        offset += cmdLen;
+    }
+}
+
+void Parser::dispatchCommand(const Command& cmd) {
+    int myId = (jFixture::instance) ? jFixture::instance->getId() : 0;
+    if (cmd.id != 255 && cmd.id != myId) {
+        return;
+    }
+
+    if (dispatcher.count(cmd.which_payload)) {
+        dispatcher[cmd.which_payload](cmd);
     } else {
-        ESP_LOGE(TAG, "ProtoBuf decoding failed: %s", PB_GET_ERROR(&stream));
+        ESP_LOGW(TAG, "Unknown command tag: %d", (int)cmd.which_payload);
     }
 }
 
@@ -113,9 +129,13 @@ void Parser::handleWifi(const Command& cmd) {
 }
 
 void Parser::handleId(const Command& cmd) {
-    if (jFixture::instance) {
-        jFixture::instance->setId(cmd.payload.set_id.id);
+    if (!jFixture::instance) return;
+    const IdCmd& c = cmd.payload.set_id;
+    if (!jFixture::instance->macMatches(c.mac.bytes, c.mac.size)) {
+        ESP_LOGW(TAG, "setId: MAC mismatch, ignoring");
+        return;
     }
+    jFixture::instance->setId((int)c.id);
 }
 
 #ifdef JFIX_ENABLE_MOTOR
@@ -142,11 +162,13 @@ void Parser::handleBlink(const Command& cmd) {
 
 void Parser::handleSleep(const Command& cmd) {
     int32_t ms = cmd.payload.sleep.duration_ms;
-    ESP_LOGI(TAG, "Deep sleep %d ms", (int)ms);
+    ESP_LOGI(TAG, "Deep sleep %d ms (ignored in emulation)", (int)ms);
+#ifndef JFIX_EMULATION
     if (ms > 0) {
         esp_sleep_enable_timer_wakeup((uint64_t)ms * 1000ULL);
     }
     esp_deep_sleep_start();
+#endif
 }
 
 void Parser::handleLag(const Command& cmd) {
@@ -159,8 +181,10 @@ void Parser::handleLag(const Command& cmd) {
 }
 
 void Parser::handleReboot(const Command& cmd) {
-    ESP_LOGI(TAG, "Reboot command received");
+    ESP_LOGI(TAG, "Reboot command received (ignored in emulation)");
+#ifndef JFIX_EMULATION
     esp_restart();
+#endif
 }
 
 void Parser::handleSetOtaUrl(const Command& cmd) {

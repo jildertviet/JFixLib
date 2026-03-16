@@ -2,8 +2,7 @@
 #include "JEvent_Perlin.h"
 #include "JOsc.h"
 #include "JRect.h"
-#include "esp_log.h"
-#include "esp_timer.h"
+#include "jfix_platform.h"
 #include <string.h>
 
 static const char *TAG = "jFixtureGraphics";

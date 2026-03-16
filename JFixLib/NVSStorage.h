@@ -1,7 +1,10 @@
 #ifndef NVS_STORAGE_H
 #define NVS_STORAGE_H
 
+#include "jfix_platform.h"
+#ifndef JFIX_EMULATION
 #include "esp_err.h"
+#endif
 #include <string>
 
 class NVSStorage {
