@@ -18,6 +18,10 @@
 #include "UART.h"
 #endif
 
+#ifdef JFIX_ENABLE_SCHEDULER
+#include "time_scheduler.h"
+#endif
+
 static const char *TAG_JF = "jFixture";
 
 #ifndef JFIX_EMULATION
@@ -97,6 +101,9 @@ void jFixture::init() {
 
 void jFixture::update() {
   updateLaggers();
+#ifdef JFIX_ENABLE_SCHEDULER
+  JTimeScheduler::getInstance().tick();
+#endif
 }
 
 void jFixture::setBrightness(float b) {
@@ -227,6 +234,7 @@ void jFixture::connectWiFi() {
   }
 
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+  esp_wifi_set_ps(WIFI_PS_NONE);
   esp_wifi_connect();
 
   ESP_LOGI(TAG_JF, "wifi_init_sta finished.");
@@ -237,6 +245,11 @@ void jFixture::connectWiFi() {
 
   if (bits & WIFI_CONNECTED_BIT) {
     ESP_LOGI(TAG_JF, "connected to ap SSID:%s", ssid_str.c_str());
+#ifdef JFIX_ENABLE_SCHEDULER
+    // Sync time now, while WiFi is still up and before the OTA check /
+    // disconnect. Blocks up to 5 s.
+    JTimeScheduler::getInstance().onGotIp();
+#endif
   } else if (bits & WIFI_FAIL_BIT) {
     ESP_LOGI(TAG_JF, "Failed to connect to SSID:%s", ssid_str.c_str());
   } else {

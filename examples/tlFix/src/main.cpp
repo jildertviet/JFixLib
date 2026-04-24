@@ -24,6 +24,8 @@ static JTlFix fix;
 static const uint8_t kPins[2] = {22, 23};
 #endif
 
+#include "time_scheduler.h"
+
 // Uncomment to draw a full-surface white rect — useful to verify wiring
 // without needing SuperCollider to send commands.
 // #include "JRect.h"
@@ -46,6 +48,20 @@ extern "C" void app_main(void) {
 #endif
 
     // addTestEvent();
+
+    // Time-of-day scheduler. SNTP syncs once during boot (before WiFi
+    // disconnects for ESP-NOW). After sync, slots gate the LED output.
+    // Uncomment and tune for the installation's operating hours.
+    //
+    // auto &sched = JTimeScheduler::getInstance();
+    // sched.addSlot(JTimeScheduler::DAYS_ALL,
+    //               JTimeScheduler::hhmm(22, 0),   // 22:00
+    //               JTimeScheduler::hhmm( 7, 0),   // 07:00 next day
+    //               JTimeScheduler::IDLE);
+    // sched.addSlot(JTimeScheduler::DAYS_ALL,
+    //               JTimeScheduler::hhmm( 3, 0),   // 03:00
+    //               JTimeScheduler::hhmm( 3, 5),   // 03:05 — 5-min window
+    //               JTimeScheduler::REBOOT);       // nightly RTC re-sync
 
     while (1) {
         fix.update();

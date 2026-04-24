@@ -9,6 +9,7 @@ option(JFIX_ENABLE_ETHERNET    "W5500 SPI Ethernet handler"                     
 option(JFIX_ENABLE_I2C_SENSORS "BQ25792, MMA8451, I2CWrapper"                    OFF)
 option(JFIX_ENABLE_MOTOR       "Stepper motor controller"                        OFF)
 option(JFIX_ENABLE_UART        "UART handler"                                    OFF)
+option(JFIX_ENABLE_SCHEDULER   "SNTP time-of-day scheduler (idle/reboot slots)"  OFF)
 
 # ── Core sources (always compiled) ───────────────────────────────────────────
 set(JFIX_SRCS
@@ -62,6 +63,11 @@ if(JFIX_ENABLE_UART)
     list(APPEND JFIX_SRCS UART.cpp)
 endif()
 
+# ── Optional: SNTP time-of-day scheduler ─────────────────────────────────────
+if(JFIX_ENABLE_SCHEDULER)
+    list(APPEND JFIX_SRCS time_scheduler.cpp)
+endif()
+
 # ── Register component ──────────────────────────────────────────────────────
 # All IDF dependencies listed statically so component registration works
 # regardless of option() evaluation order in ESP-IDF's build system.
@@ -71,7 +77,7 @@ idf_component_register(
     REQUIRES esp_driver_gpio nvs_flash esp_http_client esp_https_ota
              app_update esp_wifi esp_event esp_netif freertos esp_driver_i2c
              esp_driver_ledc esp_driver_uart esp_timer nanopb led_strip
-             esp_eth esp_driver_spi esp_system esp_hw_support
+             esp_eth esp_driver_spi esp_system esp_hw_support lwip
 )
 
 # ── Propagate flags as compile definitions ───────────────────────────────────
@@ -92,4 +98,7 @@ if(JFIX_ENABLE_MOTOR)
 endif()
 if(JFIX_ENABLE_UART)
     target_compile_definitions(${COMPONENT_LIB} PUBLIC JFIX_ENABLE_UART)
+endif()
+if(JFIX_ENABLE_SCHEDULER)
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC JFIX_ENABLE_SCHEDULER)
 endif()
