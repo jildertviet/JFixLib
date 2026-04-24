@@ -1,8 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
 # JFixLib feature flags
+# Ethernet is compiled in unconditionally so main.cpp can toggle between
+# JTlFix and JTlFixEthernet with a single #define USE_ETHERNET.
 set(JFIX_ENABLE_GRAPHICS ON CACHE BOOL "" FORCE)
 set(JFIX_ENABLE_OTA      ON CACHE BOOL "" FORCE)
+set(JFIX_ENABLE_ETHERNET ON CACHE BOOL "" FORCE)
 set(JFIX_ENABLE_UART     ON CACHE BOOL "" FORCE)
 
 set(EXTRA_COMPONENT_DIRS ../../JFixLib ../../nanopb src)
