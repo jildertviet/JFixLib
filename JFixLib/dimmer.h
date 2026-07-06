@@ -14,6 +14,7 @@ public:
   Dimmer();
   esp_err_t init(const std::vector<int> &pins);
   void setChannel(int channel, float value); // value 0.0 to 1.0
+  float getChannel(int channel) const;       // 0.0 if out of range
   void setBrightness(float brightness);      // global brightness 0.0 to 1.0
   void show();
   void test();

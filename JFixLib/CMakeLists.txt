@@ -10,6 +10,10 @@ option(JFIX_ENABLE_I2C_SENSORS "BQ25792, MMA8451, I2CWrapper"                   
 option(JFIX_ENABLE_MOTOR       "Stepper motor controller"                        OFF)
 option(JFIX_ENABLE_UART        "UART handler"                                    OFF)
 option(JFIX_ENABLE_SCHEDULER   "SNTP time-of-day scheduler (idle/reboot slots)"  OFF)
+# Behavioural flag (not a source toggle): keeps the BQ25792 alive for monitoring
+# but disables battery support — no charging, and ship mode on 12V loss so the
+# unit powers off instead of running from the battery. Default OFF = normal.
+option(JFIX_DISABLE_BATTERY    "Disable battery: ship mode on 12V loss, no charge" OFF)
 
 # ── Core sources (always compiled) ───────────────────────────────────────────
 set(JFIX_SRCS
@@ -101,4 +105,7 @@ if(JFIX_ENABLE_UART)
 endif()
 if(JFIX_ENABLE_SCHEDULER)
     target_compile_definitions(${COMPONENT_LIB} PUBLIC JFIX_ENABLE_SCHEDULER)
+endif()
+if(JFIX_DISABLE_BATTERY)
+    target_compile_definitions(${COMPONENT_LIB} PUBLIC JFIX_DISABLE_BATTERY)
 endif()

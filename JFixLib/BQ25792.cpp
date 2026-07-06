@@ -3,7 +3,14 @@
 
 #define BQ25792_CHARGER_CONTROL_0_REG 0x0F
 #define BQ25792_CHARGER_CONTROL_1_REG 0x10
+#define BQ25792_CHARGER_CONTROL_2_REG 0x11
 #define BQ25792_CHARGER_CONTROL_5_REG 0x14
+
+// REG11 Charger Control 2: SDRV_CTRL[2:1] selects the external ship-FET mode.
+// 0h=IDLE (ship FET on), 1h=Shutdown, 2h=Ship, 3h=System Power Reset.
+#define BQ25792_SDRV_CTRL_MASK 0x06 // bits [2:1]
+#define BQ25792_SDRV_CTRL_SHIP (0x2 << 1)
+#define BQ25792_SDRV_NODELAY 0x01 // SDRV_DLY (bit 0) = 1: no 10 s turn-off delay
 #define BQ25792_NTC_CONTROL_1_REG 0x18
 #define BQ25792_CHARGER_STATUS_0_REG 0x1B
 #define BQ25792_CHARGER_STATUS_1_REG 0x1C
@@ -114,6 +121,16 @@ void BQ25792::update(void *pvParameters) {
              charger->vac2Voltage_mV, charger->batteryPresent ? "Yes" : "No",
              charger->vbusPresent ? "Yes" : "No",
              charger->chargeLimitVoltage_mV);
+
+#ifdef JFIX_DISABLE_BATTERY
+    // Battery disabled at build time: when the 12 V input is gone, disconnect
+    // the battery so the unit powers off instead of running from it. The write
+    // is only honoured by the chip with no adapter present, which is exactly
+    // this condition. enterShipMode() is idempotent (won't re-arm SDRV_DLY).
+    if (!charger->vbusPresent) {
+      charger->enterShipMode();
+    }
+#endif
     vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }
@@ -131,6 +148,31 @@ esp_err_t BQ25792::enableCharging() {
 
 esp_err_t BQ25792::disableCharging() {
   return gpio_set_level(charge_enable_pin, 1);
+}
+
+esp_err_t BQ25792::enterShipMode() {
+  // Command the external ship FET off (SDRV_CTRL = Ship). This disconnects the
+  // battery from the system; with the 12 V input gone the unit powers down.
+  // NOTE: only accepted by the chip when no adapter is present (VBUS low).
+  // Read-modify-write, preserving the other bits (AUTO_INDET_EN etc.). Skip the
+  // write if we are already in ship mode, so the SDRV_DLY turn-off delay is not
+  // re-armed every time this is called.
+  uint8_t val;
+  esp_err_t err =
+      I2CWrapper::read(dev_handle, BQ25792_CHARGER_CONTROL_2_REG, &val, 1);
+  if (err != ESP_OK) {
+    return err;
+  }
+  if ((val & BQ25792_SDRV_CTRL_MASK) == BQ25792_SDRV_CTRL_SHIP) {
+    return ESP_OK; // already shipping
+  }
+  // Set SDRV_DLY=1 in the same write so the ship FET turns off immediately
+  // (no 10 s delay), then select Ship mode.
+  val = (val & ~BQ25792_SDRV_CTRL_MASK) | BQ25792_SDRV_CTRL_SHIP |
+        BQ25792_SDRV_NODELAY;
+  err = I2CWrapper::write(dev_handle, BQ25792_CHARGER_CONTROL_2_REG, &val, 1);
+  ESP_LOGW("Charger", "VBUS lost, entering ship mode (battery disabled)");
+  return err;
 }
 
 esp_err_t BQ25792::getChargerStatus0(uint8_t *status) {

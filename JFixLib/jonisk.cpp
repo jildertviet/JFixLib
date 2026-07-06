@@ -2,8 +2,14 @@
 #include "jonisk.h"
 #include "BQ25792.h"
 #include "I2CWrapper.h"
+#include "NVSStorage.h"
 #include "dimmer.h"
 #include <cmath>
+#include <cstdio>
+
+// Compiled fall-back boot state used when NVS has no "boot_state" key yet
+// (white channel half on). Overridden by the setBootState command.
+#define JONISK_DEFAULT_W 0.5f
 
 Jonisk::Jonisk() : charger(nullptr) {}
 
@@ -12,13 +18,41 @@ void Jonisk::init() {
   blink.init();
 
   dimmer.init({16, 17, 18, 8});
-  dimmer.test();
+
+  // Restore the power-on colour/brightness saved by the setBootState command.
+  // Format: "r,g,b,w,brightness". Falls back to a compiled default (white) when
+  // NVS has no key yet, so a fresh device still lights up.
+  {
+    std::string s;
+    float c[4] = {0.f, 0.f, 0.f, JONISK_DEFAULT_W};
+    float bri = 1.0f;
+    if (nvs.readString("boot_state", s) == ESP_OK && !s.empty()) {
+      float p[5];
+      if (sscanf(s.c_str(), "%f,%f,%f,%f,%f", &p[0], &p[1], &p[2], &p[3],
+                 &p[4]) == 5) {
+        c[0] = p[0]; c[1] = p[1]; c[2] = p[2]; c[3] = p[3];
+        bri = p[4];
+      }
+      ESP_LOGI("Jonisk", "Boot state loaded: %s", s.c_str());
+    } else {
+      ESP_LOGI("Jonisk", "No boot state in NVS, using default white");
+    }
+    for (int i = 0; i < 4; i++) dimmer.setChannel(i, c[i]);
+    setBrightness(bri);
+  }
 
   charger = new BQ25792(BQ_CE_PIN, BQ_INT_PIN);
 
   esp_err_t err = charger->begin();
   if (err == ESP_OK) {
+#ifndef JFIX_DISABLE_BATTERY
     charger->enableCharging();
+#else
+    // Battery disabled at build time: keep the charger alive for monitoring,
+    // but do not charge. BQ25792::update() enters ship mode on VBUS loss so the
+    // unit powers off instead of running from the battery.
+    ESP_LOGI("Jonisk", "Battery support disabled (JFIX_DISABLE_BATTERY)");
+#endif
 
     uint8_t status = 0;
     err = charger->getChargerStatus0(&status);
@@ -59,37 +93,11 @@ void Jonisk::init() {
 void Jonisk::update() {
   jFixture::update();
 
-  // White output: only channel 3 (W) on, R/G/B off
-  dimmer.setChannel(0, 0.f);
-  dimmer.setChannel(1, 0.f);
-  dimmer.setChannel(2, 0.f);
-  dimmer.setChannel(3, 0.5f);
-
-  // Brightness from tilt angle: angle of the fixture from horizontal
-  //   Z = +1g pointing straight up  → brightness = 1
-  //   Z =  0g horizontal            → brightness = 0.5
-  //   Z = -1g pointing straight down → brightness = 0
-  static int dbg_count = 0;
-  AccelData d;
-  esp_err_t read_err = accel.read(d);
-  if (read_err == ESP_OK) {
-    float angle = atan2f(d.z, sqrtf(d.x * d.x + d.y * d.y));
-    // angle: +π/2 (up) → 0 (horizontal) → -π/2 (down)
-    float brightness = (angle + M_PI_2) / M_PI; // maps to [0, 1]
-    brightness = fmaxf(0.f, fminf(1.f, brightness));
-    setBrightness(brightness);
-    if (++dbg_count >= 50) { // log ~once per second
-      ESP_LOGI("Jonisk", "accel x=%.2f y=%.2f z=%.2f  angle=%.2f  brightness=%.2f",
-               d.x, d.y, d.z, angle, brightness);
-      dbg_count = 0;
-    }
-  } else {
-    if (++dbg_count >= 50) {
-      ESP_LOGE("Jonisk", "accel.read() failed: %s", esp_err_to_name(read_err));
-      dbg_count = 0;
-    }
-  }
-
+  // Command-driven output: the dimmer channels (colour) and brightness are set
+  // by the led/channel/setBootState commands and simply applied here every
+  // frame. The boot defaults are loaded from NVS in init(). Tilt-to-brightness
+  // was experimental and is intentionally not applied; the accelerometer stays
+  // initialised for future use.
   dimmer.setBrightness(getBrightness());
   dimmer.show();
 }

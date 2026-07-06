@@ -33,6 +33,7 @@ private:
     static void handleSetOtaUrl(const Command& cmd);
     static void handleSetBackground(const Command& cmd);
     static void handleSetViewportOffset(const Command& cmd);
+    static void handleSetBootState(const Command& cmd);
 
 #ifdef JFIX_ENABLE_MOTOR
     static void handleMotor(const Command& cmd);

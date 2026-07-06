@@ -69,6 +69,9 @@ PB_BIND(SetBackgroundCmd, SetBackgroundCmd, AUTO)
 PB_BIND(SetViewportOffsetCmd, SetViewportOffsetCmd, AUTO)
 
 
+PB_BIND(SetBootStateCmd, SetBootStateCmd, AUTO)
+
+
 PB_BIND(Command, Command, AUTO)
 
 

@@ -10,6 +10,7 @@
 #include "blink.h"
 #include <pb_decode.h>
 #include <string.h>
+#include <stdio.h>
 
 #ifdef JFIX_ENABLE_GRAPHICS
 #include "jfixture_graphics.h"
@@ -37,6 +38,7 @@ Parser::Parser() {
     dispatcher[Command_set_ota_url_tag]          = handleSetOtaUrl;
     dispatcher[Command_set_background_tag]       = handleSetBackground;
     dispatcher[Command_set_viewport_offset_tag]  = handleSetViewportOffset;
+    dispatcher[Command_set_boot_state_tag]       = handleSetBootState;
 
 #ifdef JFIX_ENABLE_MOTOR
     dispatcher[Command_motor_tag]         = handleMotor;
@@ -205,6 +207,22 @@ void Parser::handleSetViewportOffset(const Command& cmd) {
     const SetViewportOffsetCmd& c = cmd.payload.set_viewport_offset;
     jFixture::instance->setViewportOffset(c.x, c.y);
     ESP_LOGI(TAG, "ViewportOffset → x=%.2f y=%.2f", c.x, c.y);
+}
+
+void Parser::handleSetBootState(const Command& cmd) {
+    const SetBootStateCmd& c = cmd.payload.set_boot_state;
+    // Persist as "r,g,b,w,brightness" (see Jonisk::init which restores it).
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%.4f,%.4f,%.4f,%.4f,%.4f",
+             c.r, c.g, c.b, c.w, c.brightness);
+    nvs.writeString("boot_state", buf);
+    // Apply immediately so the effect is visible without a reboot.
+    dimmer.setChannel(0, c.r);
+    dimmer.setChannel(1, c.g);
+    dimmer.setChannel(2, c.b);
+    dimmer.setChannel(3, c.w);
+    if (jFixture::instance) jFixture::instance->setBrightness(c.brightness);
+    ESP_LOGI(TAG, "Boot state saved: %s", buf);
 }
 
 // ── Graphics (conditional) ──────────────────────────────────────────────────

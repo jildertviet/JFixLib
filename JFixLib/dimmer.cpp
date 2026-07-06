@@ -119,3 +119,11 @@ void Dimmer::blink(uint8_t num, uint16_t dur, uint16_t delayTime,
 }
 
 #endif // JFIX_EMULATION
+
+// Common to both platforms: read back a channel value.
+float Dimmer::getChannel(int channel) const {
+  if (channel >= 0 && channel < (int)_channelValues.size()) {
+    return _channelValues[channel];
+  }
+  return 0.0f;
+}

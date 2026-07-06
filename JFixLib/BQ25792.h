@@ -18,6 +18,7 @@ public:
   esp_err_t initADC();
   esp_err_t enableCharging();
   esp_err_t disableCharging();
+  esp_err_t enterShipMode(); // turn off external ship FET (SDRV_CTRL = Ship)
   esp_err_t getChargerStatus0(uint8_t *status = nullptr);
   esp_err_t getChargerStatus1(uint8_t *status = nullptr);
   esp_err_t getBatteryVoltage(uint16_t *voltage_mV = nullptr);

@@ -181,6 +181,17 @@ typedef struct _SetViewportOffsetCmd {
     float y;
 } SetViewportOffsetCmd;
 
+/* Set the power-on default colour + brightness (jonisk dimmer fixtures).
+ Stored in NVS (key "boot_state") and re-applied on every boot. Also applied
+ immediately when received. r/g/b/w are the four dimmer channels (0..1). */
+typedef struct _SetBootStateCmd {
+    float r;
+    float g;
+    float b;
+    float w;
+    float brightness;
+} SetBootStateCmd;
+
 typedef struct _Command {
     int32_t id; /* 255 for broadcast, otherwise targeted device ID */
     pb_size_t which_payload;
@@ -206,6 +217,7 @@ typedef struct _Command {
         SetOtaUrlCmd set_ota_url;
         SetBackgroundCmd set_background;
         SetViewportOffsetCmd set_viewport_offset;
+        SetBootStateCmd set_boot_state;
     } payload;
 } Command;
 
@@ -243,6 +255,7 @@ extern "C" {
 
 
 
+
 /* Initializer values for message structs */
 #define LedCmd_init_default                      {0}
 #define ChannelCmd_init_default                  {0, 0}
@@ -265,6 +278,7 @@ extern "C" {
 #define SetOtaUrlCmd_init_default                {""}
 #define SetBackgroundCmd_init_default            {0, 0, 0, 0}
 #define SetViewportOffsetCmd_init_default        {0, 0}
+#define SetBootStateCmd_init_default             {0, 0, 0, 0, 0}
 #define Command_init_default                     {0, 0, {LedCmd_init_default}}
 #define LedCmd_init_zero                         {0}
 #define ChannelCmd_init_zero                     {0, 0}
@@ -287,6 +301,7 @@ extern "C" {
 #define SetOtaUrlCmd_init_zero                   {""}
 #define SetBackgroundCmd_init_zero               {0, 0, 0, 0}
 #define SetViewportOffsetCmd_init_zero           {0, 0}
+#define SetBootStateCmd_init_zero                {0, 0, 0, 0, 0}
 #define Command_init_zero                        {0, 0, {LedCmd_init_zero}}
 
 /* Field tags (for use in manual encoding/decoding) */
@@ -349,6 +364,11 @@ extern "C" {
 #define SetBackgroundCmd_a_tag                   4
 #define SetViewportOffsetCmd_x_tag               1
 #define SetViewportOffsetCmd_y_tag               2
+#define SetBootStateCmd_r_tag                    1
+#define SetBootStateCmd_g_tag                    2
+#define SetBootStateCmd_b_tag                    3
+#define SetBootStateCmd_w_tag                    4
+#define SetBootStateCmd_brightness_tag           5
 #define Command_id_tag                           1
 #define Command_led_tag                          2
 #define Command_channel_tag                      3
@@ -371,6 +391,7 @@ extern "C" {
 #define Command_set_ota_url_tag                  20
 #define Command_set_background_tag               21
 #define Command_set_viewport_offset_tag          22
+#define Command_set_boot_state_tag               23
 
 /* Struct field encoding specification for nanopb */
 #define LedCmd_FIELDLIST(X, a) \
@@ -518,6 +539,15 @@ X(a, STATIC,   SINGULAR, FLOAT,    y,                 2)
 #define SetViewportOffsetCmd_CALLBACK NULL
 #define SetViewportOffsetCmd_DEFAULT NULL
 
+#define SetBootStateCmd_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, FLOAT,    r,                 1) \
+X(a, STATIC,   SINGULAR, FLOAT,    g,                 2) \
+X(a, STATIC,   SINGULAR, FLOAT,    b,                 3) \
+X(a, STATIC,   SINGULAR, FLOAT,    w,                 4) \
+X(a, STATIC,   SINGULAR, FLOAT,    brightness,        5)
+#define SetBootStateCmd_CALLBACK NULL
+#define SetBootStateCmd_DEFAULT NULL
+
 #define Command_FIELDLIST(X, a) \
 X(a, STATIC,   SINGULAR, INT32,    id,                1) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,led,payload.led),   2) \
@@ -540,7 +570,8 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (payload,link_bus,payload.link_bus),  18) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_param_bus,payload.set_param_bus),  19) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_ota_url,payload.set_ota_url),  20) \
 X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_background,payload.set_background),  21) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_viewport_offset,payload.set_viewport_offset),  22)
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_viewport_offset,payload.set_viewport_offset),  22) \
+X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_boot_state,payload.set_boot_state),  23)
 #define Command_CALLBACK NULL
 #define Command_DEFAULT NULL
 #define Command_payload_led_MSGTYPE LedCmd
@@ -564,6 +595,7 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (payload,set_viewport_offset,payload.set_view
 #define Command_payload_set_ota_url_MSGTYPE SetOtaUrlCmd
 #define Command_payload_set_background_MSGTYPE SetBackgroundCmd
 #define Command_payload_set_viewport_offset_MSGTYPE SetViewportOffsetCmd
+#define Command_payload_set_boot_state_MSGTYPE SetBootStateCmd
 
 extern const pb_msgdesc_t LedCmd_msg;
 extern const pb_msgdesc_t ChannelCmd_msg;
@@ -586,6 +618,7 @@ extern const pb_msgdesc_t SetParamBusCmd_msg;
 extern const pb_msgdesc_t SetOtaUrlCmd_msg;
 extern const pb_msgdesc_t SetBackgroundCmd_msg;
 extern const pb_msgdesc_t SetViewportOffsetCmd_msg;
+extern const pb_msgdesc_t SetBootStateCmd_msg;
 extern const pb_msgdesc_t Command_msg;
 
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
@@ -610,6 +643,7 @@ extern const pb_msgdesc_t Command_msg;
 #define SetOtaUrlCmd_fields &SetOtaUrlCmd_msg
 #define SetBackgroundCmd_fields &SetBackgroundCmd_msg
 #define SetViewportOffsetCmd_fields &SetViewportOffsetCmd_msg
+#define SetBootStateCmd_fields &SetBootStateCmd_msg
 #define Command_fields &Command_msg
 
 /* Maximum encoded size of messages (where known) */
@@ -627,6 +661,7 @@ extern const pb_msgdesc_t Command_msg;
 #define RebootCmd_size                           0
 #define SIMPLE_PB_H_MAX_SIZE                     Command_size
 #define SetBackgroundCmd_size                    20
+#define SetBootStateCmd_size                     25
 #define SetCustomArgCmd_size                     27
 #define SetOtaUrlCmd_size                        130
 #define SetParamBusCmd_size                      16

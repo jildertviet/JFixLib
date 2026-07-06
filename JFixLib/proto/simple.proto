@@ -172,6 +172,17 @@ message SetViewportOffsetCmd {
   float y = 2;
 }
 
+// Set the power-on default colour + brightness (jonisk dimmer fixtures).
+// Stored in NVS (key "boot_state") and re-applied on every boot. Also applied
+// immediately when received. r/g/b/w are the four dimmer channels (0..1).
+message SetBootStateCmd {
+  float r          = 1;
+  float g          = 2;
+  float b          = 3;
+  float w          = 4;
+  float brightness = 5;
+}
+
 // ── Top-level command ─────────────────────────────────────────────────────────
 
 message Command {
@@ -198,5 +209,6 @@ message Command {
     SetOtaUrlCmd         set_ota_url        = 20;
     SetBackgroundCmd     set_background     = 21;
     SetViewportOffsetCmd set_viewport_offset = 22;
+    SetBootStateCmd      set_boot_state      = 23;
   }
 }
