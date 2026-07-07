@@ -50,7 +50,8 @@ public:
   // Override NTP server. Default: "pool.ntp.org".
   void setNtpServer(const char *server);
 
-  // Called from jFixture::connectWiFi() after GOT_IP. Blocks up to 5 s.
+  // Called from jFixture::connectWiFi() after GOT_IP. Blocks up to 30 s while
+  // probing 3 NTP servers (one is a numeric IP to bypass DNS).
   void onGotIp();
 
   // Called every loop from jFixture::update().

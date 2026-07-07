@@ -59,7 +59,7 @@ public:
   void triggerBrightnessEnv(uint16_t a, uint16_t s, uint16_t r, float b);
 
   float loc[2] = {0, 0};
-  float size[2] = {255, 255};
+  float size[2] = {1, 1};
   float speed[2] = {1, 0};
   float rgba[4] = {1, 1, 1, 1};
   float brightness = 1.0f;

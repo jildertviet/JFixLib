@@ -41,8 +41,11 @@ void jFixtureAddr::setup(uint8_t numColorChannels, const uint8_t *pins,
 
 #ifndef JFIX_EMULATION
     if (pins) {
+      // WS2816B = two WS2812 slots per physical pixel (16-bit per channel).
+      uint16_t driverLeds =
+          (mode == J_WS2816B) ? numLedsPerString * 2 : numLedsPerString;
       led_strip_config_t strip_config = {.strip_gpio_num = pins[i],
-                                         .max_leds = numLedsPerString,
+                                         .max_leds = driverLeds,
                                          .led_model = LED_MODEL_WS2812,
                                          .color_component_format =
                                              LED_STRIP_COLOR_COMPONENT_FMT_GRB,
@@ -131,18 +134,32 @@ void jFixtureAddr::writeLeds() {
       float fr = (c->r > rgbaBackground[0]) ? c->r : rgbaBackground[0];
       float fg = (c->g > rgbaBackground[1]) ? c->g : rgbaBackground[1];
       float fb = (c->b > rgbaBackground[2]) ? c->b : rgbaBackground[2];
-      uint32_t r = (uint32_t)(std::pow(fr, 2.0f) * 255.0f * brightness);
-      uint32_t g = (uint32_t)(std::pow(fg, 2.0f) * 255.0f * brightness);
-      uint32_t b = (uint32_t)(std::pow(fb, 2.0f) * 255.0f * brightness);
 
-      if (r > 255)
-        r = 255;
-      if (g > 255)
-        g = 255;
-      if (b > 255)
-        b = 255;
-
-      led_strip_set_pixel(ledStrips[j], i, r, g, b);
+      if (ledMode == J_WS2816B) {
+        // 16-bit per channel, packed into two WS2812 (GRB) slots:
+        //   wire bytes: G_hi G_lo R_hi R_lo B_hi B_lo
+        //   slot 2i   (G,R,B) = (G_hi, G_lo, R_hi)  → set_pixel(R=G_lo, G=G_hi, B=R_hi)
+        //   slot 2i+1 (G,R,B) = (R_lo, B_hi, B_lo)  → set_pixel(R=B_hi, G=R_lo, B=B_lo)
+        uint32_t r16 = (uint32_t)(std::pow(fr, 2.0f) * 65535.0f * brightness);
+        uint32_t g16 = (uint32_t)(std::pow(fg, 2.0f) * 65535.0f * brightness);
+        uint32_t b16 = (uint32_t)(std::pow(fb, 2.0f) * 65535.0f * brightness);
+        if (r16 > 65535) r16 = 65535;
+        if (g16 > 65535) g16 = 65535;
+        if (b16 > 65535) b16 = 65535;
+        uint8_t g_hi = (g16 >> 8) & 0xFF, g_lo = g16 & 0xFF;
+        uint8_t r_hi = (r16 >> 8) & 0xFF, r_lo = r16 & 0xFF;
+        uint8_t b_hi = (b16 >> 8) & 0xFF, b_lo = b16 & 0xFF;
+        led_strip_set_pixel(ledStrips[j], 2 * i,     g_lo, g_hi, r_hi);
+        led_strip_set_pixel(ledStrips[j], 2 * i + 1, b_hi, r_lo, b_lo);
+      } else {
+        uint32_t r = (uint32_t)(std::pow(fr, 2.0f) * 255.0f * brightness);
+        uint32_t g = (uint32_t)(std::pow(fg, 2.0f) * 255.0f * brightness);
+        uint32_t b = (uint32_t)(std::pow(fb, 2.0f) * 255.0f * brightness);
+        if (r > 255) r = 255;
+        if (g > 255) g = 255;
+        if (b > 255) b = 255;
+        led_strip_set_pixel(ledStrips[j], i, r, g, b);
+      }
     }
     led_strip_refresh(ledStrips[j]);
   }

@@ -6,6 +6,8 @@ c.perlin
 c.stop
 // Define red function
 t.children[0].address
+var brightness = 0.0; t.children[0].setBackground([1.0, 1.0, 1.0, 1.0] * brightness);
+
 t.children[0].send(0xFF!6 ++ [0x36, 0x00] ++ [1.0, 0.5, 1.0, 1.0].asBytes32F ++ "end"); // Set as static light
 t.children[3].send(0xFF!6 ++ [0x36, 0x01] ++ [1.0, 0.7, 0.4, 1.0].asBytes32F ++ "end"); // Alpha is not working
 t.children[0].send(0xFF!6 ++ [0x15] ++ "end"); // OTA test
@@ -16,11 +18,16 @@ j = a.collect({|e, i| JTLFix.new(i, e, p)});
 
 t.gui
 ~f = t.children
+~pw = "Klank-Dollywood-0112"
 (
 {
-t.children.at([2,3]).do{|e|
-    e.setOTAServer("Klank", ~pw, "https://192.168.10.131/.pio/build/esp32dev/firmware.bin");
-    35.wait;
+t.children.at([0]).do{|e|
+    // e.setOTAServer("Klank", ~pw, "https://192.168.10.131/.pio/build/esp32dev/firmware.bin");
+    // e.setOTAServer("http://192.168.10.202/tlFix.bin");
+    // e.setWifi("Klank", ~pw); 
+    e.reboot;
+    // e.writeID();
+    // 35.wait;
   };
   "Done".postln;
 }.fork;

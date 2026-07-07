@@ -37,18 +37,37 @@ void JTimeScheduler::addSlot(uint8_t dayMask, uint16_t startMin, uint16_t endMin
 
 void JTimeScheduler::onGotIp() {
 #ifndef JFIX_EMULATION
-  ESP_LOGI(TAG, "SNTP sync starting (server=%s)", ntpServer);
-  esp_sntp_config_t cfg = ESP_NETIF_SNTP_DEFAULT_CONFIG(ntpServer);
+  // Three servers: user-configured (DNS), Google (DNS), Cloudflare numeric IP
+  // (skips DNS — saves us if the resolver is slow or blocked at boot).
+  ESP_LOGI(TAG, "SNTP sync starting (servers=%s, time.google.com, 162.159.200.1)",
+           ntpServer);
+  esp_sntp_config_t cfg = ESP_NETIF_SNTP_DEFAULT_CONFIG_MULTIPLE(
+      3, ESP_SNTP_SERVER_LIST(ntpServer, "time.google.com", "162.159.200.1"));
   esp_err_t err = esp_netif_sntp_init(&cfg);
   if (err != ESP_OK && err != ESP_ERR_INVALID_STATE) {
     ESP_LOGE(TAG, "esp_netif_sntp_init failed: %d", err);
     return;
   }
-  err = esp_netif_sntp_sync_wait(pdMS_TO_TICKS(5000));
+
+  // Poll in 2 s chunks up to 30 s total. Each step logs progress so a hang is
+  // distinguishable from a slow first round-trip.
+  constexpr int kTotalMs = 30000;
+  constexpr int kStepMs = 2000;
+  int waited = 0;
+  err = ESP_ERR_TIMEOUT;
+  while (waited < kTotalMs) {
+    err = esp_netif_sntp_sync_wait(pdMS_TO_TICKS(kStepMs));
+    if (err == ESP_OK)
+      break;
+    waited += kStepMs;
+    ESP_LOGI(TAG, "SNTP waiting... (%d/%d ms)", waited, kTotalMs);
+  }
   if (err != ESP_OK) {
-    ESP_LOGW(TAG, "SNTP sync timed out — scheduler will stay inert");
+    ESP_LOGW(TAG, "SNTP sync timed out after %d ms — scheduler will stay inert",
+             kTotalMs);
     return;
   }
+
   setenv("TZ", tzString, 1);
   tzset();
   bSynced = true;

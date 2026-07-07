@@ -159,7 +159,6 @@ JTlFixComp {
        f.do{|e|
       e.bSyncServer = true;
     } 
-
     }
   }
 }

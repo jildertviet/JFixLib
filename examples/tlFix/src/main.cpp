@@ -24,47 +24,67 @@ static JTlFix fix;
 static const uint8_t kPins[2] = {22, 23};
 #endif
 
+#include "JOsc.h"
+#include "esp_random.h"
 #include "time_scheduler.h"
 
-// Uncomment to draw a full-surface white rect — useful to verify wiring
-// without needing SuperCollider to send commands.
-// #include "JRect.h"
-// static void addTestEvent() {
-//     JRect *r = new JRect();
-//     r->id = 1;
-//     r->bActive = true;
-//     fix.addEvent(r);
-// }
+static void addBootEvent() {
+  // viewport[0] = 20, string read positions are at x=0 and
+  // x=horizontalPixelDistance (10). Constrain each oscillator to its own string
+  // by clipping size_x.
+  const float locX[2] = {0.0f, 0.5f}; // 0 and 10 in viewport units
+  const float sizeX = 0.25f; // 5 viewport units — covers one string only
+  const float colors[2][3] = {
+      {1.0f, 0.0f, 0.0f}, // left  (string 0) — red
+      {0.0f, 0.0f, 1.0f}, // right (string 1) — blue
+  };
+  for (int i = 0; i < 2; i++) {
+    JOsc *j = new JOsc(fix.getWavetable());
+    j->id = 1 + i;
+    // ±20% jitter around 0.1 Hz
+    float jitter = ((float)esp_random() / (float)UINT32_MAX) * 0.04f - 0.02f;
+    j->frequency = 0.1f + jitter;
+    j->range = 1.0f;
+    j->loc[0] = locX[i];
+    j->size[0] = sizeX;
+
+    j->rgba[0] = colors[i][0];
+    j->rgba[1] = colors[i][1];
+    j->rgba[2] = colors[i][2];
+    j->rgba[3] = 1.0f;
+    j->start();
+    fix.addEvent(j);
+  }
+}
 
 extern "C" void app_main(void) {
-    fix.init();
+  fix.init();
 
-    JTlFixSettings s;
-    s.pins = kPins;
+  JTlFixSettings s;
+  s.pins = kPins;
 #ifdef USE_ETHERNET
-    fix.setup(s, kDeviceId);
+  fix.setup(s, kDeviceId);
 #else
-    fix.setup(s);
+  fix.setup(s);
 #endif
 
-    // addTestEvent();
+  // Reshape the shared sine wavetable: power < 1 brightens (more light, less
+  // black); default is 10.0f (sharp bright peak).
+  fix.getWavetable()->fillSineNorm(0.3f);
 
-    // Time-of-day scheduler. SNTP syncs once during boot (before WiFi
-    // disconnects for ESP-NOW). After sync, slots gate the LED output.
-    // Uncomment and tune for the installation's operating hours.
-    //
-    // auto &sched = JTimeScheduler::getInstance();
-    // sched.addSlot(JTimeScheduler::DAYS_ALL,
-    //               JTimeScheduler::hhmm(22, 0),   // 22:00
-    //               JTimeScheduler::hhmm( 7, 0),   // 07:00 next day
-    //               JTimeScheduler::IDLE);
-    // sched.addSlot(JTimeScheduler::DAYS_ALL,
-    //               JTimeScheduler::hhmm( 3, 0),   // 03:00
-    //               JTimeScheduler::hhmm( 3, 5),   // 03:05 — 5-min window
-    //               JTimeScheduler::REBOOT);       // nightly RTC re-sync
+  addBootEvent();
 
-    while (1) {
-        fix.update();
-        vTaskDelay(1 / portTICK_PERIOD_MS);
-    }
+  // Time-of-day scheduler. SNTP syncs once during boot (before WiFi
+  // disconnects for ESP-NOW). After sync, slots gate the LED output.
+  // Uncomment and tune for the installation's operating hours.
+
+  auto &sched = JTimeScheduler::getInstance();
+  sched.addSlot(JTimeScheduler::DAYS_ALL, JTimeScheduler::hhmm(23, 0),
+                JTimeScheduler::hhmm(7, 1), JTimeScheduler::IDLE);
+  sched.addSlot(JTimeScheduler::DAYS_ALL, JTimeScheduler::hhmm(7, 1),
+                JTimeScheduler::hhmm(7, 2), JTimeScheduler::REBOOT);
+  while (1) {
+    fix.update();
+    vTaskDelay(1 / portTICK_PERIOD_MS);
+  }
 }

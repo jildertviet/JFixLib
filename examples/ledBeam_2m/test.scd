@@ -4,7 +4,7 @@ t.readConfigFile("/home/jildert/JFixLib/examples/ledBeam_2m/ledBeam_2m.config", 
 c = JTlFixComp.new(t)
 // Define red function
 
-t.children[1].writeID()
+t.children[17].writeID()
 var brightness = 0.5; t.children[0].setBackground([1.0, 0.0, 0.0, 1.0] * brightness);
 var brightness = 0.0; t.children[18].setBackground([1.0, 0.0, 0.0, 1.0] * brightness);
 
@@ -27,12 +27,15 @@ p.sendMsg("/espnow", Int8Array.newFrom([1,2,3]));
 93.asHexString
 [0x24,0x6F,0x28,0xDD,0x46,0x5D].asArray
 
-t.children[11].reboot;
+t.children[0].reboot;
+~pw = "CGOi0gBO"
 (
 {
-t.children.at([11]).do{|e|
-    e.setOTAServer("http://192.168.10.21/ledBeam_2m.bin");
-    // e.setWifi("Klank", ~pw); 
+t.children.at((0..(t.children.size-1))).do{|e|
+    // e.setOTAServer("http://10.42.0.1/ledBeam_2m.bin");
+    // e.setWifi("jildert-Framework", ~pw); 
+    e.reboot;
+    // e.writeID();
     // 35.wait;
   };
   "Done".postln;
@@ -69,9 +72,9 @@ var b;
 j.start;
 b = JFixEvent_JRect.new(j).size_([0.5, 0.1]).rgba_([1.0, 0.0, 0.0, 0.0]).bWaitForEnv_(0).loc_([0.0, 0.0]);
 j.addEvent(b);
-b.doEnv('b', 1, 90, 1000, 1.0, bKill: 1);
+b.doEnv('b', 1000, 90, 1000, 1.0, bKill: 1);
 // b.doEnv('w', 500, 900, 400, 10); // seq on from L to R. 
-b.doEnv('h', 300, 10, 400, 1.0, bKill: 1);
+b.doEnv('h', 300, 1000, 400, 1.0, bKill: 0);
 j.end;
 };
 ~red.();
@@ -79,5 +82,14 @@ j.end;
 t.children[0].deleteEvents
 s.scope
 
+( // Test
+x = {
+    inf.do{
+        |i|
+        ~red.();
+        2.wait;
+    }
+}.fork;
+)
 
 t.children.do{|e| e.deepSleep(1.0)};

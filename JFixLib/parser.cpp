@@ -55,6 +55,13 @@ Parser::Parser() {
     dispatcher[Command_link_bus_tag]      = handleLinkBus;
     dispatcher[Command_set_param_bus_tag] = handleSetParamBus;
 #endif
+
+#ifndef JFIX_EMULATION
+    cmdQueue = xQueueCreate(PARSER_CMD_QUEUE_SIZE, sizeof(Command));
+    if (cmdQueue == nullptr) {
+        ESP_LOGE(TAG, "Failed to create command queue");
+    }
+#endif
 }
 
 Parser& Parser::getInstance() {
@@ -83,17 +90,57 @@ void Parser::processIncomingBuffer(uint8_t* buffer, size_t size) {
     }
 }
 
+bool Parser::isGraphicsCommand(pb_size_t tag) const {
+#ifdef JFIX_ENABLE_GRAPHICS
+    switch (tag) {
+        case Command_delete_events_tag:
+        case Command_sync_tag:
+        case Command_add_event_tag:
+        case Command_add_env_tag:
+        case Command_set_val_tag:
+        case Command_set_val_n_tag:
+        case Command_set_custom_tag:
+        case Command_link_bus_tag:
+        case Command_set_param_bus_tag:
+            return true;
+        default:
+            break;
+    }
+#endif
+    return false;
+}
+
 void Parser::dispatchCommand(const Command& cmd) {
     int myId = (jFixture::instance) ? jFixture::instance->getId() : 0;
     if (cmd.id != 255 && cmd.id != myId) {
         return;
     }
 
+#ifndef JFIX_EMULATION
+    if (isGraphicsCommand(cmd.which_payload)) {
+        if (xQueueSend(cmdQueue, &cmd, 0) != pdTRUE) {
+            ESP_LOGW(TAG, "Command queue full — dropping graphics cmd %d", (int)cmd.which_payload);
+        }
+        return;
+    }
+#endif
+
     if (dispatcher.count(cmd.which_payload)) {
         dispatcher[cmd.which_payload](cmd);
     } else {
         ESP_LOGW(TAG, "Unknown command tag: %d", (int)cmd.which_payload);
     }
+}
+
+void Parser::drainCommandQueue() {
+#ifndef JFIX_EMULATION
+    Command cmd;
+    while (xQueueReceive(cmdQueue, &cmd, 0) == pdTRUE) {
+        if (dispatcher.count(cmd.which_payload)) {
+            dispatcher[cmd.which_payload](cmd);
+        }
+    }
+#endif
 }
 
 // ── Simple control ──────────────────────────────────────────────────────────
