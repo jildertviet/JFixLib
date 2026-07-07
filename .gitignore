@@ -7,3 +7,7 @@ tags.temp
 doxygen/*
 **/build/
 tools/nvs_config.csv
+
+# Python bytecode + stray nanopb descriptor generated during proto regen
+__pycache__/
+/nanopb_pb2.py
