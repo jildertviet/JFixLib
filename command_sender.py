@@ -106,6 +106,7 @@ def main():
     print("  setotaurl:[id,]<url>")
     print("  setparambus:[id,]<bus_index>,<value>")
     print("  setbackground:[id,]<r>,<g>,<b>,<a>")
+    print("  setbootstate:[id,]<r>,<g>,<b>,<w>,<brightness>")
     print("  -- Animation (ID required; use 255 for broadcast) --")
     print("  addevent:<id>,<event_id>,<type>,<loc_x>,<loc_y>,<size_x>,<size_y>,<r>,<g>,<b>,<a>[,<wait>]")
     print("    type: 1=perlin  2=rect  3=osc")
@@ -157,6 +158,7 @@ def main():
                 if cmd_name == "setotaurl"   and len(cmd_args) == 2: has_id = True
                 if cmd_name == "setparambus"   and len(cmd_args) == 3: has_id = True
                 if cmd_name == "setbackground" and len(cmd_args) == 5: has_id = True
+                if cmd_name == "setbootstate" and len(cmd_args) == 6: has_id = True
                 if cmd_name in ("addevent", "addenv", "setval", "setvaln", "setcustom", "linkbus"):
                     has_id = True  # ID always required for animation commands
 
@@ -220,6 +222,13 @@ def main():
                     cmd.set_background.g = float(cmd_args[arg_idx+1])
                     cmd.set_background.b = float(cmd_args[arg_idx+2])
                     cmd.set_background.a = float(cmd_args[arg_idx+3])
+                    sender_func(output_obj, cmd)
+                elif cmd_name == "setbootstate":
+                    cmd.set_boot_state.r = float(cmd_args[arg_idx])
+                    cmd.set_boot_state.g = float(cmd_args[arg_idx+1])
+                    cmd.set_boot_state.b = float(cmd_args[arg_idx+2])
+                    cmd.set_boot_state.w = float(cmd_args[arg_idx+3])
+                    cmd.set_boot_state.brightness = float(cmd_args[arg_idx+4])
                     sender_func(output_obj, cmd)
                 elif cmd_name == "addevent":
                     # addevent:<id>,<event_id>,<type>,<loc_x>,<loc_y>,<size_x>,<size_y>,<r>,<g>,<b>,<a>[,<wait>]
