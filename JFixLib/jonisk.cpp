@@ -17,8 +17,7 @@ void Jonisk::init() {
   jFixture::init();
   blink.init();
 
-  dimmer.init({16, 17, 18, 8});
-
+  dimmer.init({16, 17, 18, 8}, true);
   // Restore the power-on colour/brightness saved by the setBootState command.
   // Format: "r,g,b,w,brightness". Falls back to a compiled default (white) when
   // NVS has no key yet, so a fresh device still lights up.
@@ -30,14 +29,18 @@ void Jonisk::init() {
       float p[5];
       if (sscanf(s.c_str(), "%f,%f,%f,%f,%f", &p[0], &p[1], &p[2], &p[3],
                  &p[4]) == 5) {
-        c[0] = p[0]; c[1] = p[1]; c[2] = p[2]; c[3] = p[3];
+        c[0] = p[0];
+        c[1] = p[1];
+        c[2] = p[2];
+        c[3] = p[3];
         bri = p[4];
       }
       ESP_LOGI("Jonisk", "Boot state loaded: %s", s.c_str());
     } else {
       ESP_LOGI("Jonisk", "No boot state in NVS, using default white");
     }
-    for (int i = 0; i < 4; i++) dimmer.setChannel(i, c[i]);
+    for (int i = 0; i < 4; i++)
+      dimmer.setChannel(i, c[i]);
     setBrightness(bri);
   }
 

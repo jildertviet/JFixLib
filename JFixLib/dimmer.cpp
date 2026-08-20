@@ -23,7 +23,8 @@ void Dimmer::setChannel(int channel, float value) {
 void Dimmer::setBrightness(float brightness) { _globalBrightness = brightness; }
 void Dimmer::show() {}
 void Dimmer::test() {}
-void Dimmer::blink(uint8_t num, uint16_t dur, uint16_t delayTime, uint8_t channel) {}
+void Dimmer::blink(uint8_t num, uint16_t dur, uint16_t delayTime,
+                   uint8_t channel) {}
 
 #else // Real ESP32
 
@@ -48,15 +49,14 @@ esp_err_t Dimmer::init(const std::vector<int> &pins) {
   }
 
   for (size_t i = 0; i < _pins.size(); i++) {
-    ledc_channel_config_t ledc_channel = {
-        .gpio_num = (int)_pins[i],
-        .speed_mode = MODE,
-        .channel = (ledc_channel_t)(1 + i),
-        .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = TIMER,
-        .duty = 0,
-        .hpoint = 0,
-        .flags = {.output_invert = 0}};
+    ledc_channel_config_t ledc_channel = {.gpio_num = (int)_pins[i],
+                                          .speed_mode = MODE,
+                                          .channel = (ledc_channel_t)(1 + i),
+                                          .intr_type = LEDC_INTR_DISABLE,
+                                          .timer_sel = TIMER,
+                                          .duty = 0,
+                                          .hpoint = 0,
+                                          .flags = {.output_invert = 0}};
     err = ledc_channel_config(&ledc_channel);
     if (err != ESP_OK) {
       ESP_LOGE(TAG, "Failed to configure LEDC channel %d: %s", i,
